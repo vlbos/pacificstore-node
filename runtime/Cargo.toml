@@ -25,7 +25,6 @@ hex-literal = { optional = true, version = '0.3.1' }
 serde = { features = ['derive'], optional = true, version = '1.0.119' }
 
 # local dependencies
-pallet-template = { path = '../pallets/template', default-features = false, version = '2.0.1' }
 
 # Substrate dependencies
 frame-benchmarking = { default-features = false, optional = true, version = '2.0.1' }
@@ -54,6 +53,32 @@ sp-std = { default-features = false, version = '2.0.1' }
 sp-transaction-pool = { default-features = false, version = '2.0.1' }
 sp-version = { default-features = false, version = '2.0.1' }
 
+
+
+[dependencies.orderbook]
+default-features = false
+package = 'pallet-orderbook'
+path = '../pallets/orderbook'
+version = '2.0.0'
+
+[dependencies.orderbook-runtime-api]
+default-features = false
+package = 'orderbook-runtime-api'
+path = '../pallets/orderbook/runtime-api'
+version = '2.0.0'
+
+
+[dependencies.wyvern-exchange]
+default-features = false
+package = 'pallet-wyvern-exchange'
+path = '../pallets/wyvern-exchange'
+version = '2.0.0'
+
+[dependencies.wyvern-exchange-runtime-api]
+default-features = false
+package = 'wyvern-exchange-runtime-api'
+path = '../pallets/wyvern-exchange/runtime-api'
+version = '2.0.0'
 [features]
 default = ['std']
 runtime-benchmarks = [
@@ -78,7 +103,6 @@ std = [
     'pallet-grandpa/std',
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
-    'pallet-template/std',
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
@@ -93,4 +117,6 @@ std = [
     'sp-std/std',
     'sp-transaction-pool/std',
     'sp-version/std',
+    'wyvern-exchange/std',
+    'orderbook/std',
 ]

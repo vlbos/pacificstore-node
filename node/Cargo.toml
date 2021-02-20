@@ -24,6 +24,10 @@ structopt = '0.3.8'
 
 # local dependencies
 node-template-runtime = { path = '../runtime', version = '2.0.1' }
+orderbook-rpc = { path = "../pallets/orderbook/rpc" }
+orderbook-runtime-api = { path = "../pallets/orderbook/runtime-api" }
+wyvern-exchange-rpc = { path = "../pallets/wyvern-exchange/rpc" }
+wyvern-exchange-runtime-api = { path = "../pallets/wyvern-exchange/runtime-api" }
 
 # Substrate dependencies
 frame-benchmarking = '2.0.1'

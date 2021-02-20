@@ -38,6 +38,9 @@ pub use frame_support::{
 	},
 };
 
+use orderbook::{OrderQuery,OrderJSONType};
+
+use wyvern_exchange::{Side,SaleKind,FeeMethod,HowToCall};
 /// Import the template pallet.
 pub use pallet_template;
 
@@ -67,6 +70,8 @@ pub type Hash = sp_core::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
+/// A timestamp: milliseconds since the unix epoch.
+pub type Moment = u64;
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -262,10 +267,18 @@ impl pallet_sudo::Trait for Runtime {
 }
 
 /// Configure the template pallet in pallets/template.
-impl pallet_template::Trait for Runtime {
-	type Event = Event;
+// impl pallet_template::Trait for Runtime {
+// 	type Event = Event;
+// }
+
+impl orderbook::Trait for Runtime {
+    type Event = Event;
 }
 
+impl wyvern_exchange::Trait for Runtime {
+    type Event = Event;
+	type Currency = Balances;
+}
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -282,7 +295,9 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the template pallet in the runtime.
-		TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
+        Orderbook: orderbook::{Module, Call, Storage, Event<T>},
+        WyvernExchange: wyvern_exchange::{Module, Call, Storage, Event<T>},
+		// TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
 	}
 );
 
@@ -446,6 +461,192 @@ impl_runtime_apis! {
 		}
 	}
 
+	impl orderbook_runtime_api::OrderbookApi<Block,AccountId, Moment> for Runtime {
+		  fn get_orders(
+        order_query: Option<OrderQuery<AccountId>>, page: Option<u64>,
+    ) -> Option<Vec<OrderJSONType<AccountId, Moment>>> {
+				  Orderbook::get_orders(
+        order_query,page
+    ) 
+		}
+	}
+
+	impl wyvern_exchange_runtime_api::WyvernExchangeApi<Block,AccountId, Balance,Moment,Signature> for Runtime {
+		 fn calculate_final_price_ex(
+        side: Side,
+        sale_kind: SaleKind,
+        base_price: u64,
+        extra: Moment,
+        listing_time: Moment,
+        expiration_time: Moment,
+    ) -> u64{
+		WyvernExchange::calculate_final_price_ex(  side,
+        sale_kind,
+        base_price,
+        extra,
+        listing_time,
+        expiration_time)
+	}
+    fn hash_order_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+    ) -> Vec<u8>{
+		 WyvernExchange::hash_order_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata)
+	}
+
+    fn hash_to_sign_ex(
+ addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+    ) -> Vec<u8>{
+		 WyvernExchange::hash_to_sign_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata)
+	}
+   fn validate_order_parameters_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+    ) -> bool{
+		WyvernExchange::validate_order_parameters_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata)
+	}
+   fn validate_order_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+        sig: Signature,
+    ) -> bool {
+		WyvernExchange::validate_order_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata,
+        sig)
+	}
+ fn calculate_current_price_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+    ) -> u64{
+		WyvernExchange::calculate_current_price_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata)
+	}
+   fn orders_can_match_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_methods_sides_kinds_how_to_calls: Vec<u8>,
+        calldata_buy: Vec<u8>,
+        calldata_sell: Vec<u8>,
+        replacement_pattern_buy: Vec<u8>,
+        replacement_pattern_sell: Vec<u8>,
+        static_extradata_buy: Vec<u8>,
+        static_extradata_sell: Vec<u8>,
+    ) -> bool {
+		WyvernExchange::orders_can_match_ex(
+        addrs,
+        uints,
+        fee_methods_sides_kinds_how_to_calls,
+        calldata_buy,
+        calldata_sell,
+        replacement_pattern_buy,
+        replacement_pattern_sell,
+        static_extradata_buy,
+        static_extradata_sell)
+	}
+fn calculate_match_price_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_methods_sides_kinds_how_to_calls: Vec<u8>,
+        calldata_buy: Vec<u8>,
+        calldata_sell: Vec<u8>,
+        replacement_pattern_buy: Vec<u8>,
+        replacement_pattern_sell: Vec<u8>,
+        static_extradata_buy: Vec<u8>,
+        static_extradata_sell: Vec<u8>,
+    ) -> u64 
+{
+		 WyvernExchange::calculate_match_price_ex(
+        addrs,
+        uints,
+        fee_methods_sides_kinds_how_to_calls,
+        calldata_buy,
+        calldata_sell,
+        replacement_pattern_buy,
+        replacement_pattern_sell,
+        static_extradata_buy,
+        static_extradata_sell)
+	
+	}
+	}
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn dispatch_benchmark(
