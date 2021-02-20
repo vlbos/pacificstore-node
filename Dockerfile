@@ -1,28 +1,26 @@
 # ===== BUILD ======
 
 FROM phusion/baseimage:0.10.2 as builder
-LABEL maintainer="gz@usetech.com"
+LABEL maintainer="vlbos2018@gmail.com"
 
-ENV WASM_TOOLCHAIN=nightly-2020-05-01
 
 ARG PROFILE=release
 
 RUN apt-get update && \
 	apt-get dist-upgrade -y -o Dpkg::Options::="--force-confold" && \
-	apt-get install -y cmake pkg-config libssl-dev git clang
+	apt-get install -y cmake pkg-config libssl-dev git clang build-essential clang libclang-dev curl
 
 # Get project and run it
-#RUN git clone https://github.com/usetech-llc/nft_parachain /nft_parachain
-RUN mkdir nft_parachain
-WORKDIR /nft_parachain
+#RUN git clone https://github.com/vlbos/pacific-store-node /pacific_store
+RUN mkdir pacific_store
+WORKDIR /pacific_store
 COPY . .
-
+rustup target add wasm32-unknown-unknown --toolchain nightly
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
 	export PATH="$PATH:$HOME/.cargo/bin" && \
 	rustup toolchain uninstall $(rustup toolchain list) && \
-	rustup default 1.44.0 && \
-	rustup toolchain install $WASM_TOOLCHAIN && \
-	rustup target add wasm32-unknown-unknown --toolchain $WASM_TOOLCHAIN && \
+	rustup default stable && \
+	rustup target add wasm32-unknown-unknown --toolchain nightly && \
     rustup target list --installed && \
     rustup show && \
 	cargo build "--$PROFILE" 
@@ -36,7 +34,7 @@ RUN cd target/release && ls -la
 FROM phusion/baseimage:0.10.2
 ARG PROFILE=release
 
-COPY --from=builder /nft_parachain/target/$PROFILE/nft /usr/local/bin
+COPY --from=builder /pacific_store/target/$PROFILE/nft /usr/local/bin
 
 EXPOSE 9944
 VOLUME ["/chain-data"]

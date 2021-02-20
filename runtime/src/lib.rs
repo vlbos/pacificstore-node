@@ -42,7 +42,7 @@ use orderbook::{OrderQuery,OrderJSONType};
 
 use wyvern_exchange::{Side,SaleKind,FeeMethod,HowToCall};
 /// Import the template pallet.
-pub use pallet_template;
+// pub use pallet_template;
 
 /// An index to a block.
 pub type BlockNumber = u32;

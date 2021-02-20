@@ -75,7 +75,8 @@ purge-chain
 
 export CARGO_HTTP_MULTIPLEXING=false
 
-WASM_BUILD_TOOLCHAIN=nightly-2020-10-05 cargo run --release -- --dev --tmp
+cargo run --release -- --dev --tmp
+cargo run -- --dev --tmp
 
 
 [substrate/frame/babe/src/equivocation.rs]
