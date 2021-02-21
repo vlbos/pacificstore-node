@@ -44,7 +44,7 @@ RUN cd target/release && ls -la
 FROM phusion/baseimage:0.10.2
 ARG PROFILE=release
 
-COPY --from=builder /pacific_store_node/target/$PROFILE/pacific_store /usr/local/bin
+COPY --from=builder /pacific_store_node/target/$PROFILE/pacific-store /usr/local/bin
 
 EXPOSE 9944
 VOLUME ["/node-data"]

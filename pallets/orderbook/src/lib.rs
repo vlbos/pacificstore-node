@@ -25,8 +25,8 @@ mod tests;
 // General constraints to limit data size
 // Note: these could also be passed as trait config parameters
 pub const ORDER_ID_MAX_LENGTH: usize = 36;
-pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 10;
-pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 20;
+pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
+pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400; 
 pub const ORDER_MAX_FIELDS: usize = 54;
 
 // Custom types

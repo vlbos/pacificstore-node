@@ -18,10 +18,18 @@ pub fn store_test_order<T: Trait>(order_id: OrderId, owner: T::AccountId, regist
     );
 }
 
+pub fn store_test_orderi<T: Trait>(order_id: OrderId, owner: T::AccountId, registered: T::Moment) {
+    let index = 1;
+    Orderi::insert(
+order_id,
+        index,
+    );
+}
+
 const TEST_ORDER_ID: &str = "00012345600012";
 const TEST_ORGANIZATION: &str = "Northwind";
 const TEST_SENDER: &str = "Alice";
-const LONG_VALUE : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquam ut tortor nec congue. Pellente";
+const LONG_VALUE : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquam ut tortor nec congue. PellenteLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquam ut tortor nec congue. PellenteLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquam ut tortor nec congue. PellenteLorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquam ut tortor nec congue. Pellente";
 
 #[test]
 fn create_order_without_fields() {
@@ -218,27 +226,27 @@ OrderField::new(b"prefixed_hash", b"0x98a07dfb9e4da7ffc0ad0fb230afc8684dc4a0ac44
             })
         );
 
-        assert_eq!(
-            Orderbook::get_orders( Some(OrderQuery {
-                limit:None,
-                offset:None,
-                owner:None,
-token_ids:None,
-                params: Some(fields.clone()),
-            }),None),
-            Some(vec![OrderJSONType {
-                index: index,
-                order_id: order_id.clone(),
-                owner: owner,
-                registered: now,
-                fields: Some(fields.clone()),
-            }])
-        );
+//         assert_eq!(
+//             Orderbook::get_orders( Some(OrderQuery {
+//                 limit:None,
+//                 offset:None,
+//                 owner:None,
+// token_ids:None,
+//                 params: Some(fields.clone()),
+//             }),None),
+//             Some(vec![OrderJSONType {
+//                 index: index,
+//                 order_id: order_id.clone(),
+//                 owner: owner,
+//                 registered: now,
+//                 fields: Some(fields.clone()),
+//             }])
+//         );
 
         // assert_eq!(<OrdersOfOrganization<Test>>::get(owner), vec![order_id.clone()]);
 
         assert_eq!(Orderbook::owner_of(&order_id), Some(owner));
-
+     
         // Event is raised
         assert!(System::events()
             .iter()
@@ -293,7 +301,7 @@ fn create_order_with_existing_id() {
         let existing_order = TEST_ORDER_ID.as_bytes().to_owned();
         let now = 42;
 
-        store_test_order::<Test>(existing_order.clone(), account_key(TEST_ORGANIZATION), now);
+        store_test_orderi::<Test>(existing_order.clone(), account_key(TEST_ORGANIZATION), now);
 
         assert_noop!(
             Orderbook::post_order(
@@ -302,7 +310,7 @@ fn create_order_with_existing_id() {
                 account_key(TEST_ORGANIZATION),
                 None
             ),
-            dispatch::DispatchError::BadOrigin
+           Error::<Test>::OrderIdExists
         );
     })
 }
@@ -310,17 +318,17 @@ fn create_order_with_existing_id() {
 #[test]
 fn create_order_with_too_many_fields() {
     new_test_ext().execute_with(|| {
+let mut s = Vec::with_capacity(60);
+for _ in 1..60
+{
+s.push(OrderField::new(b"field1", b"val1"));
+}
         assert_noop!(
             Orderbook::post_order(
                 Origin::signed(account_key(TEST_SENDER)),
                 TEST_ORDER_ID.as_bytes().to_owned(),
                 account_key(TEST_ORGANIZATION),
-                Some(vec![
-                    OrderField::new(b"field1", b"val1"),
-                    OrderField::new(b"field2", b"val2"),
-                    OrderField::new(b"field3", b"val3"),
-                    OrderField::new(b"field4", b"val4")
-                ])
+                Some(s.to_vec())
             ),
             Error::<Test>::OrderTooManyFields
         );

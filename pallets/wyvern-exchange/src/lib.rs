@@ -1878,7 +1878,7 @@ impl<T: Trait> Module<T> {
         listing_time: T::Moment,
         expiration_time: T::Moment,
     ) -> Result<bool, Error<T>> {
-        let now: T::Moment = T::Moment::from(3); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
+        let now: T::Moment = Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
         ensure!(
             (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time),
             Error::<T>::OrdersCannotMatch1
