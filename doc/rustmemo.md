@@ -37,7 +37,7 @@ sudo apt-get install libssl-dev pkg-config libclang-dev clang
 rustup install 1.44.0
 ```
 
-4. Make it default (actual toochain version may be different, so do a `rustup toolchain list` first)
+4. Make it default (actual toolchain version may be different, so do a `rustup toolchain list` first)
 ```bash
 rustup toolchain list
 rustup default 1.44.0-x86_64-unknown-linux-gnu
@@ -90,17 +90,17 @@ cargo run -- --dev --tmp
 This command will start the single-node development chain with persistent state:
 
 ```bash
-./target/release/node-template --dev
+./target/release/pacific-store --dev
 ```
 
 Purge the development chain's state:
 
 ```bash
-./target/release/node-template purge-chain --dev
+./target/release/pacific-store purge-chain --dev
 ```
 
 Start the development chain with detailed logging:
 
 ```bash
-RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/node-template -lruntime=debug --dev
+RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/pacific-store -lruntime=debug --dev
 ```

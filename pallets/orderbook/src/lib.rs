@@ -156,9 +156,8 @@ decl_module! {
 
 
   
-//     Send an order to the orderbook.
-//     param order Order JSON to post to the orderbook
-   
+        //     Send an order to the orderbook.
+        //     param order Order JSON to post to the orderbook
         #[weight = 10_000]
         pub fn post_order(origin, order_id: OrderId, owner: T::AccountId, fields: Option<Vec<OrderField>>) -> DispatchResult {
             // T::CreateRoleOrigin::ensure_origin(origin.clone())?;

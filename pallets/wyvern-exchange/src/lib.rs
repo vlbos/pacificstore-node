@@ -2171,11 +2171,11 @@ impl<T: Trait> Module<T> {
         let _a = _my_balance - _my_balance1;
         let _s = _my_balance * _my_balance1;
         // let _my:u32 = _my_balance1.try_into<u32>();
-        let _mm: T::Moment = T::Moment::from(3); //T::Moment::get();
-        let _mm1: T::Moment = T::Moment::from(3); //T::Moment::get();
-        let _mm: T::Moment = _mm + _mm1; //T::Moment::get();
-        let _mm: T::Moment = Zero::zero(); //T::Moment::get();
-        let _my_balance: BalanceOf<T> = Zero::zero();
+        // let _mm: T::Moment = T::Moment::from(3); //T::Moment::get();
+        // let _mm1: T::Moment = T::Moment::from(3); //T::Moment::get();
+        // let _mm: T::Moment = _mm + _mm1; //T::Moment::get();
+        // let _mm: T::Moment = Zero::zero(); //T::Moment::get();
+        // let _my_balance: BalanceOf<T> = Zero::zero();
         // let _m :u32 = _mm.try_into();
     }
 
@@ -2188,13 +2188,30 @@ impl<T: Trait> Module<T> {
     pub fn u64_to_balance_saturated(_input: u64) -> BalanceOf<T> {
         // let my_u32:u32 = _input as u32;
         //  my_u32.into()
-        BalanceOf::<T>::saturated_from(_input.into()) //.saturated_into()
+        // BalanceOf::<T>::saturated_from(_input.into()) //.saturated_into()
+        if let Some(b) = Self::u64_to_balance_option(_input) {
+            b
+        } else {
+            Zero::zero()
+        }
     }
 
     pub fn u64_to_moment_saturated(_input: u64) -> T::Moment {
         // let my_u32:u32 = _input as u32;
         //  my_u32.into()
-        T::Moment::saturated_from(_input.into()) //.saturated_into()
+        if let Some(b) = Self::u64_to_moment_option(_input) {
+            b
+        } else {
+            Zero::zero()
+        }
+
+        // T::Moment::saturated_from(_input.into()) //.saturated_into()
+    }
+
+    pub fn u64_to_moment_option(_input: u64) -> Option<T::Moment> {
+        // use sp_std::convert::{TryFrom, TryInto};
+        _input.try_into().ok()
+        // Some(Zero::zero())
     }
 
     pub fn u64_to_balance_option(_input: u64) -> Option<BalanceOf<T>> {
@@ -2224,18 +2241,12 @@ impl<T: Trait> Module<T> {
         TryInto::<u64>::try_into(input).ok()
     }
 
-    pub fn balance_to_u64_saturated(input: BalanceOf<T>) -> u64 {
-        input.saturated_into::<u64>()
-    }
-    pub fn moment_to_u64_saturated(input: T::Moment) -> u64 {
-        input.saturated_into::<u64>()
-    }
-
-    // Note the warning above about saturated conversions
-    // pub fn balance_to_u64_saturated(input: T::Balance) -> u64 {
+    // pub fn balance_to_u64_saturated(input: BalanceOf<T>) -> u64 {
     //     input.saturated_into::<u64>()
     // }
-    //
+    // pub fn moment_to_u64_saturated(input: T::Moment) -> u64 {
+    //     input.saturated_into::<u64>()
+    // }
 
     pub fn moment_to_balance(m: &T::Moment) -> BalanceOf<T> {
         let mut _b: BalanceOf<T> = Zero::zero();
@@ -2248,8 +2259,6 @@ impl<T: Trait> Module<T> {
         _b
     }
 }
-
-
 
 impl<AccountId, Moment, Balance> OrderType<AccountId, Moment, Balance>
 where

@@ -5,12 +5,12 @@ description = 'A fresh FRAME-based Substrate node, ready for hacking.'
 edition = '2018'
 homepage = 'https://substrate.dev'
 license = 'Unlicense'
-name = 'node-template'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
+name = 'pacific-store'
+repository = 'https://github.com/vlbos/pacific-store-node/'
 version = '2.0.1'
 
 [[bin]]
-name = 'node-template'
+name = 'pacific-store'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -23,7 +23,7 @@ jsonrpc-core = '15.0.0'
 structopt = '0.3.8'
 
 # local dependencies
-node-template-runtime = { path = '../runtime', version = '2.0.1' }
+pacific-store-runtime = { path = '../runtime', version = '2.0.1' }
 orderbook-rpc = { path = "../pallets/orderbook/rpc" }
 orderbook-runtime-api = { path = "../pallets/orderbook/runtime-api" }
 wyvern-exchange-rpc = { path = "../pallets/wyvern-exchange/rpc" }
@@ -58,4 +58,4 @@ substrate-frame-rpc-system = '2.0.1'
 
 [features]
 default = []
-runtime-benchmarks = ['node-template-runtime/runtime-benchmarks']
+runtime-benchmarks = ['pacific-store-runtime/runtime-benchmarks']

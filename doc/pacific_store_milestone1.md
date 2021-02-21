@@ -1,4 +1,6 @@
 # Pacific Store Orderbook&WyvernExchange Modules 
+
+
 When it comes to the rise of crypto collectables, it’s no surprise that many secondary markets have arisen for the exchange of these unique assets.
 
 For those unfamiliar with non-fungible tokens (better known as NFTs), they are tokens which are unique from one another due to special characteristics or identifiers which distinguish them from others in a similar set.
@@ -17,27 +19,23 @@ While there are a number of other crypto collectible marketplaces on the market,
 
 ## Milestone 1
 
+### Orderbook Module
 
-#### Orderbook Module
+#### Orderbook Pallet
 
-
-
-# Orderbook Pallet
-
-
-### Functions
+##### Functions
 
 - `post_order(origin, order_id: OrderId, owner: T::AccountId, fields: Option<Vec<OrderField>>) -> DispatchResult` : Send an order to the orderbook.
 
 - `get_orders( order_query: Option<OrderQuery<T::AccountId>>, page: Option<u64>, ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>>`:Get a list of orders from the orderbook, returning the page of orders
   and the count of total orders found.
 
-#### WyvernExchange Module
+### WyvernExchange Module
 
-# WyvernExchange Pallet
+#### WyvernExchange Pallet
 
 
-### Functions
+##### Functions
 
 - `change_minimum_maker_protocol_fee( origin, new_minimum_maker_protocol_fee: BalanceOf<T>, ) -> DispatchResult`: Change the minimum maker fee paid to the protocol (only:owner)
 
@@ -70,18 +68,12 @@ While there are a number of other crypto collectible marketplaces on the market,
   Precondition: parameters have passed validate_parameters.
 
 
-
-## Tests
-
-Refer to the [mock runtime](src/mock.rs) and [provided tests](src/tests.rs) to see the NFT implementation in action.
-
-## Test Project
+### Test Project
 
 In order to help develop this pallet, it is being consumed by
-[a test project](https://github.com/danforbes/substratekitties) - a work-in-progress update to
-[the original Substratekitties tutorial](https://github.com/shawntabrizi/substratekitties).
+[a test project](https://github.com/vlbos/pacific-store-node/tree/dev/front-end) .
 
-## Build & Run
+### Build & Run
 
 First, build & run the node:
 
