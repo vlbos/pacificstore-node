@@ -28,7 +28,7 @@ use sp_version::NativeVersion;
 pub use sp_runtime::BuildStorage;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{Permill, Perbill};
+pub use sp_runtime::{MultiSigner,Permill, Perbill};
 pub use frame_support::{
 	construct_runtime, parameter_types, StorageValue,
 	traits::{KeyOwnerProofSystem, Randomness},
@@ -278,6 +278,8 @@ impl orderbook::Trait for Runtime {
 impl wyvern_exchange::Trait for Runtime {
     type Event = Event;
 	type Currency = Balances;
+    type Public = MultiSigner;
+    type Signature = Signature;
 }
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(

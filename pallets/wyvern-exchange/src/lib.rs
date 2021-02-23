@@ -289,8 +289,8 @@ pub struct OrderType<AccountId, Moment, Balance> {
 
 pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
-    // type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
-    // type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
+    type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
+    type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
     // // Currency type for this module.
     type Currency: ReservableCurrency<Self::AccountId>
         + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
@@ -467,7 +467,7 @@ let _user = ensure_signed(origin.clone())?;
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: Signature,
+        sig: T::Signature,
     ) -> DispatchResult {
 let _user = ensure_signed(origin.clone())?;
         Self::cancel_order(
@@ -502,7 +502,7 @@ let _user = ensure_signed(origin.clone())?;
         replacement_pattern_sell: Vec<u8>,
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
-        sig: Vec<Signature>,
+        sig: Vec<T::Signature>,
         rss_metadata: Vec<u8>,
     ) -> DispatchResult {
 
@@ -729,7 +729,7 @@ impl<T: Trait> Module<T> {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: Signature,
+        sig: T::Signature,
     ) -> bool {
         let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = Self::build_order_type_arr(
             addrs,
@@ -998,7 +998,7 @@ impl<T: Trait> Module<T> {
     //
     pub fn require_valid_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &Signature,
+        sig: &T::Signature,
     ) -> Result<Vec<u8>, Error<T>> {
         let hash: Vec<u8> = Self::hash_to_sign(&order)?;
         ensure!(
@@ -1046,7 +1046,7 @@ impl<T: Trait> Module<T> {
     pub fn validate_order(
         hash: &[u8],
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &Signature,
+        sig: &T::Signature,
     ) -> Result<bool, Error<T>> {
         // Not done in an if-conditional to prevent unnecessary ecrecover evaluation, which seems to happen even though it should short-circuit.
         frame_support::debug::RuntimeLogger::init();
@@ -1084,17 +1084,17 @@ impl<T: Trait> Module<T> {
     // Example function to verify the signature.
 
     pub fn check_signature(
-        _signature: &Signature,
+        _signature: &T::Signature,
         _msg: &[u8],
         _signer: &T::AccountId,
     ) -> Result<(), Error<T>> {
         // let mut bytes = [u8; 32];
         // T::AccountId::decode(&mut &bytes[..]).unwrap_or_default();
-        // if _signature.verify(_msg, _signer) {
+        if _signature.verify(_msg, _signer) {
         Ok(())
-        // } else {
-        //     Err(Error::<T>::OrderIdMissing.into())
-        // }
+        } else {
+            Err(Error::<T>::OrderIdMissing.into())
+        }
     }
 
     //
@@ -1170,7 +1170,7 @@ impl<T: Trait> Module<T> {
     pub fn cancel_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &Signature,
+        sig: &T::Signature,
     ) -> DispatchResult {
         // CHECKS
         let _user = ensure_signed(origin)?;
@@ -1703,9 +1703,9 @@ impl<T: Trait> Module<T> {
         msg_sender: T::AccountId,
         msg_value: BalanceOf<T>,
         buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        buy_sig: Signature,
+        buy_sig: T::Signature,
         sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sell_sig: Signature,
+        sell_sig: T::Signature,
         metadata: &[u8],
     ) -> Result<(), Error<T>> {
         //reentrancyGuard
