@@ -7,7 +7,7 @@ SKIP_WASM_BUILD=1 cargo check
 
 
 ```
-SKIP_WASM_BUILD=1 cargo test
+SKIP_WASM_BUILD=1 cargo test -- --nocapture
 ```
 
 

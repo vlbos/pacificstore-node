@@ -299,7 +299,9 @@ fn atomic_match_ex() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-
+        System::set_block_number(1);
+        Timestamp::set_timestamp(100);
+        run_to_block(100);
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);

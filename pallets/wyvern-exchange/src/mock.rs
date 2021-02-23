@@ -4,8 +4,12 @@ use crate as wyvern_exchange;
 use crate::{Module, Trait};
 use core::marker::PhantomData;
 use frame_support::{
-    impl_outer_dispatch, impl_outer_event, impl_outer_origin, parameter_types, traits::Currency,
-    traits::EnsureOrigin, traits::StorageMapShim, weights::Weight,
+    impl_outer_dispatch, impl_outer_event, impl_outer_origin, parameter_types,
+    traits::Currency,
+    traits::EnsureOrigin,
+    traits::StorageMapShim,
+    traits::{OnFinalize, OnInitialize, TestRandomness},
+    weights::Weight,
 };
 use frame_system as system;
 use frame_system::RawOrigin;
@@ -106,6 +110,18 @@ pub type WyvernExchange = Module<Test>;
 pub type System = system::Module<Test>;
 pub type Timestamp = timestamp::Module<Test>;
 pub type Balances = balances::Module<Test>;
+
+/// Run until a particular block.
+pub fn run_to_block(n: u64) {
+    while System::block_number() < n {
+        if System::block_number() > 1 {
+            System::on_finalize(System::block_number());
+        }
+        System::set_block_number(System::block_number() + 1);
+        System::on_initialize(System::block_number());
+        WyvernExchange::on_initialize(System::block_number());
+    }
+}
 
 pub struct MockOrigin<T>(PhantomData<T>);
 

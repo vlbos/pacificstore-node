@@ -9,6 +9,7 @@ use core::result::Result;
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 // use sp_std::convert::{TryFrom, TryInto};
+use sp_std::if_std;
 
 use frame_support::{
     debug, decl_error, decl_event, decl_module, decl_storage,
@@ -18,7 +19,7 @@ use frame_support::{
     sp_runtime::{
         print,
         traits::{
-            DispatchInfoOf, Dispatchable, IdentifyAccount, Member, PostDispatchInfoOf,
+            DispatchInfoOf, Dispatchable, IdentifyAccount, Member, PostDispatchInfoOf, Printable,
             SaturatedConversion, Saturating, SignedExtension, Verify, Zero,
         },
         MultiSignature, RuntimeDebug,
@@ -504,6 +505,7 @@ let _user = ensure_signed(origin.clone())?;
         sig: Vec<Signature>,
         rss_metadata: Vec<u8>,
     ) -> DispatchResult {
+
         let _user = ensure_signed(origin)?;
 
         let bs = Self::build_order_type_arr2(
@@ -541,6 +543,8 @@ let _user = ensure_signed(origin.clone())?;
     ) -> DispatchResult
     {
 // onlyOwner
+        frame_support::debug::RuntimeLogger::init();
+        debug::error!("exchange is contract self.");
 
 let _user = ensure_signed(origin)?;
         MinimumMakerProtocolFee::<T>::put(new_minimum_maker_protocol_fee);
@@ -576,7 +580,7 @@ pub fn change_protocol_fee_recipient(
 origin,
 new_protocol_fee_recipient: T::AccountId,
 ) -> DispatchResult {
-
+print("================");
 // onlyOwner
 let _user = ensure_signed(origin)?;
 
@@ -1014,16 +1018,11 @@ impl<T: Trait> Module<T> {
         // OrderType must be targeted at this protocol version (this contract:Exchange).
         //TODO
         if order.exchange != ContractSelf::<T>::get() {
-            frame_support::debug::RuntimeLogger::init();
-            debug::error!("exchange is contract self.");
-            ensure!(false, Error::<T>::OrderHashInvalid1);
             return Ok(false);
         }
 
         // OrderType must possess valid sale kind parameter combination.
         if !Self::validate_parameters(&order.sale_kind, order.expiration_time)? {
-            ensure!(false, Error::<T>::OrderHashInvalid2);
-            debug::error!("validate_parameters is false.");
             return Ok(false);
         }
 
@@ -1032,9 +1031,7 @@ impl<T: Trait> Module<T> {
             && (order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get()
                 || order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get())
         {
-            ensure!(false, Error::<T>::OrderHashInvalid3);
-            debug::error!("fee_method is not split fee or maker_protocol_fee greater than setting or taker_protocol_fee greater than setting.");
-            return Ok(false);
+              return Ok(false);
         }
 
         Ok(true)
@@ -1057,23 +1054,17 @@ impl<T: Trait> Module<T> {
         print("================");
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order)? {
-            debug::error!("exchange is contract self.");
-            ensure!(false, Error::<T>::OrderHashInvalid4);
             return Ok(false);
         }
 
         // OrderType must have not been canceled or already filled.
         if CancelledOrFinalized::get(hash) {
-            debug::error!("exchange is contract self.");
-            ensure!(false, Error::<T>::OrderHashInvalid5);
             return Ok(false);
         }
 
         // OrderType authentication. OrderType must be either:
         // (a) previously approved
         if ApprovedOrders::get(hash) {
-            debug::error!("exchange is contract self.");
-            ensure!(false, Error::<T>::OrderHashInvalid6);
             return Ok(true);
         }
 
@@ -1082,11 +1073,9 @@ impl<T: Trait> Module<T> {
         //     return true;
         // }
         if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
-            debug::error!("exchange is contract self.");
 
             return Ok(true);
         }
-        ensure!(false, Error::<T>::OrderHashInvalid7);
         Ok(false)
     }
 
@@ -1878,7 +1867,13 @@ impl<T: Trait> Module<T> {
         listing_time: T::Moment,
         expiration_time: T::Moment,
     ) -> Result<bool, Error<T>> {
-        let now: T::Moment = Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
+        if_std! {
+            // This code is only being compiled and executed when the `std` feature is enabled.
+            println!("Hello native world!");
+            println!("My value is: {:#?}", listing_time);
+            println!("The caller account is: {:#?}", <timestamp::Module<T>>::now());
+        }
+        let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
         ensure!(
             (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time),
             Error::<T>::OrdersCannotMatch1
