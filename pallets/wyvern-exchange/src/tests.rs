@@ -6,7 +6,9 @@ use frame_support::{assert_noop, assert_ok, dispatch};
 
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
-
+mod changes;
+mod orders;
+mod transfer;
 //   const makeOrder = (exchange, isMaker) => ({
 //     exchange: exchange,
 //     maker: accounts[0],
