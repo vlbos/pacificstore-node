@@ -1,6 +1,6 @@
 // Creating mock runtime here
 
-use crate as wyvern_exchange;
+pub use crate as wyvern_exchange;
 use crate::{Module, Trait};
 use core::marker::PhantomData;
 use frame_support::{
@@ -100,14 +100,39 @@ impl timestamp::Trait for Test {
 }
 
 impl Trait for Test {
-    type Event = TestEvent;
+    // type Event = TestEvent;
+    // type Currency = Balances;
+    // type Public = sr25519::Public;
+    // type Signature = sr25519::Signature;
+    // type CreateRoleOrigin = MockOrigin<Test>;
+}
+
+impl wyvern_exchange::utils::Trait for Test {
+    // type Event = TestEvent;
     type Currency = Balances;
+    // type Public = sr25519::Public;
+    // type Signature = sr25519::Signature;
+    // type CreateRoleOrigin = MockOrigin<Test>;
+}
+impl wyvern_exchange::sale_kind_interface::Trait for Test {
+    // type Event = TestEvent;
+    // type Currency = Balances;
+    // type Public = sr25519::Public;
+    // type Signature = sr25519::Signature;
+    // type CreateRoleOrigin = MockOrigin<Test>;
+}
+impl wyvern_exchange::exchange_core::Trait for Test {
+    type Event = TestEvent;
+    // type Currency = Balances;
     type Public = sr25519::Public;
     type Signature = sr25519::Signature;
     // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
 pub type WyvernExchange = Module<Test>;
+pub type ExchangeCore = wyvern_exchange::exchange_core::Module<Test>;
+pub type Utils = wyvern_exchange::utils::Module<Test>;
+pub type SaleKindInterface = wyvern_exchange::sale_kind_interface::Module<Test>;
 pub type System = system::Module<Test>;
 pub type Timestamp = timestamp::Module<Test>;
 pub type Balances = balances::Module<Test>;
@@ -159,6 +184,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
     // Any dispatchable calls made during genesis block will have no events emitted.
     ext.execute_with(|| System::set_block_number(1));
     ext
+}
+
+pub fn account_pair(s: &str) -> sr25519::Pair {
+    sr25519::Pair::from_string(&format!("//{}", s), None).expect("static values are valid; qed")
 }
 
 pub fn account_key(s: &str) -> sr25519::Public {

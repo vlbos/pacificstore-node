@@ -3,12 +3,12 @@
 use super::*;
 use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok, dispatch};
-
+use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
-mod changes;
-mod orders;
-mod transfer;
+// mod changes;
+// mod orders;
+// mod transfer;
 //   const makeOrder = (exchange, isMaker) => ({
 //     exchange: exchange,
 //     maker: accounts[0],
@@ -97,6 +97,16 @@ fn make_order(
         registered: time,
     }
 }
+// fn sig_data(data:&[u8)-> sp_core::sr25519::Signature{
+//         let alice_pair = account_pair("Alice");
+//         let alice_public = alice_pair.public();
+
+// //         let _calldata_buy = calldata_buy.encode();
+// // let calldata_sell = calldata_sell.encode();
+// //       let alice_sig_buy= alice_pair.sign(&_calldata_buy);
+// //         let alice_sig_sell = alice_pair.sign(&_calldata_sell);
+
+// }
 
 #[test]
 fn change_minimum_maker_protocol_fee() {
@@ -104,7 +114,7 @@ fn change_minimum_maker_protocol_fee() {
         let sender = account_key(TEST_SENDER);
         let new_minimum_maker_protocol_fee = 42;
 
-        let result = WyvernExchange::change_minimum_maker_protocol_fee(
+        let result = ExchangeCore::change_minimum_maker_protocol_fee(
             Origin::signed(sender),
             new_minimum_maker_protocol_fee,
         );
@@ -124,7 +134,7 @@ fn change_minimum_taker_protocol_fee() {
         let sender = account_key(TEST_SENDER);
         let min_taker_protocol_fee = 42;
 
-        let result = WyvernExchange::change_minimum_taker_protocol_fee(
+        let result = ExchangeCore::change_minimum_taker_protocol_fee(
             Origin::signed(sender),
             min_taker_protocol_fee,
         );
@@ -144,7 +154,7 @@ fn change_protocol_fee_recipient() {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
 
-        let result = WyvernExchange::change_protocol_fee_recipient(Origin::signed(sender), sender1);
+        let result = ExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
 
         assert_ok!(result);
 
@@ -276,7 +286,13 @@ fn cancel_order_ex() {
         let calldata = Vec::<u8>::new();
         let replacement_pattern = Vec::<u8>::new();
         let static_extradata = Vec::<u8>::new();
-        let sig = Signature::default();
+        let alice_pair = account_pair("Alice");
+        let alice_public = alice_pair.public();
+
+        let calldatas = calldata.encode();
+        let alice_sig = alice_pair.sign(&calldatas);
+
+        let sig = alice_sig;//Signature::default();
 
         let result = WyvernExchange::cancel_order_ex(
             Origin::signed(sender),
@@ -366,7 +382,16 @@ fn atomic_match_ex() {
         let replacement_pattern_sell = Vec::<u8>::new();
         let static_extradata_buy = Vec::<u8>::new();
         let static_extradata_sell = Vec::<u8>::new();
-        let sig = vec![Signature::default(), Signature::default()];
+
+        let alice_pair = account_pair("Alice");
+        let alice_public = alice_pair.public();
+
+        let _calldata_buy = calldata_buy.encode();
+        let _calldata_sell = calldata_sell.encode();
+        let alice_sig_buy= alice_pair.sign(&_calldata_buy);
+        let alice_sig_sell = alice_pair.sign(&_calldata_sell);
+        // let sig = alice_sig;//Signature::default();
+        let sig = vec![alice_sig_buy, alice_sig_sell];
         let rss_metadata = Vec::<u8>::new();
 
         let result = WyvernExchange::atomic_match_ex(
@@ -402,11 +427,11 @@ fn transfer_tokens() {
         assert_ok!(result);
 
         assert_eq!(
-            <Test as Trait>::Currency::free_balance(&sender),
+            <Test as wyvern_exchange::utils::Trait>::Currency::free_balance(&sender),
             99999999999999958
         );
         assert_eq!(
-            <Test as Trait>::Currency::free_balance(&sender1),
+            <Test as wyvern_exchange::utils::Trait>::Currency::free_balance(&sender1),
             100000000000000042
         );
         // 		assert_eq!(<Test as Config>::Currency::free_balance(&alice()), 100);
