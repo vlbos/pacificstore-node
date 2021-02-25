@@ -299,7 +299,6 @@ fn create_order_with_long_id() {
 fn create_order_with_existing_id() {
     new_test_ext().execute_with(|| {
         let existing_order = TEST_ORDER_ID.as_bytes().to_owned();
-        let now = 42;
 
         store_test_orderi::<Test>(existing_order.clone());
 
