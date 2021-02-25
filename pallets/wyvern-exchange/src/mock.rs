@@ -1,14 +1,14 @@
 // Creating mock runtime here
 
 pub use crate as wyvern_exchange;
-use crate::{Module, Trait};
+pub use crate::exchange_core::*;
+pub use crate::{Module,Trait};
 use core::marker::PhantomData;
 use frame_support::{
-    impl_outer_dispatch, impl_outer_event, impl_outer_origin, parameter_types,
+    impl_outer_event, impl_outer_origin, parameter_types,
     traits::Currency,
     traits::EnsureOrigin,
-    traits::StorageMapShim,
-    traits::{OnFinalize, OnInitialize, TestRandomness},
+    traits::{OnFinalize, OnInitialize},
     weights::Weight,
 };
 use frame_system as system;
@@ -131,8 +131,6 @@ impl wyvern_exchange::exchange_core::Trait for Test {
 
 pub type WyvernExchange = Module<Test>;
 pub type ExchangeCore = wyvern_exchange::exchange_core::Module<Test>;
-pub type Utils = wyvern_exchange::utils::Module<Test>;
-pub type SaleKindInterface = wyvern_exchange::sale_kind_interface::Module<Test>;
 pub type System = system::Module<Test>;
 pub type Timestamp = timestamp::Module<Test>;
 pub type Balances = balances::Module<Test>;
@@ -161,13 +159,6 @@ impl<T: Trait> EnsureOrigin<T::Origin> for MockOrigin<T> {
     }
 }
 
-pub fn print_all_events() {
-    println!("------------------- Print Events Started -------------------");
-    for event in <system::Module<Test>>::events() {
-        println!("{:?}", event);
-    }
-    println!("------------------- Print Events Ended -------------------");
-}
 
 pub fn create_account_test(account_id: sr25519::Public) {
     let _ = Balances::deposit_creating(&account_id, 100_000_000_000_000_000);

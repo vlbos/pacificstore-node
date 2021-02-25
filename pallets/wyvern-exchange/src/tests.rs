@@ -3,6 +3,7 @@
 use super::*;
 use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok, dispatch};
+use codec::Encode;
 use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
@@ -287,9 +288,8 @@ fn cancel_order_ex() {
         let replacement_pattern = Vec::<u8>::new();
         let static_extradata = Vec::<u8>::new();
         let alice_pair = account_pair("Alice");
-        let alice_public = alice_pair.public();
 
-        let calldatas = calldata.encode();
+        let calldatas = calldata.to_vec().encode();
         let alice_sig = alice_pair.sign(&calldatas);
 
         let sig = alice_sig;//Signature::default();
@@ -384,10 +384,9 @@ fn atomic_match_ex() {
         let static_extradata_sell = Vec::<u8>::new();
 
         let alice_pair = account_pair("Alice");
-        let alice_public = alice_pair.public();
 
-        let _calldata_buy = calldata_buy.encode();
-        let _calldata_sell = calldata_sell.encode();
+        let _calldata_buy = calldata_buy.to_vec().encode();
+        let _calldata_sell = calldata_sell.to_vec().encode();
         let alice_sig_buy= alice_pair.sign(&_calldata_buy);
         let alice_sig_sell = alice_pair.sign(&_calldata_sell);
         // let sig = alice_sig;//Signature::default();

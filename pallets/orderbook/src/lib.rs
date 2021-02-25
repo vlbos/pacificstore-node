@@ -2,10 +2,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use core::result::Result;
 use frame_support::{
     decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{DispatchError, DispatchResult},
+    dispatch::{ DispatchResult},
     ensure,
     sp_runtime::RuntimeDebug,
     sp_std::collections::btree_set::BTreeSet,
@@ -191,7 +190,7 @@ decl_module! {
                         if <OrdersByField>::contains_key(field.name(),field.value())
                         {
                             index_arr = <OrdersByField>::get(field.name(),field.value());
-                if(!index_arr.contains(&next_id))
+                if !index_arr.contains(&next_id)
 {
                         index_arr.push(next_id);
         <OrdersByField>::mutate(field.name(),field.value(), |arr|{*arr=index_arr});

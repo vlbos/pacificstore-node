@@ -3,39 +3,27 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "512"]
 
-use codec::{Decode, Encode};
-use core::convert::TryInto;
 use core::result::Result;
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-// use sp_std::convert::{TryFrom, TryInto};
-use sp_std::if_std;
+
+// use sp_std::if_std;
 
 use frame_support::{
-    debug, decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{DispatchError, DispatchResult, DispatchResultWithPostInfo},
-    ensure,
-    sp_io::hashing::keccak_256,
+    decl_module, decl_storage,
+    dispatch::{ DispatchResult},
     sp_runtime::{
-        print,
         traits::{
-            DispatchInfoOf, Dispatchable, IdentifyAccount, Member, PostDispatchInfoOf, Printable,
-            SaturatedConversion, Saturating, SignedExtension, Verify, Zero,
+       Zero,
         },
-        MultiSignature, RuntimeDebug,
     },
-    sp_std::collections::btree_set::BTreeSet,
     sp_std::prelude::*,
     traits::{
-        Currency, ExistenceRequirement::AllowDeath, Get, LockableCurrency, Randomness,
-        ReservableCurrency,
+        Currency
     },
 };
 
 // use sp_runtime::{generic, MultiSignature, traits::{Verify, BlakeTwo256, IdentifyAccount}};
 
 // traits::EnsureOrigin,
-use balances::Call as BalancesCall;
 use frame_system::{self as system, ensure_signed};
 
 // use sp_core::H256;
@@ -51,15 +39,12 @@ mod types;
 pub use crate::types::*;
 
 pub mod utils;
-use crate::utils::*;
 use crate::utils::Error;
 use crate::utils::BalanceOf;
 
 pub mod sale_kind_interface;
-use crate::sale_kind_interface::*;
 
 pub mod exchange_core;
-use crate::exchange_core::*;
 pub use crate::exchange_core::Event;
 //exchange core
 

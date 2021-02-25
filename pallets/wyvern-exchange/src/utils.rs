@@ -1,38 +1,27 @@
 //! # Substrate Enterprise Sample - OrderType Post example pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![recursion_limit = "512"]
 
-use codec::{Decode, Encode};
 use core::convert::TryInto;
 use core::result::Result;
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-// use sp_std::convert::{TryFrom, TryInto};
-use sp_std::if_std;
+
+// use sp_std::if_std;
 
 use frame_support::{
-    debug, decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{DispatchError, DispatchResult, DispatchResultWithPostInfo},
+     decl_error,  decl_module,
     ensure,
-    sp_io::hashing::keccak_256,
     sp_runtime::{
-        print,
         traits::{
-            DispatchInfoOf, Dispatchable, IdentifyAccount, Member, PostDispatchInfoOf, Printable,
-            SaturatedConversion, Saturating, SignedExtension, Verify, Zero,
+             Zero,
         },
-        MultiSignature, RuntimeDebug,
     },
-    sp_std::collections::btree_set::BTreeSet,
     sp_std::prelude::*,
     traits::{
-        Currency, ExistenceRequirement::AllowDeath, Get, LockableCurrency, Randomness,
+        Currency,  LockableCurrency, 
         ReservableCurrency,
     },
 };
-use balances::Call as BalancesCall;
-use frame_system::{self as system, ensure_signed};
+use frame_system::{self as system};
 pub type BalanceOf<T> = <<T as Trait>::Currency as Currency<<T as system::Trait>::AccountId>>::Balance;
 
 use crate::types::*;
@@ -110,7 +99,6 @@ impl<T: Trait> Module<T> {
 
     //
     //Test if two arrays are equal
-    //Source: https://github.com/GNSPS/solidity-Vec<u8>-utils/blob/master/contracts/BytesLib.sol
     //#dev Arrays must be of equal length, otherwise will return false
     //#param a First array
     //#param b Second array

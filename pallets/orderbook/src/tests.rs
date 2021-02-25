@@ -4,21 +4,21 @@ use super::*;
 use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok, dispatch};
 
-pub fn store_test_order<T: Trait>(order_id: OrderId, owner: T::AccountId, registered: T::Moment) {
-    let index = 1;
-    Orders::<T>::insert(
-        index,
-        OrderJSONType {
-            index,
-            order_id,
-            owner,
-            registered,
-            fields: None,
-        },
-    );
-}
+// pub fn store_test_order<T: Trait>(order_id: OrderId, owner: T::AccountId, registered: T::Moment) {
+//     let index = 1;
+//     Orders::<T>::insert(
+//         index,
+//         OrderJSONType {
+//             index,
+//             order_id,
+//             owner,
+//             registered,
+//             fields: None,
+//         },
+//     );
+// }
 
-pub fn store_test_orderi<T: Trait>(order_id: OrderId, owner: T::AccountId, registered: T::Moment) {
+pub fn store_test_orderi<T: Trait>(order_id: OrderId) {
     let index = 1;
     Orderi::insert(
 order_id,
@@ -301,7 +301,7 @@ fn create_order_with_existing_id() {
         let existing_order = TEST_ORDER_ID.as_bytes().to_owned();
         let now = 42;
 
-        store_test_orderi::<Test>(existing_order.clone(), account_key(TEST_ORGANIZATION), now);
+        store_test_orderi::<Test>(existing_order.clone());
 
         assert_noop!(
             Orderbook::post_order(
