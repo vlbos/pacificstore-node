@@ -1,15 +1,14 @@
-# Substrate Product Registry pallet
+# Pacific Store Wyvern Exchange  pallet
 
 The Product Registry pallet provides functionality for registering and managing master data (aka class-level) about products / trade items exchanged in a supply chain between various stakeholders. This data is typically registered once by the product's manufacturer / supplier to be shared with other network participants.
 
 When this pallet is added to a Subtrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Product Registry pallet as a reference for known products and their owning organizations.
 
-This pallet is part of the [Substrate Enterprise sample](https://github.com/gautamdhameja/substrate-enterprise-sample).
+This pallet is part of the [Pacific-store-node](https://github.com/vlbos/pacific-store-node).
 
 It is inspired by existing projects & standards:
-- [IBM Food Trust](https://github.com/IBM/IFT-Developer-Zone/wiki/APIs)
-- [Hyperledger Grid](https://www.hyperledger.org/use/grid)
-- [GS1 Standards](https://www.gs1.org/standards)
+- [Opensea js](https://github.com/ProjectOpenSea/opensea-js)
+- [Wyvern Ethereum](https://github.com/ProjectOpenSea/wyvern-js/blob/master/src/wyvern-ethereum/contracts/exchange/ExchangeCore.sol)
 
 NOTE: This pallet implements the aforementionned process in a simplified way, thus it is intended for demonstration purposes and is not audited or ready for production use.
 
@@ -48,9 +47,9 @@ Run the tests with:
 To add this pallet to your runtime, simply include the following to your runtime's `Cargo.toml` file:
 
 ```TOML
-[dependencies.product-registry]
+[dependencies.wyvern-exchange]
 default_features = false
-package = 'pallet-product-registry'
+package = 'pallet-wyvern-exchange'
 version = '2.0.0'
 ```
 
@@ -59,7 +58,7 @@ and update your runtime's `std` feature to include this pallet:
 ```TOML
 std = [
     # --snip--
-    'product-registry/std',
+    'wyvern-exchange/std',
 ]
 ```
 
@@ -68,7 +67,7 @@ std = [
 You should implement it's trait like so:
 
 ```rust
-impl product_registry::Trait for Runtime {
+impl wyvern_exchange::Trait for Runtime {
 	type Event = Event;
 	type CreateRoleOrigin = Origin;
 }
@@ -77,7 +76,7 @@ impl product_registry::Trait for Runtime {
 and include it in your `construct_runtime!` macro:
 
 ```rust
-ProductRegistry: product_registry::{Module, Call, Storage, Event<T>},
+WyvernExchange: wyvern_exchange::{Module, Call, Storage, Event<T>},
 ```
 
 ### Genesis Configuration

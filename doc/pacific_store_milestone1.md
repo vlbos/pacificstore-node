@@ -87,7 +87,7 @@ It is inspired by existing projects & standards:
 
 - [Opensea js](https://github.com/ProjectOpenSea/opensea-js)
 - [Wyvern Ethereum](https://github.com/ProjectOpenSea/wyvern-js/blob/master/src/wyvern-ethereum/contracts/exchange/ExchangeCore.sol)
-- [Substrate Enterprise Sample](https://github.com/substrate-developer-hub/substrate-enterprise-sample)
+
 
 
 NOTE: This pallet implements the aforementionned process in a simplified way, thus it is intended for demonstration purposes and is not audited or ready for production use.
@@ -97,3 +97,4 @@ NOTE: This pallet implements the aforementionned process in a simplified way, th
 This project was forked from
 [the Substrate DevHub Node Template](https://github.com/substrate-developer-hub/substrate-node-template).
 [the Substrate DevHub Front-end Template](https://github.com/substrate-developer-hub/substrate-front-end-template)
+[Substrate Enterprise Sample](https://github.com/substrate-developer-hub/substrate-enterprise-sample)

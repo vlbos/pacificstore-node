@@ -10,6 +10,7 @@ use frame_support::{
     sp_std::collections::btree_set::BTreeSet,
     sp_std::prelude::*,
 };
+
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 // traits::EnsureOrigin,
@@ -21,97 +22,103 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-// General constraints to limit data size
-// Note: these could also be passed as trait config parameters
-pub const ORDER_ID_MAX_LENGTH: usize = 36;
-pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
-pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400; 
-pub const ORDER_MAX_FIELDS: usize = 54;
+mod types;
+pub use crate::types::*;
 
-// Custom types
-pub type OrderId = Vec<u8>;
-pub type FieldName = Vec<u8>;
-pub type FieldValue = Vec<u8>;
+mod builders;
+use crate::builders::*;
 
-// Order contains master data (aka class-level) about a trade item.
-// This data is typically registered once by the order's manufacturer / supplier,
-// to be shared with other network participants, and remains largely static.
-// It can also be used for instance-level (lot) master data.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct OrderJSONType<AccountId, Moment> {
-    index: u64,
-    // The order ID would typically be a GS1 GTIN (Global Trade Item Number),
-    // or ASIN (Amazon Standard Identification Number), or similar,
-    // a numeric or alpha-numeric code with a well-defined data structure.
-    order_id: OrderId,
-    // This is account that represents the owner of this order, as in
-    // the manufacturer or supplier providing this order within the value chain.
-    owner: AccountId,
-    // This a series of fields describing the order.
-    // Typically, there would at least be a textual description, and SKU(Stock-keeping unit).
-    // It could also contain instance / lot master data e.g. expiration, weight, harvest date.
-    fields: Option<Vec<OrderField>>,
-    // Timestamp (approximate) at which the Order was registered on-chain.
-    registered: Moment,
-}
+// // General constraints to limit data size
+// // Note: these could also be passed as trait config parameters
+// pub const ORDER_ID_MAX_LENGTH: usize = 36;
+// pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
+// pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400; 
+// pub const ORDER_MAX_FIELDS: usize = 54;
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct OrderQuery<AccountId> {
-    limit: Option<u64>,
-    offset: Option<u64>,
+// // Custom types
+// pub type OrderId = Vec<u8>;
+// pub type FieldName = Vec<u8>;
+// pub type FieldValue = Vec<u8>;
 
-    owner: Option<AccountId>,
+// // Order contains master data (aka class-level) about a trade item.
+// // This data is typically registered once by the order's manufacturer / supplier,
+// // to be shared with other network participants, and remains largely static.
+// // It can also be used for instance-level (lot) master data.
+// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+// pub struct OrderJSONType<AccountId, Moment> {
+//     index: u64,
+//     // The order ID would typically be a GS1 GTIN (Global Trade Item Number),
+//     // or ASIN (Amazon Standard Identification Number), or similar,
+//     // a numeric or alpha-numeric code with a well-defined data structure.
+//     order_id: OrderId,
+//     // This is account that represents the owner of this order, as in
+//     // the manufacturer or supplier providing this order within the value chain.
+//     owner: AccountId,
+//     // This a series of fields describing the order.
+//     // Typically, there would at least be a textual description, and SKU(Stock-keeping unit).
+//     // It could also contain instance / lot master data e.g. expiration, weight, harvest date.
+//     fields: Option<Vec<OrderField>>,
+//     // Timestamp (approximate) at which the Order was registered on-chain.
+//     registered: Moment,
+// }
 
-    token_ids: Option<Vec<OrderId>>,
+// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+// pub struct OrderQuery<AccountId> {
+//     limit: Option<u64>,
+//     offset: Option<u64>,
 
-    params: Option<Vec<OrderField>>,
-}
+//     owner: Option<AccountId>,
 
-//   owner?: string,
-//   sale_kind?: SaleKind,
-//   asset_contract_address?: string,
-//   payment_token_address?: string,
-//   is_english?: boolean
-//   is_expired?: boolean
-//   bundled?: boolean
-//   include_invalid?: boolean
-//   token_id?: number | string
-//   token_ids?: Array<number | string>
-//   // This means listing_time > value in seconds
-//   listed_after?: number | string
-//   // This means listing_time <= value in seconds
-//   listed_before?: number | string
-//   limit?: number
-//   offset?: number
+//     token_ids: Option<Vec<OrderId>>,
 
-// Contains a name-value pair for a order fielderty e.g. description: Ingredient ABC
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-pub struct OrderField {
-    // Name of the order fielderty e.g. desc or description
-    name: FieldName,
-    // Value of the order fielderty e.g. Ingredient ABC
-    value: FieldValue,
-}
+//     params: Option<Vec<OrderField>>,
+// }
 
-impl OrderField {
-    pub fn new(name: &[u8], value: &[u8]) -> Self {
-        Self {
-            name: name.to_vec(),
-            value: value.to_vec(),
-        }
-    }
+// //   owner?: string,
+// //   sale_kind?: SaleKind,
+// //   asset_contract_address?: string,
+// //   payment_token_address?: string,
+// //   is_english?: boolean
+// //   is_expired?: boolean
+// //   bundled?: boolean
+// //   include_invalid?: boolean
+// //   token_id?: number | string
+// //   token_ids?: Array<number | string>
+// //   // This means listing_time > value in seconds
+// //   listed_after?: number | string
+// //   // This means listing_time <= value in seconds
+// //   listed_before?: number | string
+// //   limit?: number
+// //   offset?: number
 
-    pub fn name(&self) -> &[u8] {
-        self.name.as_ref()
-    }
+// // Contains a name-value pair for a order fielderty e.g. description: Ingredient ABC
+// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+// pub struct OrderField {
+//     // Name of the order fielderty e.g. desc or description
+//     name: FieldName,
+//     // Value of the order fielderty e.g. Ingredient ABC
+//     value: FieldValue,
+// }
 
-    pub fn value(&self) -> &[u8] {
-        self.value.as_ref()
-    }
-}
+// impl OrderField {
+//     pub fn new(name: &[u8], value: &[u8]) -> Self {
+//         Self {
+//             name: name.to_vec(),
+//             value: value.to_vec(),
+//         }
+//     }
+
+//     pub fn name(&self) -> &[u8] {
+//         self.name.as_ref()
+//     }
+
+//     pub fn value(&self) -> &[u8] {
+//         self.value.as_ref()
+//     }
+// }
 
 pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
@@ -357,60 +364,60 @@ impl<T: Trait> Module<T> {
     }
 }
 
-// fn accounts() -> BTreeSet<T::AccountId> {
-// 		Self::members().into_iter().collect::<BTreeSet<_>>()
-// 	}
+// // fn accounts() -> BTreeSet<T::AccountId> {
+// // 		Self::members().into_iter().collect::<BTreeSet<_>>()
+// // 	}
 
-#[derive(Default)]
-pub struct OrderBuilder<AccountId, Moment>
-where
-    AccountId: Default,
-    Moment: Default,
-{
-    index: u64,
-    order_id: OrderId,
-    owner: AccountId,
-    fields: Option<Vec<OrderField>>,
-    registered: Moment,
-}
+// #[derive(Default)]
+// pub struct OrderBuilder<AccountId, Moment>
+// where
+//     AccountId: Default,
+//     Moment: Default,
+// {
+//     index: u64,
+//     order_id: OrderId,
+//     owner: AccountId,
+//     fields: Option<Vec<OrderField>>,
+//     registered: Moment,
+// }
 
-impl<AccountId, Moment> OrderBuilder<AccountId, Moment>
-where
-    AccountId: Default,
-    Moment: Default,
-{
-    pub fn index_by(mut self, index: u64) -> Self {
-        self.index = index;
-        self
-    }
+// impl<AccountId, Moment> OrderBuilder<AccountId, Moment>
+// where
+//     AccountId: Default,
+//     Moment: Default,
+// {
+//     pub fn index_by(mut self, index: u64) -> Self {
+//         self.index = index;
+//         self
+//     }
 
-    pub fn identified_by(mut self, order_id: OrderId) -> Self {
-        self.order_id = order_id;
-        self
-    }
+//     pub fn identified_by(mut self, order_id: OrderId) -> Self {
+//         self.order_id = order_id;
+//         self
+//     }
 
-    pub fn owned_by(mut self, owner: AccountId) -> Self {
-        self.owner = owner;
-        self
-    }
+//     pub fn owned_by(mut self, owner: AccountId) -> Self {
+//         self.owner = owner;
+//         self
+//     }
 
-    pub fn with_fields(mut self, fields: Option<Vec<OrderField>>) -> Self {
-        self.fields = fields;
-        self
-    }
+//     pub fn with_fields(mut self, fields: Option<Vec<OrderField>>) -> Self {
+//         self.fields = fields;
+//         self
+//     }
 
-    pub fn registered_on(mut self, registered: Moment) -> Self {
-        self.registered = registered;
-        self
-    }
+//     pub fn registered_on(mut self, registered: Moment) -> Self {
+//         self.registered = registered;
+//         self
+//     }
 
-    pub fn build(self) -> OrderJSONType<AccountId, Moment> {
-        OrderJSONType::<AccountId, Moment> {
-            index: self.index,
-            order_id: self.order_id,
-            owner: self.owner,
-            fields: self.fields,
-            registered: self.registered,
-        }
-    }
-}
+//     pub fn build(self) -> OrderJSONType<AccountId, Moment> {
+//         OrderJSONType::<AccountId, Moment> {
+//             index: self.index,
+//             order_id: self.order_id,
+//             owner: self.owner,
+//             fields: self.fields,
+//             registered: self.registered,
+//         }
+//     }
+// }
