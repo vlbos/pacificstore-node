@@ -8,17 +8,8 @@ use core::result::Result;
 // use sp_std::if_std;
 
 use frame_support::{
-    decl_module, decl_storage,
-    dispatch::{ DispatchResult},
-    sp_runtime::{
-        traits::{
-       Zero,
-        },
-    },
-    sp_std::prelude::*,
-    traits::{
-        Currency
-    },
+    decl_module, decl_storage, dispatch::DispatchResult, sp_runtime::traits::Zero,
+    sp_std::prelude::*, traits::Currency,
 };
 
 // use sp_runtime::{generic, MultiSignature, traits::{Verify, BlakeTwo256, IdentifyAccount}};
@@ -38,17 +29,20 @@ mod tests;
 mod types;
 pub use crate::types::*;
 
-pub mod utils;
-use crate::utils::Error;
-use crate::utils::BalanceOf;
+pub mod exchange_common;
+use crate::exchange_common::BalanceOf;
+use crate::exchange_common::Error;
 
 pub mod sale_kind_interface;
-
 pub mod exchange_core;
 pub use crate::exchange_core::Event;
-//exchange core
 
-pub trait Trait: system::Trait + timestamp::Trait+ exchange_core::Trait+ sale_kind_interface::Trait+ utils::Trait {
+
+//exchange core
+//system::Trait + timestamp::Trait +
+pub trait Trait:
+     exchange_core::Trait + sale_kind_interface::Trait
+{
     // type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     // type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
     // type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
@@ -183,7 +177,7 @@ decl_module! {
 
 
 //
-//#dev Call approve_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
+// Call approve_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
 //
 #[weight = 10_000]
     pub fn approve_order_ex(origin,
@@ -199,7 +193,7 @@ decl_module! {
         orderbook_inclusion_desired: bool,
     ) -> DispatchResult {
 let _user = ensure_signed(origin.clone())?;
-        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = <utils::Module<T>>::build_order_type_arr(
+        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = <exchange_common::Module<T>>::build_order_type_arr(
             addrs,
             uints,
             fee_method,
@@ -214,7 +208,7 @@ let _user = ensure_signed(origin.clone())?;
     }
 
 //
-//#dev Call cancel_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
+// Call cancel_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
 //
 #[weight = 10_000]
     pub fn cancel_order_ex(
@@ -233,7 +227,7 @@ let _user = ensure_signed(origin.clone())?;
 let _user = ensure_signed(origin.clone())?;
         <exchange_core::Module<T>>::cancel_order(
             origin,
-            &<utils::Module<T>>::build_order_type_arr(
+            &<exchange_common::Module<T>>::build_order_type_arr(
                 addrs,
                 uints,
                 fee_method,
@@ -249,7 +243,7 @@ let _user = ensure_signed(origin.clone())?;
     }
 
 //
-//#dev Call atomic_match - Solidity ABI encoding workaround:limitation, hopefully temporary.
+// Call atomic_match - Solidity ABI encoding workaround:limitation, hopefully temporary.
 //
 #[weight = 10_000]
     pub fn atomic_match_ex(
@@ -269,7 +263,7 @@ let _user = ensure_signed(origin.clone())?;
 
         let _user = ensure_signed(origin)?;
 
-        let bs = <utils::Module<T>>::build_order_type_arr2(
+        let bs = <exchange_common::Module<T>>::build_order_type_arr2(
             addrs,
             uints,
             &fee_methods_sides_kinds_how_to_calls,
@@ -294,8 +288,8 @@ let _user = ensure_signed(origin.clone())?;
 
 //     //exchange core
 // //
-// //#dev Change the minimum maker fee paid to the protocol (only:owner)
-// //#param newMinimumMakerProtocolFee New fee to set in basis points
+// // Change the minimum maker fee paid to the protocol (only:owner)
+// // newMinimumMakerProtocolFee New fee to set in basis points
 // //
 // #[weight = 10_000]
 //     pub fn change_minimum_maker_protocol_fee(
@@ -315,8 +309,8 @@ let _user = ensure_signed(origin.clone())?;
 //     }
 
 // //
-// //#dev Change the minimum taker fee paid to the protocol (only:owner)
-// //#param new_minimum_taker_protocol_fee New fee to set in basis points
+// // Change the minimum taker fee paid to the protocol (only:owner)
+// // new_minimum_taker_protocol_fee New fee to set in basis points
 // //
 // #[weight = 10_000]
 //     pub fn change_minimum_taker_protocol_fee(
@@ -333,8 +327,8 @@ let _user = ensure_signed(origin.clone())?;
 //     }
 
 // //
-// //#dev Change the protocol fee recipient (only:owner)
-// //#param new_protocol_fee_recipient New protocol fee recipient AccountId
+// // Change the protocol fee recipient (only:owner)
+// // new_protocol_fee_recipient New protocol fee recipient AccountId
 // //
 // #[weight = 10_000]
 // pub fn change_protocol_fee_recipient(
@@ -354,9 +348,9 @@ let _user = ensure_signed(origin.clone())?;
  }
 }
 
-impl<T: Trait> Module<T> {
 
-    // #dev Call calculate_final_price - library exposed for testing.
+impl<T: Trait> Module<T> {
+    //  Call calculate_final_price - library exposed for testing.
     pub fn calculate_final_price_ex(
         side: Side,
         sale_kind: SaleKind,
@@ -366,7 +360,7 @@ impl<T: Trait> Module<T> {
         expiration_time: T::Moment,
     ) -> u64 {
         let mut base_pricex: BalanceOf<T> = Zero::zero();
-        if let Some(base_price) = <utils::Module<T>>::u64_to_balance_option(base_price) {
+        if let Some(base_price) = <exchange_common::Module<T>>::u64_to_balance_option(base_price) {
             base_pricex = base_price;
         }
 
@@ -380,7 +374,7 @@ impl<T: Trait> Module<T> {
         )
         .unwrap();
         let mut bb: u64 = 0;
-        if let Some(bbb) = <utils::Module<T>>::balance_to_u64_option(b) {
+        if let Some(bbb) = <exchange_common::Module<T>>::balance_to_u64_option(b) {
             bb = bbb;
         }
 
@@ -388,7 +382,7 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Call hash_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call hash_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
     pub fn hash_order_ex(
         addrs: Vec<T::AccountId>,
@@ -401,7 +395,7 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
-        <exchange_core::Module<T>>::hash_order(&<utils::Module<T>>::build_order_type_arr(
+        <exchange_core::Module<T>>::hash_order(&<exchange_common::Module<T>>::build_order_type_arr(
             addrs,
             uints,
             fee_method,
@@ -415,7 +409,7 @@ impl<T: Trait> Module<T> {
         .unwrap()
     }
 
-    //#dev Call hash_to_sign - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call hash_to_sign - Solidity ABI encoding workaround:limitation, hopefully temporary.
 
     pub fn hash_to_sign_ex(
         addrs: Vec<T::AccountId>,
@@ -428,7 +422,7 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
-        <exchange_core::Module<T>>::hash_to_sign(&<utils::Module<T>>::build_order_type_arr(
+        <exchange_core::Module<T>>::hash_to_sign(&<exchange_common::Module<T>>::build_order_type_arr(
             addrs,
             uints,
             fee_method,
@@ -443,7 +437,7 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Call validate_order_parameters - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call validate_order_parameters - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
 
     pub fn validate_order_parameters_ex(
@@ -457,22 +451,23 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> bool {
-        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = <utils::Module<T>>::build_order_type_arr(
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            &calldata,
-            &replacement_pattern,
-            &static_extradata,
-        );
+        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+            <exchange_common::Module<T>>::build_order_type_arr(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            );
         <exchange_core::Module<T>>::validate_order_parameters(&order).unwrap()
     }
 
     //
-    //#dev Call validate_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call validate_order - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
 
     pub fn validate_order_ex(
@@ -487,22 +482,28 @@ impl<T: Trait> Module<T> {
         static_extradata: Vec<u8>,
         sig: T::Signature,
     ) -> bool {
-        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = <utils::Module<T>>::build_order_type_arr(
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            &calldata,
-            &replacement_pattern,
-            &static_extradata,
-        );
-        <exchange_core::Module<T>>::validate_order(&<exchange_core::Module<T>>::hash_to_sign(&order).unwrap(), &order, &sig).unwrap()
+        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+            <exchange_common::Module<T>>::build_order_type_arr(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            );
+        <exchange_core::Module<T>>::validate_order(
+            &<exchange_core::Module<T>>::hash_to_sign(&order).unwrap(),
+            &order,
+            &sig,
+        )
+        .unwrap()
     }
 
     //
-    //#dev Call calculate_current_price - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call calculate_current_price - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
 
     pub fn calculate_current_price_ex(
@@ -516,21 +517,23 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> u64 {
-        let b = <exchange_core::Module<T>>::calculate_current_price(&<utils::Module<T>>::build_order_type_arr(
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            &calldata,
-            &replacement_pattern,
-            &static_extradata,
-        ))
+        let b = <exchange_core::Module<T>>::calculate_current_price(
+            &<exchange_common::Module<T>>::build_order_type_arr(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            ),
+        )
         .unwrap();
 
         let mut bb: u64 = 0;
-        if let Some(bbb) =  <utils::Module<T>>::balance_to_u64_option(b) {
+        if let Some(bbb) = <exchange_common::Module<T>>::balance_to_u64_option(b) {
             bb = bbb;
         }
 
@@ -538,7 +541,7 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Call orders_can_match - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call orders_can_match - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
 
     pub fn orders_can_match_ex(
@@ -552,7 +555,7 @@ impl<T: Trait> Module<T> {
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
     ) -> bool {
-        let bs = <utils::Module<T>>::build_order_type_arr2(
+        let bs = <exchange_common::Module<T>>::build_order_type_arr2(
             addrs,
             uints,
             &fee_methods_sides_kinds_how_to_calls,
@@ -567,11 +570,11 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Return whether or not two orders' calldata specifications can match
-    //#param buy_calldata Buy-side order calldata
-    //#param buy_replacement_pattern Buy-side order calldata replacement mask
-    //#param sell_calldata Sell-side order calldata
-    //#param sell_replacement_pattern Sell-side order calldata replacement mask
+    // Return whether or not two orders' calldata specifications can match
+    // buy_calldata Buy-side order calldata
+    // buy_replacement_pattern Buy-side order calldata replacement mask
+    // sell_calldata Sell-side order calldata
+    // sell_replacement_pattern Sell-side order calldata replacement mask
     //#return Whether the orders' calldata can be matched
     //
 
@@ -584,27 +587,27 @@ impl<T: Trait> Module<T> {
         let mut tmpbuy_calldata = buy_calldata.clone();
         let mut tmpsell_calldata = sell_calldata.clone();
         if buy_replacement_pattern.len() > 0 {
-            let _r = <utils::Module<T>>::guarded_array_replace(
+              <exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpbuy_calldata,
                 &sell_calldata,
                 &buy_replacement_pattern,
-            );
+            )?;
             // ensure!(r.is_ok(),Error::<T>::OrderIdMissing);
         }
         if sell_replacement_pattern.len() > 0 {
-            let _r = <utils::Module<T>>::guarded_array_replace(
+             <exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpsell_calldata,
                 &buy_calldata,
                 &sell_replacement_pattern,
-            );
+            )?;
             // ensure!(r.is_ok(),Error::<T>::OrderIdMissing);
         }
 
-        <utils::Module<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata)
+        Ok(<exchange_common::Module<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata))
     }
 
     //
-    //#dev Call calculate_match_price - Solidity ABI encoding workaround:limitation, hopefully temporary.
+    // Call calculate_match_price - Solidity ABI encoding workaround:limitation, hopefully temporary.
     //
 
     pub fn calculate_match_price_ex(
@@ -618,7 +621,7 @@ impl<T: Trait> Module<T> {
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
     ) -> u64 {
-        let bs = <utils::Module<T>>::build_order_type_arr2(
+        let bs = <exchange_common::Module<T>>::build_order_type_arr2(
             addrs,
             uints,
             &fee_methods_sides_kinds_how_to_calls,
@@ -632,7 +635,7 @@ impl<T: Trait> Module<T> {
         let b = <exchange_core::Module<T>>::calculate_match_price(&bs[0], &bs[1]).unwrap();
 
         let mut bb: u64 = 0;
-        if let Some(bbb) = <utils::Module<T>>::balance_to_u64_option(b) {
+        if let Some(bbb) = <exchange_common::Module<T>>::balance_to_u64_option(b) {
             bb = bbb;
         }
 
@@ -640,31 +643,31 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Transfer tokens
-    //#param token Token to transfer
-    //#param from AccountId to charge fees
-    //#param to AccountId to receive fees
-    //#param amount Amount of protocol tokens to charge
-    //
-    pub fn transfer_tokens(
-        _token: &T::AccountId,
-        _from: &T::AccountId,
-        _to: &T::AccountId,
-        _amount: BalanceOf<T>,
-    ) -> Result<(), Error<T>> {
-        if _amount > Zero::zero() {
-            // ensure!(TokenTransferProxy.transferFrom(token, from, to, amount), Error::<T>::OrderIdMissing);
-            // let _a = _amount as u128;
-            // let balance_amount = BalanceOf::<T>::zero();// _a.try_into().map_err(|_| ());
-            let _ = T::Currency::transfer(
-                &_from,
-                &_to,
-                _amount,
-                frame_support::traits::ExistenceRequirement::AllowDeath,
-            );
-        }
-        Ok(())
-    }
+    // // Transfer tokens
+    // // token Token to transfer
+    // // from AccountId to charge fees
+    // // to AccountId to receive fees
+    // // amount Amount of protocol tokens to charge
+    // //
+    // pub fn transfer_tokens(
+    //     _token: &T::AccountId,
+    //     _from: &T::AccountId,
+    //     _to: &T::AccountId,
+    //     _amount: BalanceOf<T>,
+    // ) -> Result<(), Error<T>> {
+    //     if _amount > Zero::zero() {
+    //         // ensure!(TokenTransferProxy.transferFrom(token, from, to, amount), Error::<T>::OrderIdMissing);
+    //         // let _a = _amount as u128;
+    //         // let balance_amount = BalanceOf::<T>::zero();// _a.try_into().map_err(|_| ());
+    //         let _ = T::Currency::transfer(
+    //             &_from,
+    //             &_to,
+    //             _amount,
+    //             frame_support::traits::ExistenceRequirement::AllowDeath,
+    //         );
+    //     }
+    //     Ok(())
+    // }
 
     // pub fn transfer_tokens_fee(
     //     _token: &T::AccountId,
@@ -707,10 +710,10 @@ impl<T: Trait> Module<T> {
     //     Ok(())
     // }
 
-    // //#dev Charge a fee in protocol tokens
-    // //#param from AccountId to charge fees
-    // //#param to AccountId to receive fees
-    // //#param amount Amount of protocol tokens to charge
+    // // Charge a fee in protocol tokens
+    // // from AccountId to charge fees
+    // // to AccountId to receive fees
+    // // amount Amount of protocol tokens to charge
     // //
     // pub fn charge_protocol_fee(
     //     from: &T::AccountId,
@@ -721,8 +724,8 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Hash an order, returning the canonical order hash, without the message prefix
-    // //#param order OrderType to hash
+    // // Hash an order, returning the canonical order hash, without the message prefix
+    // // order OrderType to hash
     // //#return Hash of order
     // //
     // pub fn hash_order(
@@ -737,8 +740,8 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Hash an order, returning the hash that a client must sign, including the standard message prefix
-    // //#param order OrderType to hash
+    // // Hash an order, returning the hash that a client must sign, including the standard message prefix
+    // // order OrderType to hash
     // //#return Hash of message prefix and order hash per Ethereum format
     // //
     // pub fn hash_to_sign(
@@ -748,9 +751,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Assert an order is valid and return its hash
-    // //#param order OrderType to validate
-    // //#param sig ECDSA signature
+    // // Assert an order is valid and return its hash
+    // // order OrderType to validate
+    // // sig ECDSA signature
     // //
     // pub fn require_valid_order(
     //     order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -765,8 +768,8 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Validate order parameters (does *not* check validity:signature)
-    // //#param order OrderType to validate
+    // // Validate order parameters (does *not* check validity:signature)
+    // // order OrderType to validate
     // //
     // pub fn validate_order_parameters(
     //     order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -794,10 +797,10 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Validate a provided previously approved / signed order, hash, and signature.
-    // //#param hash OrderType hash (calculated:already, passed to recalculation:avoid)
-    // //#param order OrderType to validate
-    // //#param sig ECDSA signature
+    // // Validate a provided previously approved / signed order, hash, and signature.
+    // // hash OrderType hash (calculated:already, passed to recalculation:avoid)
+    // // order OrderType to validate
+    // // sig ECDSA signature
     // //
     // pub fn validate_order(
     //     hash: &[u8],
@@ -853,9 +856,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-    // //#param order OrderType to approve
-    // //#param orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
+    // // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+    // // order OrderType to approve
+    // // orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
     // //
     // pub fn approve_order(
     //     origin: T::Origin,
@@ -918,9 +921,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Cancel an order, preventing it from being matched. Must be called by the maker of the order
-    // //#param order OrderType to cancel
-    // //#param sig ECDSA signature
+    // // Cancel an order, preventing it from being matched. Must be called by the maker of the order
+    // // order OrderType to cancel
+    // // sig ECDSA signature
     // //
     // pub fn cancel_order(
     //     origin: T::Origin,
@@ -946,8 +949,8 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Calculate the current price of an order (fn:convenience)
-    // //#param order OrderType to calculate the price of
+    // // Calculate the current price of an order (fn:convenience)
+    // // order OrderType to calculate the price of
     // //#return The current price of the order
     // //
     // pub fn calculate_current_price(
@@ -964,9 +967,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
-    // //#param buy Buy-side order
-    // //#param sell Sell-side order
+    // // Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
+    // // buy Buy-side order
+    // // sell Sell-side order
     // //#return Match price
     // //
     // pub fn calculate_match_price(
@@ -1010,9 +1013,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    // //#param buy Buy-side order
-    // //#param sell Sell-side order
+    // // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // // buy Buy-side order
+    // // sell Sell-side order
     // //
     // pub fn execute_funds_transfer(
     //     msg_value: BalanceOf<T>,
@@ -1255,9 +1258,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    // //#param buy Buy-side order
-    // //#param sell Sell-side order
+    // // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // // buy Buy-side order
+    // // sell Sell-side order
     // //
     // pub fn execute_funds_transfer_sell_side(
     //     buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -1339,9 +1342,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    // //#param buy Buy-side order
-    // //#param sell Sell-side order
+    // // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // // buy Buy-side order
+    // // sell Sell-side order
     // //
     // pub fn execute_funds_transfer_buy_side(
     //     buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -1417,9 +1420,9 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
-    // //#param buy Buy-side order
-    // //#param sell Sell-side order
+    // // Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
+    // // buy Buy-side order
+    // // sell Sell-side order
     // //#return Whether or not the two orders can be matched
     // //
     // pub fn orders_can_match(
@@ -1430,29 +1433,29 @@ impl<T: Trait> Module<T> {
     //     Ok((buy.side == Side::Buy && sell.side == Side::Sell) &&
     //         // Must use same fee method.
     //         (buy.fee_method == sell.fee_method) &&
-    //         // Must use same payment token. 
+    //         // Must use same payment token.
     //         (buy.payment_token == sell.payment_token) &&
-    //         // Must match maker/taker addresses. 
+    //         // Must match maker/taker addresses.
     //         (sell.taker == ContractSelf::<T>::get() || sell.taker == buy.maker) &&
     //         (buy.taker == ContractSelf::<T>::get() || buy.taker == sell.maker) &&
-    //         // One must be maker and the other must be taker (no bool XOR Solidity:in). 
+    //         // One must be maker and the other must be taker (no bool XOR Solidity:in).
     //         ((sell.fee_recipient == ContractSelf::<T>::get() && buy.fee_recipient != ContractSelf::<T>::get()) || (sell.fee_recipient != ContractSelf::<T>::get() && buy.fee_recipient == ContractSelf::<T>::get())) &&
-    //         // Must match target. 
+    //         // Must match target.
     //         (buy.target == sell.target) &&
-    //         // Must match how_to_call. 
+    //         // Must match how_to_call.
     //         (buy.how_to_call == sell.how_to_call) &&
-    //         // Buy-side order must be settleable. 
+    //         // Buy-side order must be settleable.
     //         Self::can_settle_order(buy.listing_time, buy.expiration_time)? &&
-    //         // Sell-side order must be settleable. 
+    //         // Sell-side order must be settleable.
     //         Self::can_settle_order(sell.listing_time, sell.expiration_time)?)
     // }
 
     // //
-    // //#dev Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-    // //#param buy Buy-side order
-    // //#param buy_sig Buy-side order signature
-    // //#param sell Sell-side order
-    // //#param sell_sig Sell-side order signature
+    // // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+    // // buy Buy-side order
+    // // buy_sig Buy-side order signature
+    // // sell Sell-side order
+    // // sell_sig Sell-side order signature
     // //
     // pub fn atomic_match(
     //     msg_sender: T::AccountId,
@@ -1599,9 +1602,9 @@ impl<T: Trait> Module<T> {
 
     // // sale Kind interface
     // //
-    // //#dev Check whether the parameters of a sale are valid
-    // //#param sale_kind Kind of sale
-    // //#param expiration_time OrderType expiration time
+    // // Check whether the parameters of a sale are valid
+    // // sale_kind Kind of sale
+    // // expiration_time OrderType expiration time
     // //#return Whether the parameters were valid
     // //
     // pub fn validate_parameters(
@@ -1613,10 +1616,10 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Return whether or not an order can be settled
-    // //#dev Precondition: parameters have passed validate_parameters
-    // //#param listing_time OrderType listing time
-    // //#param expiration_time OrderType expiration time
+    // // Return whether or not an order can be settled
+    // // Precondition: parameters have passed validate_parameters
+    // // listing_time OrderType listing time
+    // // expiration_time OrderType expiration time
     // //
     // pub fn can_settle_order(
     //     listing_time: T::Moment,
@@ -1637,14 +1640,14 @@ impl<T: Trait> Module<T> {
     // }
 
     // //
-    // //#dev Calculate the settlement price of an order
-    // //#dev Precondition: parameters have passed validate_parameters.
-    // //#param side OrderType side
-    // //#param sale_kind Method of sale
-    // //#param base_price OrderType base price
-    // //#param extra OrderType extra price data
-    // //#param listing_time OrderType listing time
-    // //#param expiration_time OrderType expiration time
+    // // Calculate the settlement price of an order
+    // // Precondition: parameters have passed validate_parameters.
+    // // side OrderType side
+    // // sale_kind Method of sale
+    // // base_price OrderType base price
+    // // extra OrderType extra price data
+    // // listing_time OrderType listing time
+    // // expiration_time OrderType expiration time
     // //
     // pub fn calculate_final_price(
     //     side: &Side,
@@ -1674,10 +1677,10 @@ impl<T: Trait> Module<T> {
     // //
     // //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
     // //Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model (arrays under 32 Vec<u8> will be slower)
-    // //#dev Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
-    // //#param array The original array
-    // //#param desired The target array
-    // //#param mask The mask specifying which bits can be changed
+    // // Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
+    // // array The original array
+    // // desired The target array
+    // // mask The mask specifying which bits can be changed
     // //#return The updated byte array (the parameter will be modified inplace)
     // //
     // pub fn guarded_array_replace(
@@ -1703,10 +1706,10 @@ impl<T: Trait> Module<T> {
 
     // //
     // //Test if two arrays are equal
-    // //Source: https://github.com/GNSPS/solidity-Vec<u8>-utils/blob/master/contracts/BytesLib.sol
-    // //#dev Arrays must be of equal length, otherwise will return false
-    // //#param a First array
-    // //#param b Second array
+    // //Source: https://github.com/GNSPS/solidity-Vec<u8>-exchange_common/blob/master/contracts/BytesLib.sol
+    // // Arrays must be of equal length, otherwise will return false
+    // // a First array
+    // // b Second array
     // //#return Whether or not all Vec<u8> in the arrays are equal
     // //
     // pub fn array_eq(a: &[u8], b: &[u8]) -> Result<bool, Error<T>> {

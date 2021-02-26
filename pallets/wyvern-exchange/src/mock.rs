@@ -2,7 +2,8 @@
 
 pub use crate as wyvern_exchange;
 pub use crate::exchange_core::*;
-pub use crate::{Module,Trait};
+pub use crate::exchange_common::*;
+pub use crate::{Module, Trait};
 use core::marker::PhantomData;
 use frame_support::{
     impl_outer_event, impl_outer_origin, parameter_types,
@@ -107,13 +108,14 @@ impl Trait for Test {
     // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
-impl wyvern_exchange::utils::Trait for Test {
+impl wyvern_exchange::exchange_common::Trait for Test {
     // type Event = TestEvent;
     type Currency = Balances;
     // type Public = sr25519::Public;
     // type Signature = sr25519::Signature;
     // type CreateRoleOrigin = MockOrigin<Test>;
 }
+
 impl wyvern_exchange::sale_kind_interface::Trait for Test {
     // type Event = TestEvent;
     // type Currency = Balances;
@@ -158,7 +160,6 @@ impl<T: Trait> EnsureOrigin<T::Origin> for MockOrigin<T> {
         })
     }
 }
-
 
 pub fn create_account_test(account_id: sr25519::Public) {
     let _ = Balances::deposit_creating(&account_id, 100_000_000_000_000_000);

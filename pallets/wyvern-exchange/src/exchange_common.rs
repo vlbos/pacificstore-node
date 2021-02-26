@@ -8,21 +8,14 @@ use core::result::Result;
 // use sp_std::if_std;
 
 use frame_support::{
-     decl_error,  decl_module,
-    ensure,
-    sp_runtime::{
-        traits::{
-             Zero,
-        },
-    },
+    decl_error, decl_module, ensure,
+    sp_runtime::traits::Zero,
     sp_std::prelude::*,
-    traits::{
-        Currency,  LockableCurrency, 
-        ReservableCurrency,
-    },
+    traits::{Currency, LockableCurrency, ReservableCurrency},
 };
 use frame_system::{self as system};
-pub type BalanceOf<T> = <<T as Trait>::Currency as Currency<<T as system::Trait>::AccountId>>::Balance;
+pub type BalanceOf<T> =
+    <<T as Trait>::Currency as Currency<<T as system::Trait>::AccountId>>::Balance;
 
 use crate::types::*;
 
@@ -31,9 +24,15 @@ pub trait Trait: system::Trait + timestamp::Trait {
         + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 }
 
-decl_module! {
-    pub struct Module<T: Trait> for enum Call where origin: T::Origin {}
+// type Trait =  system::Trait + timestamp::Trait;
+
+// decl_module! {
+//     pub struct Module<T: Trait> for enum Call where origin: T::Origin {}
+// }
+pub struct Module<T: Trait> {
+a:T::AccountId,
 }
+
 
 decl_error! {
     pub enum Error for Module<T: Trait> {
@@ -70,17 +69,17 @@ impl<T: Trait> Module<T> {
     //
     //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
     //Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model (arrays under 32 Vec<u8> will be slower)
-    //#dev Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
-    //#param array The original array
-    //#param desired The target array
-    //#param mask The mask specifying which bits can be changed
+    // Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
+    // array The original array
+    // desired The target array
+    // mask The mask specifying which bits can be changed
     //#return The updated byte array (the parameter will be modified inplace)
     //
     pub fn guarded_array_replace(
         array: &mut Vec<u8>,
         desired: &[u8],
         mask: &[u8],
-    ) -> Result<bool, Error<T>> {
+    ) -> Result<(), Error<T>> {
         ensure!(
             array.len() == desired.len(),
             Error::<T>::ArraySizeNotAsSameAsDesired
@@ -94,22 +93,22 @@ impl<T: Trait> Module<T> {
             // Conceptually: array[i] = (!mask[i] && array[i]) || (mask[i] && desired[i]), bitwise in word chunks.
             array[i] = (!mask[i] & _item) | (mask[i] & desired[i]);
         }
-        Ok(true)
+        Ok(())
     }
 
     //
     //Test if two arrays are equal
-    //#dev Arrays must be of equal length, otherwise will return false
-    //#param a First array
-    //#param b Second array
+    // Arrays must be of equal length, otherwise will return false
+    // a First array
+    // b Second array
     //#return Whether or not all Vec<u8> in the arrays are equal
     //
-    pub fn array_eq(a: &[u8], b: &[u8]) -> Result<bool, Error<T>> {
+    pub fn array_eq(a: &[u8], b: &[u8]) -> bool {
         if a.len() != b.len() {
-            return Ok(false);
+            return false;
         }
 
-        Ok(a == b)
+        a == b
     }
 
     pub fn build_order_type_arr(

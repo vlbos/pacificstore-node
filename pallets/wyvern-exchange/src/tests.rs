@@ -2,8 +2,8 @@
 
 use super::*;
 use crate::{mock::*, Error};
-use frame_support::{assert_noop, assert_ok, dispatch};
 use codec::Encode;
+use frame_support::{assert_noop, assert_ok, dispatch};
 use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
@@ -292,7 +292,7 @@ fn cancel_order_ex() {
         let calldatas = calldata.to_vec().encode();
         let alice_sig = alice_pair.sign(&calldatas);
 
-        let sig = alice_sig;//Signature::default();
+        let sig = alice_sig; //Signature::default();
 
         let result = WyvernExchange::cancel_order_ex(
             Origin::signed(sender),
@@ -387,7 +387,7 @@ fn atomic_match_ex() {
 
         let _calldata_buy = calldata_buy.to_vec().encode();
         let _calldata_sell = calldata_sell.to_vec().encode();
-        let alice_sig_buy= alice_pair.sign(&_calldata_buy);
+        let alice_sig_buy = alice_pair.sign(&_calldata_buy);
         let alice_sig_sell = alice_pair.sign(&_calldata_sell);
         // let sig = alice_sig;//Signature::default();
         let sig = vec![alice_sig_buy, alice_sig_sell];
@@ -421,16 +421,16 @@ fn transfer_tokens() {
         let amount = 42;
         create_account_test(sender);
         create_account_test(sender1);
-        let result = WyvernExchange::transfer_tokens(&sender, &sender, &sender1, amount);
+        let result = ExchangeCore::transfer_tokens(&sender, &sender, &sender1, amount);
 
         assert_ok!(result);
 
         assert_eq!(
-            <Test as wyvern_exchange::utils::Trait>::Currency::free_balance(&sender),
+            <Test as wyvern_exchange::exchange_common::Trait>::Currency::free_balance(&sender),
             99999999999999958
         );
         assert_eq!(
-            <Test as wyvern_exchange::utils::Trait>::Currency::free_balance(&sender1),
+            <Test as wyvern_exchange::exchange_common::Trait>::Currency::free_balance(&sender1),
             100000000000000042
         );
         // 		assert_eq!(<Test as Config>::Currency::free_balance(&alice()), 100);

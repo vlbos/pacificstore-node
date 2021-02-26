@@ -6,26 +6,15 @@ use core::result::Result;
 
 use sp_std::if_std;
 
-use frame_support::{
-     decl_module, 
-    ensure,
-    sp_runtime::{
-        traits::{
-            Zero,
-        },
-    },
-    sp_std::prelude::*,
-};
+use frame_support::{decl_error,decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
 use frame_system::{self as system};
 
 use crate::types::*;
 
-use crate::utils;
-use crate::utils::Error;
-use crate::utils::BalanceOf;
-pub trait Trait: system::Trait + timestamp::Trait+ utils::Trait {
-
-}
+use crate::exchange_common;
+use crate::exchange_common::BalanceOf;
+use crate::exchange_common::Error;
+pub trait Trait: exchange_common::Trait  {}
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {}
@@ -35,9 +24,9 @@ decl_module! {
 impl<T: Trait> Module<T> {
     // sale Kind interface
     //
-    //#dev Check whether the parameters of a sale are valid
-    //#param sale_kind Kind of sale
-    //#param expiration_time OrderType expiration time
+    // Check whether the parameters of a sale are valid
+    // sale_kind Kind of sale
+    // expiration_time OrderType expiration time
     //#return Whether the parameters were valid
     //
     pub fn validate_parameters(
@@ -49,10 +38,10 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Return whether or not an order can be settled
-    //#dev Precondition: parameters have passed validate_parameters
-    //#param listing_time OrderType listing time
-    //#param expiration_time OrderType expiration time
+    // Return whether or not an order can be settled
+    // Precondition: parameters have passed validate_parameters
+    // listing_time OrderType listing time
+    // expiration_time OrderType expiration time
     //
     pub fn can_settle_order(
         listing_time: T::Moment,
@@ -73,14 +62,14 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Calculate the settlement price of an order
-    //#dev Precondition: parameters have passed validate_parameters.
-    //#param side OrderType side
-    //#param sale_kind Method of sale
-    //#param base_price OrderType base price
-    //#param extra OrderType extra price data
-    //#param listing_time OrderType listing time
-    //#param expiration_time OrderType expiration time
+    // Calculate the settlement price of an order
+    // Precondition: parameters have passed validate_parameters.
+    // side OrderType side
+    // sale_kind Method of sale
+    // base_price OrderType base price
+    // extra OrderType extra price data
+    // listing_time OrderType listing time
+    // expiration_time OrderType expiration time
     //
     pub fn calculate_final_price(
         side: &Side,
@@ -97,10 +86,10 @@ impl<T: Trait> Module<T> {
             let diff: T::Moment = extra * (now - listing_time) / (expiration_time - listing_time);
             if *side == Side::Sell {
                 // Sell-side - start price: base_price. End price: base_price - extra.
-                Ok(base_price - <utils::Module<T>>::moment_to_balance(&diff))
+                Ok(base_price - <exchange_common::Module<T>>::moment_to_balance(&diff))
             } else {
                 // Buy-side - start price: base_price. End price: base_price + extra.
-                Ok(base_price - <utils::Module<T>>::moment_to_balance(&diff))
+                Ok(base_price - <exchange_common::Module<T>>::moment_to_balance(&diff))
             }
         } else {
             Ok(Zero::zero())

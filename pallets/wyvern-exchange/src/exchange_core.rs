@@ -5,42 +5,35 @@
 use codec::{Decode, Encode};
 use core::result::Result;
 
-
 use frame_support::{
-    debug,  decl_event, decl_module, decl_storage,
-    dispatch::{DispatchResult},
+    debug, decl_event, decl_module, decl_storage,
+    dispatch::DispatchResult,
     ensure,
     sp_io::hashing::keccak_256,
     sp_runtime::{
         print,
-        traits::{
-             IdentifyAccount, Member, 
-             Verify, Zero,
-        },
-        
+        traits::{IdentifyAccount, Member, Verify, Zero},
     },
     sp_std::prelude::*,
-    traits::{
-        Currency, 
-    },
+    traits::{Currency, LockableCurrency, ReservableCurrency},
 };
 
 use frame_system::{self as system, ensure_signed};
 
 use crate::types::*;
 
-
-use crate::utils;
-use crate::utils::Error;
-use crate::utils::BalanceOf;
 use crate::sale_kind_interface;
-
-
-
-pub trait Trait: system::Trait + timestamp::Trait+ sale_kind_interface::Trait+ utils::Trait {
+use crate::exchange_common;
+use crate::exchange_common::BalanceOf;
+use crate::exchange_common::Error;
+//  system::Trait + timestamp::Trait + sale_kind_interface::Trait +
+pub trait Trait:
+  sale_kind_interface::Trait + exchange_common::Trait
+{
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
     type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
+    // type Currency: Into<<Self as exchange_common::Trait>::Currency>;
     // type Currency: ReservableCurrency<Self::AccountId>
     //     + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 }
@@ -71,7 +64,6 @@ decl_storage! {
 
  }
 }
-
 
 decl_event!(
     pub enum Event<T>
@@ -159,78 +151,68 @@ decl_event!(
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
-        fn deposit_event() = default;
+    fn deposit_event() = default;
 
     //exchange core
-//
-//#dev Change the minimum maker fee paid to the protocol (only:owner)
-//#param newMinimumMakerProtocolFee New fee to set in basis points
-//
-#[weight = 10_000]
+    // Change the minimum maker fee paid to the protocol (only:owner)
+    // newMinimumMakerProtocolFee New fee to set in basis points
+    #[weight = 10_000]
     pub fn change_minimum_maker_protocol_fee(
-  origin,
+        origin,
         new_minimum_maker_protocol_fee: BalanceOf<T>,
     ) -> DispatchResult
     {
-// onlyOwner
+        // onlyOwner
         frame_support::debug::RuntimeLogger::init();
         debug::error!("exchange is contract self.");
 
-let _user = ensure_signed(origin)?;
+        let _user = ensure_signed(origin)?;
         MinimumMakerProtocolFee::<T>::put(new_minimum_maker_protocol_fee);
-   Self::deposit_event(RawEvent::MinimumMakerProtocolFeeChanged(new_minimum_maker_protocol_fee));
+        Self::deposit_event(RawEvent::MinimumMakerProtocolFeeChanged(new_minimum_maker_protocol_fee));
 
         Ok(())
     }
 
-//
-//#dev Change the minimum taker fee paid to the protocol (only:owner)
-//#param new_minimum_taker_protocol_fee New fee to set in basis points
-//
-#[weight = 10_000]
+    // Change the minimum taker fee paid to the protocol (only:owner)
+    // new_minimum_taker_protocol_fee New fee to set in basis points
+    #[weight = 10_000]
     pub fn change_minimum_taker_protocol_fee(
-  origin,
+        origin,
         new_minimum_taker_protocol_fee: BalanceOf<T>,
     ) -> DispatchResult {
         // onlyOwner
-let _user = ensure_signed(origin)?;
+        let _user = ensure_signed(origin)?;
 
         MinimumTakerProtocolFee::<T>::put(new_minimum_taker_protocol_fee);
-           Self::deposit_event(RawEvent::MinimumTakerProtocolFeeChanged(new_minimum_taker_protocol_fee));
+        Self::deposit_event(RawEvent::MinimumTakerProtocolFeeChanged(new_minimum_taker_protocol_fee));
 
-Ok(())
+        Ok(())
     }
 
-//
-//#dev Change the protocol fee recipient (only:owner)
-//#param new_protocol_fee_recipient New protocol fee recipient AccountId
-//
-#[weight = 10_000]
-pub fn change_protocol_fee_recipient(
-origin,
-new_protocol_fee_recipient: T::AccountId,
-) -> DispatchResult {
-print("================");
-// onlyOwner
-let _user = ensure_signed(origin)?;
-
-ProtocolFeeRecipient::<T>::put(new_protocol_fee_recipient.clone());
-           Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(_user,new_protocol_fee_recipient.clone()));
-Ok(())
+    // Change the protocol fee recipient (only:owner)
+    // new_protocol_fee_recipient New protocol fee recipient AccountId
+    #[weight = 10_000]
+    pub fn change_protocol_fee_recipient(
+        origin,
+        new_protocol_fee_recipient: T::AccountId,
+    ) -> DispatchResult {
+        print("================");
+        // onlyOwner
+        let _user = ensure_signed(origin)?;
+        ProtocolFeeRecipient::<T>::put(new_protocol_fee_recipient.clone());
+        Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(_user,new_protocol_fee_recipient.clone()));
+        Ok(())
+    }
+    }
 }
-
-
- }
-}
-
 
 impl<T: Trait> Module<T> {
     //
-    //#dev Transfer tokens
-    //#param token Token to transfer
-    //#param from AccountId to charge fees
-    //#param to AccountId to receive fees
-    //#param amount Amount of protocol tokens to charge
+    // Transfer tokens
+    // token Token to transfer
+    // from AccountId to charge fees
+    // to AccountId to receive fees
+    // amount Amount of protocol tokens to charge
     //
     pub fn transfer_tokens(
         _token: &T::AccountId,
@@ -290,10 +272,10 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
-    //#dev Charge a fee in protocol tokens
-    //#param from AccountId to charge fees
-    //#param to AccountId to receive fees
-    //#param amount Amount of protocol tokens to charge
+    // Charge a fee in protocol tokens
+    // from AccountId to charge fees
+    // to AccountId to receive fees
+    // amount Amount of protocol tokens to charge
     //
     pub fn charge_protocol_fee(
         from: &T::AccountId,
@@ -304,8 +286,8 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Hash an order, returning the canonical order hash, without the message prefix
-    //#param order OrderType to hash
+    // Hash an order, returning the canonical order hash, without the message prefix
+    // order OrderType to hash
     //#return Hash of order
     //
     pub fn hash_order(
@@ -320,8 +302,8 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Hash an order, returning the hash that a client must sign, including the standard message prefix
-    //#param order OrderType to hash
+    // Hash an order, returning the hash that a client must sign, including the standard message prefix
+    // order OrderType to hash
     //#return Hash of message prefix and order hash per Ethereum format
     //
     pub fn hash_to_sign(
@@ -331,9 +313,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Assert an order is valid and return its hash
-    //#param order OrderType to validate
-    //#param sig ECDSA signature
+    // Assert an order is valid and return its hash
+    // order OrderType to validate
+    // sig ECDSA signature
     //
     pub fn require_valid_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -348,8 +330,8 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Validate order parameters (does *not* check validity:signature)
-    //#param order OrderType to validate
+    // Validate order parameters (does *not* check validity:signature)
+    // order OrderType to validate
     //
     pub fn validate_order_parameters(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -361,7 +343,10 @@ impl<T: Trait> Module<T> {
         }
 
         // OrderType must possess valid sale kind parameter combination.
-        if !<sale_kind_interface::Module<T>>::validate_parameters(&order.sale_kind, order.expiration_time)? {
+        if !<sale_kind_interface::Module<T>>::validate_parameters(
+            &order.sale_kind,
+            order.expiration_time,
+        )? {
             return Ok(false);
         }
 
@@ -377,10 +362,10 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Validate a provided previously approved / signed order, hash, and signature.
-    //#param hash OrderType hash (calculated:already, passed to recalculation:avoid)
-    //#param order OrderType to validate
-    //#param sig ECDSA signature
+    // Validate a provided previously approved / signed order, hash, and signature.
+    // hash OrderType hash (calculated:already, passed to recalculation:avoid)
+    // order OrderType to validate
+    // sig ECDSA signature
     //
     pub fn validate_order(
         hash: &[u8],
@@ -436,9 +421,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-    //#param order OrderType to approve
-    //#param orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
+    // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+    // order OrderType to approve
+    // orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
     //
     pub fn approve_order(
         origin: T::Origin,
@@ -501,9 +486,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Cancel an order, preventing it from being matched. Must be called by the maker of the order
-    //#param order OrderType to cancel
-    //#param sig ECDSA signature
+    // Cancel an order, preventing it from being matched. Must be called by the maker of the order
+    // order OrderType to cancel
+    // sig ECDSA signature
     //
     pub fn cancel_order(
         origin: T::Origin,
@@ -529,8 +514,8 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Calculate the current price of an order (fn:convenience)
-    //#param order OrderType to calculate the price of
+    // Calculate the current price of an order (fn:convenience)
+    // order OrderType to calculate the price of
     //#return The current price of the order
     //
     pub fn calculate_current_price(
@@ -547,9 +532,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
-    //#param buy Buy-side order
-    //#param sell Sell-side order
+    // Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
+    // buy Buy-side order
+    // sell Sell-side order
     //#return Match price
     //
     pub fn calculate_match_price(
@@ -593,9 +578,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    //#param buy Buy-side order
-    //#param sell Sell-side order
+    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // buy Buy-side order
+    // sell Sell-side order
     //
     pub fn execute_funds_transfer(
         msg_value: BalanceOf<T>,
@@ -838,9 +823,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    //#param buy Buy-side order
-    //#param sell Sell-side order
+    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // buy Buy-side order
+    // sell Sell-side order
     //
     pub fn execute_funds_transfer_sell_side(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -922,9 +907,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
-    //#param buy Buy-side order
-    //#param sell Sell-side order
+    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // buy Buy-side order
+    // sell Sell-side order
     //
     pub fn execute_funds_transfer_buy_side(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -1000,9 +985,9 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
-    //#param buy Buy-side order
-    //#param sell Sell-side order
+    // Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
+    // buy Buy-side order
+    // sell Sell-side order
     //#return Whether or not the two orders can be matched
     //
     pub fn orders_can_match(
@@ -1031,11 +1016,11 @@ impl<T: Trait> Module<T> {
     }
 
     //
-    //#dev Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-    //#param buy Buy-side order
-    //#param buy_sig Buy-side order signature
-    //#param sell Sell-side order
-    //#param sell_sig Sell-side order signature
+    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+    // buy Buy-side order
+    // buy_sig Buy-side order signature
+    // sell Sell-side order
+    // sell_sig Sell-side order signature
     //
     pub fn atomic_match(
         msg_sender: T::AccountId,
@@ -1089,21 +1074,21 @@ impl<T: Trait> Module<T> {
         let mut buycalldata = buy.calldata.clone();
         let mut sellcalldata = sell.calldata.clone();
         if buy.replacement_pattern.len() > 0 {
-            <utils::Module<T>>::guarded_array_replace(
+             <exchange_common::Module<T>>::guarded_array_replace(
                 &mut buycalldata,
                 &sell.calldata,
                 &buy.replacement_pattern,
             )?;
         }
         if sell.replacement_pattern.len() > 0 {
-            <utils::Module<T>>::guarded_array_replace(
+             <exchange_common::Module<T>>::guarded_array_replace(
                 &mut sellcalldata,
                 &buy.calldata,
                 &sell.replacement_pattern,
             )?;
         }
         ensure!(
-            <utils::Module<T>>::array_eq(&buycalldata, &sellcalldata)?,
+            <exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata),
             Error::<T>::OrderInvalidFieldName
         );
 

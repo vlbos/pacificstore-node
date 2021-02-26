@@ -282,12 +282,13 @@ impl wyvern_exchange::Trait for Runtime {
     // type Signature = Signature;
 }
 
-impl wyvern_exchange::utils::Trait for Runtime {
+impl wyvern_exchange::exchange_common::Trait for Runtime {
     // type Event = Event;
 	type Currency = Balances;
     // type Public = MultiSigner;
     // type Signature = Signature;
 }
+
 impl wyvern_exchange::sale_kind_interface::Trait for Runtime {
     // type Event = Event;
 	// type Currency = Balances;

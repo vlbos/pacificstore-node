@@ -8,16 +8,9 @@ use serde::{Deserialize, Serialize};
 // use sp_std::if_std;
 
 use frame_support::{
-    sp_runtime::{
-        MultiSignature, RuntimeDebug,
-    },
+    sp_runtime::{MultiSignature, RuntimeDebug},
     sp_std::prelude::*,
-
 };
-
-
-
-
 
 // General constraints to limit data size
 // Note: these could also be passed as trait config parameters
@@ -26,7 +19,6 @@ pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 10;
 pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 20;
 pub const ORDER_MAX_FIELDS: usize = 3;
 // // Inverse basis point.
-
 
 pub const INVERSE_BASIS_POINT: u32 = 10000;
 
