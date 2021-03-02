@@ -1,4 +1,45 @@
-//! # Substrate Enterprise Sample - OrderType Post example pallet
+
+//! # WyvernExchange Pallet
+//!
+//!
+//! ## Overview
+//!
+//! The WyvernExchange pallet provides functionality for WyvernExchanges management.
+//!
+//! * Approve Order
+//! * Cancel Order
+//! * Hash Order
+//! * Validate Order
+//!
+//! ### Goals
+//!
+//! The WyvernExchange system in Substrate is designed to make the following possible:
+//!
+//! *Autonomously governed decentralized digital asset exchange.
+//!
+//! ### Dispatchable Functions
+//!
+//! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
+//! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
+//! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
+//! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
+//! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
+//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
+//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
+//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//!
+
+//! ### Public Functions
+//!
+//! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
+//! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
+//! * `calculate_match_price` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
+//! * `orders_can_match` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
+//! * `calculate_final_price ` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//!
+
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "512"]

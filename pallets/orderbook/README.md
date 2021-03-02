@@ -69,7 +69,6 @@ You should implement it's trait like so:
 ```rust
 impl orderbook::Trait for Runtime {
 	type Event = Event;
-	type CreateRoleOrigin = Origin;
 }
 ```
 

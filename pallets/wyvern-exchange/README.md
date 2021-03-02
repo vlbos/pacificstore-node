@@ -67,9 +67,20 @@ std = [
 You should implement it's trait like so:
 
 ```rust
+
 impl wyvern_exchange::Trait for Runtime {
-	type Event = Event;
-	type CreateRoleOrigin = Origin;
+}
+
+impl wyvern_exchange::exchange_common::Trait for Runtime {
+	type Currency = Balances;
+}
+
+impl wyvern_exchange::sale_kind_interface::Trait for Runtime {
+}
+impl wyvern_exchange::exchange_core::Trait for Runtime {
+    type Event = Event;
+    type Public = MultiSigner;
+    type Signature = Signature;
 }
 ```
 

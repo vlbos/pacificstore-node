@@ -3,12 +3,8 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-    decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{ DispatchResult},
-    ensure,
-    sp_runtime::RuntimeDebug,
-    sp_std::collections::btree_set::BTreeSet,
-    sp_std::prelude::*,
+    decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
+    sp_runtime::RuntimeDebug, sp_std::collections::btree_set::BTreeSet, sp_std::prelude::*,
 };
 
 #[cfg(feature = "std")]
@@ -17,7 +13,6 @@ use serde::{Deserialize, Serialize};
 use frame_system::{self as system, ensure_signed};
 
 pub use crate::types::*;
-
 
 #[derive(Default)]
 pub struct OrderBuilder<AccountId, Moment>

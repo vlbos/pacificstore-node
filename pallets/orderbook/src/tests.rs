@@ -3,6 +3,7 @@
 use super::*;
 use crate::{mock::*, Error};
 use frame_support::{assert_noop, assert_ok, dispatch};
+// mod asset_white_list;
 
 // pub fn store_test_order<T: Trait>(order_id: OrderId, owner: T::AccountId, registered: T::Moment) {
 //     let index = 1;
@@ -20,10 +21,7 @@ use frame_support::{assert_noop, assert_ok, dispatch};
 
 pub fn store_test_orderi<T: Trait>(order_id: OrderId) {
     let index = 1;
-    Orderi::insert(
-order_id,
-        index,
-    );
+    Orderi::insert(order_id, index);
 }
 
 const TEST_ORDER_ID: &str = "00012345600012";
@@ -76,7 +74,7 @@ fn create_order_without_fields() {
 //   "order_hash": "0x3f8d16507c4d9905815e860324d64b9c9f5933a70e59c2a07a63320459f67826",
 //   "metadata": {
 //     "asset": {
-//       "order_id": "505",
+//       "token_id": "505",
 //       "address": "0x16baf0de678e52367adc69fd067e5edd1d33e3bf"
 //     },
 //     "schema": "ERC721"
@@ -147,7 +145,7 @@ fn create_order_with_valid_fields() {
  let fields = vec![
 OrderField::new(b"created_date", b"2019-01-29T04:04:03.258323"),
 OrderField::new(b"order_hash", b"0x3f8d16507c4d9905815e860324d64b9c9f5933a70e59c2a07a63320459f67826"),
-OrderField::new(b"metadata.asset.order_id", b"505"),
+OrderField::new(b"metadata.asset.token_id", b"505"),
 OrderField::new(b"metadata.asset.address", b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf"),
 OrderField::new(b"metadata.schema", b"ERC721"),
 OrderField::new(b"exchange", b"0x5206e78b21ce315ce284fb24cf05e0585a93b1d9"),
@@ -244,9 +242,7 @@ OrderField::new(b"prefixed_hash", b"0x98a07dfb9e4da7ffc0ad0fb230afc8684dc4a0ac44
 //         );
 
         // assert_eq!(<OrdersOfOrganization<Test>>::get(owner), vec![order_id.clone()]);
-
         assert_eq!(Orderbook::owner_of(&order_id), Some(owner));
-     
         // Event is raised
         assert!(System::events()
             .iter()
@@ -309,7 +305,7 @@ fn create_order_with_existing_id() {
                 account_key(TEST_ORGANIZATION),
                 None
             ),
-           Error::<Test>::OrderIdExists
+            Error::<Test>::OrderIdExists
         );
     })
 }
@@ -317,11 +313,10 @@ fn create_order_with_existing_id() {
 #[test]
 fn create_order_with_too_many_fields() {
     new_test_ext().execute_with(|| {
-let mut s = Vec::with_capacity(60);
-for _ in 1..60
-{
-s.push(OrderField::new(b"field1", b"val1"));
-}
+        let mut s = Vec::with_capacity(60);
+        for _ in 1..60 {
+            s.push(OrderField::new(b"field1", b"val1"));
+        }
         assert_noop!(
             Orderbook::post_order(
                 Origin::signed(account_key(TEST_SENDER)),

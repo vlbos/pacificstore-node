@@ -3,12 +3,8 @@
 
 use codec::{Decode, Encode};
 use frame_support::{
-    decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{ DispatchResult},
-    ensure,
-    sp_runtime::RuntimeDebug,
-    sp_std::collections::btree_set::BTreeSet,
-    sp_std::prelude::*,
+    decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
+    sp_runtime::RuntimeDebug, sp_std::collections::btree_set::BTreeSet, sp_std::prelude::*,
 };
 
 #[cfg(feature = "std")]
@@ -16,16 +12,16 @@ use serde::{Deserialize, Serialize};
 // traits::EnsureOrigin,
 use frame_system::{self as system, ensure_signed};
 
-
 // General constraints to limit data size
 // Note: these could also be passed as trait config parameters
 pub const ORDER_ID_MAX_LENGTH: usize = 36;
 pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
-pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400; 
+pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400;
 pub const ORDER_MAX_FIELDS: usize = 54;
 
 // Custom types
 pub type OrderId = Vec<u8>;
+pub type TokenId = Vec<u8>;
 pub type FieldName = Vec<u8>;
 pub type FieldValue = Vec<u8>;
 
@@ -37,16 +33,13 @@ pub type FieldValue = Vec<u8>;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderJSONType<AccountId, Moment> {
     pub index: u64,
-    // The order ID would typically be a GS1 GTIN (Global Trade Item Number),
-    // or ASIN (Amazon Standard Identification Number), or similar,
     // a numeric or alpha-numeric code with a well-defined data structure.
     pub order_id: OrderId,
     // This is account that represents the owner of this order, as in
     // the manufacturer or supplier providing this order within the value chain.
     pub owner: AccountId,
     // This a series of fields describing the order.
-    // Typically, there would at least be a textual description, and SKU(Stock-keeping unit).
-    // It could also contain instance / lot master data e.g. expiration, weight, harvest date.
+    // Typically, there would at least be a textual description.
     pub fields: Option<Vec<OrderField>>,
     // Timestamp (approximate) at which the Order was registered on-chain.
     pub registered: Moment,
@@ -55,11 +48,11 @@ pub struct OrderJSONType<AccountId, Moment> {
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderQuery<AccountId> {
-   pub limit: Option<u64>,
-   pub offset: Option<u64>,
-   pub owner: Option<AccountId>,
-   pub token_ids: Option<Vec<OrderId>>,
-   pub params: Option<Vec<OrderField>>,
+    pub limit: Option<u64>,
+    pub offset: Option<u64>,
+    pub owner: Option<AccountId>,
+    pub token_ids: Option<Vec<TokenId>>,
+    pub params: Option<Vec<OrderField>>,
 }
 
 //   owner?: string,
@@ -103,5 +96,74 @@ impl OrderField {
 
     pub fn value(&self) -> &[u8] {
         self.value.as_ref()
+    }
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct JSONField {
+    // Name of the order field e.g. desc or description
+    pub name: FieldName,
+    // Value of the order field e.g. tokenjson
+    pub json: Option<Vec<OrderField>>,
+}
+
+// export interface OpenSeaAssetQuery {
+//     owner?: string;
+//     asset_contract_address?: string;
+//     token_ids?: Array<number | string>;
+//     search?: string;
+//     order_by?: string;
+//     order_direction?: string;
+//     limit?: number;
+//     offset?: number;
+// }
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct AssetQuery<AccountId> {
+    pub owner: Option<AccountId>,
+    pub asset_contract_address: Option<Vec<u8>>,
+    pub token_ids: Option<Vec<TokenId>>,
+    pub search: Option<Vec<u8>>,
+    pub order_by: Option<Vec<u8>>,
+    pub order_direction: Option<Vec<u8>>,
+    pub limit: Option<u64>,
+    pub offset: Option<u64>,
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct JSONType {
+    pub fields: Option<Vec<OrderField>>,
+    pub jsons: Option<Vec<JSONField>>,
+}
+
+pub fn convert_assetquery_to_orderquery<AccountId>(
+    asset_query: Option<AssetQuery<AccountId>>,
+) -> Option<OrderQuery<AccountId>> {
+if let Some(asset_query)=asset_query{
+    let mut token_address = Vec::new();
+    if let Some(asset_contract_address) = asset_query.asset_contract_address {
+        token_address = asset_contract_address;
+    }
+
+    return Some(OrderQuery::<AccountId> {
+        limit: asset_query.limit,
+        offset: asset_query.offset,
+        owner: asset_query.owner,
+        token_ids: asset_query.token_ids,
+        params: Some(vec![OrderField::new(b"token_address", &token_address)]),
+    });
+}
+None
+}
+
+pub fn convert_orderjsontype_to_jsontype<AccountId, Moment>(
+    order_json: OrderJSONType<AccountId, Moment>,
+) -> JSONType {
+    JSONType {
+        fields: order_json.fields,
+jsons:None,
     }
 }
