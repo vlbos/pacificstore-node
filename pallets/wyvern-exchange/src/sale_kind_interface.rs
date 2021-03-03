@@ -1,4 +1,4 @@
-//! # Substrate Enterprise Sample - OrderType Post example pallet
+//! # Pacific Store - Wyvern Exchange pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -23,12 +23,10 @@ decl_module! {
 
 impl<T: Trait> Module<T> {
     // sale Kind interface
-    //
     // Check whether the parameters of a sale are valid
     // sale_kind Kind of sale
     // expiration_time OrderType expiration time
-    //#return Whether the parameters were valid
-    //
+    //Whether the parameters were valid
     pub fn validate_parameters(
         sale_kind: &SaleKind,
         expiration_time: T::Moment,
@@ -37,12 +35,10 @@ impl<T: Trait> Module<T> {
         Ok(*sale_kind == SaleKind::FixedPrice || expiration_time > Zero::zero())
     }
 
-    //
     // Return whether or not an order can be settled
     // Precondition: parameters have passed validate_parameters
     // listing_time OrderType listing time
     // expiration_time OrderType expiration time
-    //
     pub fn can_settle_order(
         listing_time: T::Moment,
         expiration_time: T::Moment,
@@ -56,12 +52,11 @@ impl<T: Trait> Module<T> {
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
         ensure!(
             (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time),
-            Error::<T>::OrdersCannotMatch1
+            Error::<T>::ListingTimeExpired
         );
         Ok((listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time))
     }
 
-    //
     // Calculate the settlement price of an order
     // Precondition: parameters have passed validate_parameters.
     // side OrderType side
@@ -70,7 +65,6 @@ impl<T: Trait> Module<T> {
     // extra OrderType extra price data
     // listing_time OrderType listing time
     // expiration_time OrderType expiration time
-    //
     pub fn calculate_final_price(
         side: &Side,
         sale_kind: &SaleKind,

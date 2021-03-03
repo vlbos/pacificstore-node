@@ -101,34 +101,19 @@ impl timestamp::Trait for Test {
 }
 
 impl Trait for Test {
-    // type Event = TestEvent;
-    // type Currency = Balances;
-    // type Public = sr25519::Public;
-    // type Signature = sr25519::Signature;
-    // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
 impl wyvern_exchange::exchange_common::Trait for Test {
-    // type Event = TestEvent;
     type Currency = Balances;
-    // type Public = sr25519::Public;
-    // type Signature = sr25519::Signature;
-    // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
 impl wyvern_exchange::sale_kind_interface::Trait for Test {
-    // type Event = TestEvent;
-    // type Currency = Balances;
-    // type Public = sr25519::Public;
-    // type Signature = sr25519::Signature;
-    // type CreateRoleOrigin = MockOrigin<Test>;
+
 }
 impl wyvern_exchange::exchange_core::Trait for Test {
     type Event = TestEvent;
-    // type Currency = Balances;
     type Public = sr25519::Public;
     type Signature = sr25519::Signature;
-    // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
 pub type WyvernExchange = Module<Test>;

@@ -51,49 +51,27 @@ fn make_order(
     OrderType::<AccountId, Moment, Balance> {
         index: 0,
         exchange: sender,
-
         maker: maker,
-
         taker: taker,
-
         maker_relayer_fee: fee,
-
         taker_relayer_fee: fee,
-
         maker_protocol_fee: fee,
-
         taker_protocol_fee: fee,
-
         fee_recipient: fee_recipient,
-
         fee_method: FeeMethod::from(0),
-
         side: Side::from(side),
-
         sale_kind: SaleKind::from(0),
-
         target: sender,
-
         how_to_call: HowToCall::from(0),
-
         calldata: bytes.clone(),
-
         replacement_pattern: bytes.clone(),
-
         static_target: sender,
-
         static_extradata: bytes.clone(),
-
         payment_token: sender,
-
         base_price: fee,
-
         extra: time,
-
         listing_time: Zero::zero(),
-
         expiration_time: Zero::zero(),
-
         salt: 0,
         registered: time,
     }
@@ -101,27 +79,21 @@ fn make_order(
 // fn sig_data(data:&[u8)-> sp_core::sr25519::Signature{
 //         let alice_pair = account_pair("Alice");
 //         let alice_public = alice_pair.public();
-
 // //         let _calldata_buy = calldata_buy.encode();
 // // let calldata_sell = calldata_sell.encode();
 // //       let alice_sig_buy= alice_pair.sign(&_calldata_buy);
 // //         let alice_sig_sell = alice_pair.sign(&_calldata_sell);
-
 // }
-
 #[test]
 fn change_minimum_maker_protocol_fee() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let new_minimum_maker_protocol_fee = 42;
-
         let result = ExchangeCore::change_minimum_maker_protocol_fee(
             Origin::signed(sender),
             new_minimum_maker_protocol_fee,
         );
-
         assert_ok!(result);
-
         assert_eq!(
             <MinimumMakerProtocolFee<Test>>::get(),
             new_minimum_maker_protocol_fee
@@ -134,14 +106,11 @@ fn change_minimum_taker_protocol_fee() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let min_taker_protocol_fee = 42;
-
         let result = ExchangeCore::change_minimum_taker_protocol_fee(
             Origin::signed(sender),
             min_taker_protocol_fee,
         );
-
         assert_ok!(result);
-
         assert_eq!(
             <MinimumTakerProtocolFee<Test>>::get(),
             min_taker_protocol_fee
@@ -154,45 +123,17 @@ fn change_protocol_fee_recipient() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-
         let result = ExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
-
         assert_ok!(result);
-
         assert_eq!(<ProtocolFeeRecipient<Test>>::get(), sender1);
     });
 }
-
-// [order.exchange, order.maker, order.taker, order.feerecipient, order.target, order.statictarget, order.paymenttoken],
-//               [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
-//               order.feeMethod,
-//               order.side,
-//               order.saleKind,
-//               order.howToCall,
-//               order.calldata,
-//               order.replacementPattern,
-//               order.staticExtradata,
-//               true
-//             ).then(res => {
-//
-//                 return exchangeInstance.cancelOrder_(
-//                   [order.exchange, order.maker, order.taker, order.feerecipient, order.target, order.statictarget, order.paymenttoken],
-//                   [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
-//                   order.feeMethod,
-//                   order.side,
-//                   order.saleKind,
-//                   order.howToCall,
-//                   order.calldata,
-//                   order.replacementPattern,
-//                   order.staticExtradata,
-//                   0, '0x', '0x'
 
 #[test]
 fn approve_order_ex() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-
         create_account_test(sender);
         create_account_test(sender1);
         let order = make_order(sender, sender, sender, 0);
@@ -218,8 +159,6 @@ fn approve_order_ex() {
             order.salt,
         ]
         .to_vec();
-        // let addrs =  Vec::<<Test as system::Trait>::AccountId>::new();
-        //    let     uints =  Vec::<u32>::new();
         let fee_method = FeeMethod::from(0);
         let side = Side::from(0);
         let sale_kind = SaleKind::from(0);
@@ -228,7 +167,6 @@ fn approve_order_ex() {
         let replacement_pattern = Vec::<u8>::new();
         let static_extradata = Vec::<u8>::new();
         let orderbook_inclusion_desired: bool = false;
-
         let result = WyvernExchange::approve_order_ex(
             Origin::signed(sender),
             addrs,
@@ -242,7 +180,6 @@ fn approve_order_ex() {
             static_extradata,
             orderbook_inclusion_desired,
         );
-
         assert_ok!(result);
     });
 }
@@ -252,7 +189,6 @@ fn cancel_order_ex() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
@@ -279,7 +215,6 @@ fn cancel_order_ex() {
             order.salt,
         ]
         .to_vec();
-
         let fee_method = FeeMethod::from(0);
         let side = Side::from(0);
         let sale_kind = SaleKind::from(0);
@@ -288,12 +223,9 @@ fn cancel_order_ex() {
         let replacement_pattern = Vec::<u8>::new();
         let static_extradata = Vec::<u8>::new();
         let alice_pair = account_pair("Alice");
-
         let calldatas = calldata.to_vec().encode();
         let alice_sig = alice_pair.sign(&calldatas);
-
         let sig = alice_sig; //Signature::default();
-
         let result = WyvernExchange::cancel_order_ex(
             Origin::signed(sender),
             addrs,
@@ -307,7 +239,6 @@ fn cancel_order_ex() {
             static_extradata,
             sig,
         );
-
         assert_ok!(result);
     });
 }
@@ -363,7 +294,6 @@ fn atomic_match_ex() {
             sell.salt,
         ]
         .to_vec();
-
         let fee_methods_sides_kinds_how_to_calls: Vec<u8> = vec![
             buy.fee_method.value(),
             buy.side.value(),
@@ -375,16 +305,13 @@ fn atomic_match_ex() {
             sell.how_to_call.value(),
         ]
         .to_vec();
-
         let calldata_buy = Vec::<u8>::new();
         let calldata_sell = Vec::<u8>::new();
         let replacement_pattern_buy = Vec::<u8>::new();
         let replacement_pattern_sell = Vec::<u8>::new();
         let static_extradata_buy = Vec::<u8>::new();
         let static_extradata_sell = Vec::<u8>::new();
-
         let alice_pair = account_pair("Alice");
-
         let _calldata_buy = calldata_buy.to_vec().encode();
         let _calldata_sell = calldata_sell.to_vec().encode();
         let alice_sig_buy = alice_pair.sign(&_calldata_buy);
@@ -392,7 +319,6 @@ fn atomic_match_ex() {
         // let sig = alice_sig;//Signature::default();
         let sig = vec![alice_sig_buy, alice_sig_sell];
         let rss_metadata = Vec::<u8>::new();
-
         let result = WyvernExchange::atomic_match_ex(
             Origin::signed(sender),
             addrs,
@@ -407,7 +333,6 @@ fn atomic_match_ex() {
             sig,
             rss_metadata,
         );
-
         assert_ok!(result);
     });
 }
@@ -417,14 +342,11 @@ fn transfer_tokens() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-
         let amount = 42;
         create_account_test(sender);
         create_account_test(sender1);
         let result = ExchangeCore::transfer_tokens(&sender, &sender, &sender1, amount);
-
         assert_ok!(result);
-
         assert_eq!(
             <Test as wyvern_exchange::exchange_common::Trait>::Currency::free_balance(&sender),
             99999999999999958
@@ -433,22 +355,5 @@ fn transfer_tokens() {
             <Test as wyvern_exchange::exchange_common::Trait>::Currency::free_balance(&sender1),
             100000000000000042
         );
-        // 		assert_eq!(<Test as Config>::Currency::free_balance(&alice()), 100);
-        // 		// 10% of the 50 units is unlocked automatically for Alice
-        // 		assert_eq!(<Test as Config>::VestingSchedule::vesting_balance(&alice()), Some(45));
-        // 		assert_eq!(<Test as Config>::Currency::free_balance(&bob()), 250);
-        // 		// A max of 10 units is unlocked automatically for Bob
-        // 		assert_eq!(<Test as Config>::VestingSchedule::vesting_balance(&bob()), Some(140));
-        // 		// Status is completed.
-        // 		assert_eq!(
-        // 			Accounts::<Test>::get(alice()),
-        // 			AccountStatus {
-        // 				validity: AccountValidity::Completed,
-        // 				free_balance: 50,
-        // 				locked_balance: 50,
-        // 				signature: alice_signature().to_vec(),
-        // 				vat: Permill::zero(),
-        // 			}
-        // 		);
-    });
+     });
 }

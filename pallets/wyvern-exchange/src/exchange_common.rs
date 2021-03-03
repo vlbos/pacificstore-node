@@ -1,4 +1,4 @@
-//! # Substrate Enterprise Sample - OrderType Post example pallet
+//! # Pacific Store - Wyvern Exchange pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -24,24 +24,20 @@ pub trait Trait: system::Trait + timestamp::Trait {
         + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 }
 
-// type Trait =  system::Trait + timestamp::Trait;
-
-// decl_module! {
-//     pub struct Module<T: Trait> for enum Call where origin: T::Origin {}
-// }
-pub struct Module<T: Trait> {
-a:T::AccountId,
+decl_module! {
+    pub struct Module<T: Trait> for enum Call where origin: T::Origin {
+    }
 }
 
 
 decl_error! {
     pub enum Error for Module<T: Trait> {
-        OrderIdMissing,
-        OrderIdTooLong,
-        OrderIdExists,
+        MsgVerifyFailed,
+        InvalidBuyOrderParameters,
+        InvalidSellOrderParameters,
         OrdersCannotMatch,
-        OrdersCannotMatch1,
-        OrderInvalidFieldName,
+        ListingTimeExpired,
+        ArrayNotEqual,
         ArraySizeNotAsSameAsDesired,
         ArraySizeNotAsSameAsMask,
         BuyTakerProtocolFeeGreaterThanSellTakerProtocolFee,
@@ -54,27 +50,18 @@ decl_error! {
         BuyPriceLessThanSellPrice,
         OrderHashMissing,
         OnlyMaker,
-        OrderHashInvalid,
-        OrderHashInvalid1,
-        OrderHashInvalid2,
-        OrderHashInvalid3,
-        OrderHashInvalid4,
-        OrderHashInvalid5,
-        OrderHashInvalid6,
-        OrderHashInvalid7,
+        InvalidOrderHash,
     }
 }
 
 impl<T: Trait> Module<T> {
-    //
     //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
     //Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model (arrays under 32 Vec<u8> will be slower)
     // Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
     // array The original array
     // desired The target array
     // mask The mask specifying which bits can be changed
-    //#return The updated byte array (the parameter will be modified inplace)
-    //
+    // The updated byte array (the parameter will be modified inplace)
     pub fn guarded_array_replace(
         array: &mut Vec<u8>,
         desired: &[u8],
@@ -96,22 +83,19 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
-    //
     //Test if two arrays are equal
     // Arrays must be of equal length, otherwise will return false
     // a First array
     // b Second array
-    //#return Whether or not all Vec<u8> in the arrays are equal
-    //
+    // Whether or not all Vec<u8> in the arrays are equal
     pub fn array_eq(a: &[u8], b: &[u8]) -> bool {
         if a.len() != b.len() {
             return false;
         }
-
         a == b
     }
 
-    pub fn build_order_type_arr(
+    pub fn build_order_type_from_array_parameters(
         addrs: Vec<T::AccountId>,
         uints: Vec<u64>,
         fee_method: FeeMethod,
@@ -149,7 +133,7 @@ impl<T: Trait> Module<T> {
         )
     }
 
-    pub fn build_order_type_arr2(
+    pub fn build_buy_sell_order_type(
         addrs: Vec<T::AccountId>,
         uints: Vec<u64>,
         fee_methods_sides_kinds_how_to_calls: &[u8],
@@ -215,160 +199,95 @@ impl<T: Trait> Module<T> {
 
     pub fn build_order_type(
         exchange: T::AccountId,
-        // OrderType maker AccountId.
         maker: T::AccountId,
-        // OrderType taker AccountId, if specified.
         taker: T::AccountId,
-        // Maker relayer fee of the order, unused for taker order.
         maker_relayer_fee: BalanceOf<T>,
-        // Taker relayer fee of the order, or maximum taker fee for a taker order.
         taker_relayer_fee: BalanceOf<T>,
-        // Maker protocol fee of the order, unused for taker order.
         maker_protocol_fee: BalanceOf<T>,
-        // Taker protocol fee of the order, or maximum taker fee for a taker order.
         taker_protocol_fee: BalanceOf<T>,
-        // OrderType fee recipient or zero AccountId for taker order.
         fee_recipient: T::AccountId,
-        // Fee method (protocol token or split fee).
         fee_method: FeeMethod,
-        // Side (buy/sell).
         side: Side,
-        // Kind of sale.
         sale_kind: SaleKind,
-        // Target.
         target: T::AccountId,
-        // Vec<u8>.
         how_to_call: HowToCall,
-        // Calldata.
         calldata: Bytes,
-        // Calldata replacement pattern, or an empty byte array for no replacement.
         replacement_pattern: Bytes,
-        // Static call target, zero-AccountId for no static call.
         static_target: T::AccountId,
-        // Static call extra data.
         static_extradata: Bytes,
-        // Token used to pay for the order, or the zero-AccountId as a sentinel value for Ether.
         payment_token: T::AccountId,
-        // Base price of the order (in paymentTokens).
         base_price: BalanceOf<T>,
-        // Auction extra parameter - minimum bid increment for English auctions, starting/ending price difference.
         extra: T::Moment,
-        // Listing timestamp.
         listing_time: T::Moment,
-        // Expiration timestamp - 0 for no expiry.
         expiration_time: T::Moment,
-        // OrderType salt, used to prevent duplicate hashes.
         salt: u64,
     ) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
         OrderType::<T::AccountId, T::Moment, BalanceOf<T>>::new(
             exchange,
-            // OrderType maker AccountId.
-            maker,
-            // OrderType taker AccountId, if specified.
-            taker,
-            // Maker relayer fee of the order, unused for taker order.
-            maker_relayer_fee,
-            // Taker relayer fee of the order, or maximum taker fee for a taker order.
-            taker_relayer_fee,
-            // Maker protocol fee of the order, unused for taker order.
-            maker_protocol_fee,
-            // Taker protocol fee of the order, or maximum taker fee for a taker order.
-            taker_protocol_fee,
-            // OrderType fee recipient or zero AccountId for taker order.
-            fee_recipient,
-            // Fee method (protocol token or split fee).
-            fee_method,
-            // Side (buy/sell).
-            side,
-            // Kind of sale.
-            sale_kind,
-            // Target.
-            target,
-            // Vec<u8>.
-            how_to_call,
-            // Calldata.
-            calldata,
-            // Calldata replacement pattern, or an empty byte array for no replacement.
-            replacement_pattern,
-            // Static call target, zero-AccountId for no static call.
-            static_target,
-            // Static call extra data.
-            static_extradata,
-            // Token used to pay for the order, or the zero-AccountId as a sentinel value for Ether.
-            payment_token,
-            // Base price of the order (in paymentTokens).
-            base_price,
-            // Auction extra parameter - minimum bid increment for English auctions, starting/ending price difference.
-            extra,
-            // Listing timestamp.
-            listing_time,
-            // Expiration timestamp - 0 for no expiry.
-            expiration_time,
-            // OrderType salt, used to prevent duplicate hashes.
-            salt,
+                maker,
+                taker,
+                maker_relayer_fee,
+                taker_relayer_fee,
+                maker_protocol_fee,
+                taker_protocol_fee,
+                fee_recipient,
+                fee_method,
+                side,
+                sale_kind,
+                target,
+                how_to_call,
+                calldata,
+                replacement_pattern,
+                static_target,
+                static_extradata,
+                payment_token,
+                base_price,
+                extra,
+                listing_time,
+                expiration_time,
+                salt,
         )
     }
 
     pub fn u64_to_balance_saturated(_input: u64) -> BalanceOf<T> {
-        if let Some(b) = Self::u64_to_balance_option(_input) {
-            b
-        } else {
-            Zero::zero()
-        }
+        if let Some(_balance) = Self::u64_to_balance_option(_input) {
+           return _balance;
+        } 
+        Zero::zero()
     }
 
     pub fn u64_to_moment_saturated(_input: u64) -> T::Moment {
-        // let my_u32:u32 = _input as u32;
-        //  my_u32.into()
-        if let Some(b) = Self::u64_to_moment_option(_input) {
-            b
-        } else {
-            Zero::zero()
+        if let Some(_moment) = Self::u64_to_moment_option(_input) {
+            return _moment;
         }
+        Zero::zero()
     }
 
     pub fn u64_to_moment_option(_input: u64) -> Option<T::Moment> {
-        // use sp_std::convert::{TryFrom, TryInto};
         _input.try_into().ok()
-        // Some(Zero::zero())
     }
 
     pub fn u64_to_balance_option(_input: u64) -> Option<BalanceOf<T>> {
-        // use sp_std::convert::{TryFrom, TryInto};
         _input.try_into().ok()
-        // Some(Zero::zero())
     }
     pub fn balance_to_u128(input: BalanceOf<T>) -> Option<u128> {
-        // use sp_std::convert::{TryFrom, TryInto};
         TryInto::<u128>::try_into(input).ok()
-
-        // Some(input.saturated_into::<u64>())
     }
     pub fn balance_to_u64_option(input: BalanceOf<T>) -> Option<u64> {
-        // use sp_std::convert::{TryFrom, TryInto};
         TryInto::<u64>::try_into(input).ok()
     }
 
     pub fn moment_to_u64_option(input: T::Moment) -> Option<u64> {
-        // use sp_std::convert::{TryFrom, TryInto};
         TryInto::<u64>::try_into(input).ok()
     }
 
-    // pub fn balance_to_u64_saturated(input: BalanceOf<T>) -> u64 {
-    //     input.saturated_into::<u64>()
-    // }
-    // pub fn moment_to_u64_saturated(input: T::Moment) -> u64 {
-    //     input.saturated_into::<u64>()
-    // }
-
-    pub fn moment_to_balance(m: &T::Moment) -> BalanceOf<T> {
-        let mut _b: BalanceOf<T> = Zero::zero();
-        if let Some(m) = Self::moment_to_u64_option(*m) {
-            if let Some(bo) = Self::u64_to_balance_option(m) {
-                _b = bo;
+    pub fn moment_to_balance(_moment: &T::Moment) -> BalanceOf<T> {
+        if let Some(_moment) = Self::moment_to_u64_option(*_moment) {
+            if let Some(_balance) = Self::u64_to_balance_option(_moment) {
+                return _balance;
             }
         }
 
-        _b
+        Zero::zero()
     }
 }

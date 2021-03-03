@@ -1,4 +1,4 @@
-//! # Substrate Enterprise Sample - OrderType Post example pallet
+//! # Pacific Store - Wyvern Exchange pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -28,7 +28,6 @@ pub type Signature = MultiSignature;
 // Some way of identifying an account on the chain. We intentionally make it equivalent
 // to the public key of our transaction signing scheme.
 // pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
 // Custom types
 // pub type AccountId =Vec<u8>;
 pub type OrderId = Vec<u8>;
@@ -179,8 +178,6 @@ impl From<u8> for Side {
     }
 }
 
-//exchange core begin
-
 // OrderType contains master data (aka class-level) about a trade item.
 // This data is typically registered once by the order's manufacturer / supplier,
 // to be shared with other network participants, and remains largely static.
@@ -246,99 +243,55 @@ where
 {
     pub fn new(
         exchange: AccountId,
-        // OrderType maker AccountId.
         maker: AccountId,
-        // OrderType taker AccountId, if specified.
         taker: AccountId,
-        // Maker relayer fee of the order, unused for taker order.
         maker_relayer_fee: Balance,
-        // Taker relayer fee of the order, or maximum taker fee for a taker order.
         taker_relayer_fee: Balance,
-        // Maker protocol fee of the order, unused for taker order.
         maker_protocol_fee: Balance,
-        // Taker protocol fee of the order, or maximum taker fee for a taker order.
         taker_protocol_fee: Balance,
-        // OrderType fee recipient or zero AccountId for taker order.
         fee_recipient: AccountId,
-        // Fee method (protocol token or split fee).
         fee_method: FeeMethod,
-        // Side (buy/sell).
         side: Side,
-        // Kind of sale.
         sale_kind: SaleKind,
-        // Target.
         target: AccountId,
-        // Vec<u8>.
         how_to_call: HowToCall,
-        // Calldata.
         calldata: Bytes,
-        // Calldata replacement pattern, or an empty byte array for no replacement.
         replacement_pattern: Bytes,
-        // Static call target, zero-AccountId for no static call.
         static_target: AccountId,
-        // Static call extra data.
         static_extradata: Bytes,
-        // Token used to pay for the order, or the zero-AccountId as a sentinel value for Ether.
         payment_token: AccountId,
-        // Base price of the order (in paymentTokens).
         base_price: Balance,
-        // Auction extra parameter - minimum bid increment for English auctions, starting/ending price difference.
         extra: Moment,
-        // Listing timestamp.
         listing_time: Moment,
-        // Expiration timestamp - 0 for no expiry.
         expiration_time: Moment,
-        // OrderType salt, used to prevent duplicate hashes.
         salt: u64,
     ) -> Self {
         Self {
-            index: 0,
-            exchange: exchange,
-            // OrderType maker AccountId.
-            maker: maker,
-            // OrderType taker AccountId, if specified.
-            taker: taker,
-            // Maker relayer fee of the order, unused for taker order.
-            maker_relayer_fee: maker_relayer_fee,
-            // Taker relayer fee of the order, or maximum taker fee for a taker order.
-            taker_relayer_fee: taker_relayer_fee,
-            // Maker protocol fee of the order, unused for taker order.
-            maker_protocol_fee: maker_protocol_fee,
-            // Taker protocol fee of the order, or maximum taker fee for a taker order.
-            taker_protocol_fee: taker_protocol_fee,
-            // OrderType fee recipient or zero AccountId for taker order.
-            fee_recipient: fee_recipient,
-            // Fee method (protocol token or split fee).
-            fee_method: fee_method,
-            // Side (buy/sell).
-            side: side,
-            // Kind of sale.
-            sale_kind: sale_kind,
-            // Target.
-            target: target,
-            // Vec<u8>.
-            how_to_call: how_to_call,
-            // Calldata.
-            calldata: calldata,
-            // Calldata replacement pattern, or an empty byte array for no replacement.
-            replacement_pattern: replacement_pattern,
-            // Static call target, zero-AccountId for no static call.
-            static_target: static_target,
-            // Static call extra data.
-            static_extradata: static_extradata,
-            // Token used to pay for the order, or the zero-AccountId as a sentinel value for Ether.
-            payment_token: payment_token,
-            // Base price of the order (in paymentTokens).
-            base_price: base_price,
-            // Auction extra parameter - minimum bid increment for English auctions, starting/ending price difference.
-            extra: extra,
-            // Listing timestamp.
-            listing_time: listing_time,
-            // Expiration timestamp - 0 for no expiry.
-            expiration_time: expiration_time,
-            // OrderType salt, used to prevent duplicate hashes.
-            salt: salt,
-            registered: Moment::default(),
+                index: 0,
+                exchange: exchange,
+                maker: maker,
+                taker: taker,
+                maker_relayer_fee: maker_relayer_fee,
+                taker_relayer_fee: taker_relayer_fee,
+                maker_protocol_fee: maker_protocol_fee,
+                taker_protocol_fee: taker_protocol_fee,
+                fee_recipient: fee_recipient,
+                fee_method: fee_method,
+                side: side,
+                sale_kind: sale_kind,
+                target: target,
+                how_to_call: how_to_call,
+                calldata: calldata,
+                replacement_pattern: replacement_pattern,
+                static_target: static_target,
+                static_extradata: static_extradata,
+                payment_token: payment_token,
+                base_price: base_price,
+                extra: extra,
+                listing_time: listing_time,
+                expiration_time: expiration_time,
+                salt: salt,
+                registered: Moment::default(),
         }
     }
 

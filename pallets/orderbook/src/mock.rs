@@ -76,7 +76,6 @@ impl timestamp::Trait for Test {
 
 impl Trait for Test {
     type Event = TestEvent;
-    // type CreateRoleOrigin = MockOrigin<Test>;
 }
 
 pub type Orderbook = Module<Test>;

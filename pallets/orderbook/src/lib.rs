@@ -31,7 +31,7 @@
 use codec::{Decode, Encode};
 use frame_support::{
     decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
-    sp_runtime::RuntimeDebug, sp_std::collections::btree_set::BTreeSet, sp_std::prelude::*,
+    sp_runtime::RuntimeDebug, sp_std::orders::btree_set::BTreeSet, sp_std::prelude::*,
 };
 
 #[cfg(feature = "std")]
@@ -51,101 +51,8 @@ pub use crate::types::*;
 mod builders;
 use crate::builders::*;
 
-// // General constraints to limit data size
-// // Note: these could also be passed as trait config parameters
-// pub const ORDER_ID_MAX_LENGTH: usize = 36;
-// pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
-// pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400;
-// pub const ORDER_MAX_FIELDS: usize = 54;
-
-// // Custom types
-// pub type OrderId = Vec<u8>;
-// pub type FieldName = Vec<u8>;
-// pub type FieldValue = Vec<u8>;
-
-// // Order contains master data (aka class-level) about a trade item.
-// // This data is typically registered once by the order's manufacturer / supplier,
-// // to be shared with other network participants, and remains largely static.
-// // It can also be used for instance-level (lot) master data.
-// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-// pub struct OrderJSONType<AccountId, Moment> {
-//     index: u64,
-//     // The order ID would typically be a GS1 GTIN (Global Trade Item Number),
-//     // or ASIN (Amazon Standard Identification Number), or similar,
-//     // a numeric or alpha-numeric code with a well-defined data structure.
-//     order_id: OrderId,
-//     // This is account that represents the owner of this order, as in
-//     // the manufacturer or supplier providing this order within the value chain.
-//     owner: AccountId,
-//     // This a series of fields describing the order.
-//     // Typically, there would at least be a textual description, and SKU(Stock-keeping unit).
-//     // It could also contain instance / lot master data e.g. expiration, weight, harvest date.
-//     fields: Option<Vec<OrderField>>,
-//     // Timestamp (approximate) at which the Order was registered on-chain.
-//     registered: Moment,
-// }
-
-// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-// pub struct OrderQuery<AccountId> {
-//     limit: Option<u64>,
-//     offset: Option<u64>,
-
-//     owner: Option<AccountId>,
-
-//     token_ids: Option<Vec<OrderId>>,
-
-//     params: Option<Vec<OrderField>>,
-// }
-
-// //   owner?: string,
-// //   sale_kind?: SaleKind,
-// //   asset_contract_address?: string,
-// //   payment_token_address?: string,
-// //   is_english?: boolean
-// //   is_expired?: boolean
-// //   bundled?: boolean
-// //   include_invalid?: boolean
-// //   token_id?: number | string
-// //   token_ids?: Array<number | string>
-// //   // This means listing_time > value in seconds
-// //   listed_after?: number | string
-// //   // This means listing_time <= value in seconds
-// //   listed_before?: number | string
-// //   limit?: number
-// //   offset?: number
-
-// // Contains a name-value pair for a order fielderty e.g. description: Ingredient ABC
-// #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
-// #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-// pub struct OrderField {
-//     // Name of the order fielderty e.g. desc or description
-//     name: FieldName,
-//     // Value of the order fielderty e.g. Ingredient ABC
-//     value: FieldValue,
-// }
-
-// impl OrderField {
-//     pub fn new(name: &[u8], value: &[u8]) -> Self {
-//         Self {
-//             name: name.to_vec(),
-//             value: value.to_vec(),
-//         }
-//     }
-
-//     pub fn name(&self) -> &[u8] {
-//         self.name.as_ref()
-//     }
-
-//     pub fn value(&self) -> &[u8] {
-//         self.value.as_ref()
-//     }
-// }
-
 pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
-    // type CreateRoleOrigin: EnsureOrigin<Self::Origin>;
 }
 
 decl_storage! {
@@ -165,6 +72,7 @@ decl_event!(
         AccountId = <T as system::Trait>::AccountId,
     {
         OrderPosted(AccountId, OrderId, AccountId),
+        AssetWhiteListPosted(Vec<u8>, Vec<u8>, Vec<u8>),
     }
 );
 
@@ -201,14 +109,10 @@ decl_module! {
             // Validate order fields
             Self::validate_order_fields(&fields)?;
 
-            // Check order doesn't exist yet (1 DB read)
+            // Check order doesn't exist yet 
             Self::validate_new_order(&order_id)?;
 
-            // TODO: if organization has an attribute w/ GS1 Company prefix,
-            //       additional validation could be applied to the order ID
-            //       to ensure its validity (same company prefix as org).
-
-            // Generate next collection ID
+            // Generate next order ID
             let next_id = NextOrderIndex::get()
                 .checked_add(1)
                 .expect("order id error");
@@ -225,7 +129,6 @@ decl_module! {
                             index_arr.push(next_id);
                             <OrdersByField>::mutate(field.name(), field.value(), |arr| *arr = index_arr);
                         }
-                    // ensure!(!index_arr.contains(&next_id), "Account already has admin role");
                     } else {
                         index_arr.push(next_id);
                         <OrdersByField>::insert(field.name(), field.value(), index_arr);
@@ -266,7 +169,6 @@ decl_module! {
         //    tokenAddress Address of the asset's contract
         //    tokenId The asset's token ID
         //    email The email allowed to buy.
-        //
         //     postAssetWhitelist(tokenAddress: string, tokenId: string | number, email: string): Promise<boolean>;
         #[weight = 10_000]
         pub fn post_asset_white_list(
@@ -280,6 +182,7 @@ decl_module! {
             } else {
                 <AssetWhitelist>::insert(token_address, token_id, email);
             }
+            Self::deposit_event(RawEvent::OrderPosted(token_address, token_id, email));
             Ok(())
         }
 
@@ -328,7 +231,6 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
-    //
     //     Get an order from the orderbook, throwing if none is found.
     //      query Query to use for getting orders. A subset of parameters
     //      on the `OrderJSON` type is supported
@@ -339,8 +241,8 @@ impl<T: Trait> Module<T> {
     ) -> Option<OrderJSONType<T::AccountId, T::Moment>> {
         if let Some(orders) = Self::get_orders(order_query, Some(1)) {
             if !orders.is_empty() {
-                if let Some(order) = orders.get(0){
-                return Some((*order).clone());
+                if let Some(order) = orders.get(0) {
+                    return Some((*order).clone());
                 }
             }
         }
@@ -432,13 +334,15 @@ impl<T: Trait> Module<T> {
         }
         let mut temp_order_indices: BTreeSet<u64> = BTreeSet::new();
         if let Some(order_query) = order_query {
-            if let None = Self::get_order_by_params(order_query.params, & mut temp_order_indices) {
+            if let None = Self::get_order_by_params(order_query.params, &mut temp_order_indices) {
                 return None;
             }
 
             let limit: usize = Self::convert_option_to_size(order_query.limit, 8);
             let offset: usize = Self::convert_option_to_size(order_query.offset, 0);
-            if let Some(result_orders) = Self::get_orders_by_indices(temp_order_indices, limit, offset) {
+            if let Some(result_orders) =
+                Self::get_orders_by_indices(temp_order_indices, limit, offset)
+            {
                 return Some(result_orders);
             }
         }
@@ -446,71 +350,71 @@ impl<T: Trait> Module<T> {
         None
     }
 
-//
-// Fetch an asset from the API, throwing if none is found
-//  tokenAddress Address of the asset's contract
-//  tokenId The asset's token ID, or null if ERC-20
-//  retries Number of times to retry if the service is unavailable for any reason
-//
-//     getAsset({ tokenAddress, tokenId }: {
-//         tokenAddress: string;
-//         tokenId: string | number | null;
-//     }, retries?: number): Promise<OpenSeaAsset>;
+    //
+    // Fetch an asset from the API, throwing if none is found
+    //  tokenAddress Address of the asset's contract
+    //  tokenId The asset's token ID, or null if ERC-20
+    //  retries Number of times to retry if the service is unavailable for any reason
+    //
+    //     getAsset({ tokenAddress, tokenId }: {
+    //         tokenAddress: string;
+    //         tokenId: string | number | null;
+    //     }, retries?: number): Promise<OpenSeaAsset>;
 
-pub fn get_asset(token_address: Option<Vec<u8>>, token_id: Option<Vec<u8>>) -> Option<JSONType> {
-  let mut token_ids : Option<Vec<TokenId>>= None;
-    if let Some(token_id) = token_id{
-    token_ids = Some(vec![token_id]);
-}
- let query = AssetQuery::<T::AccountId> {
-owner:None,
-asset_contract_address:token_address,
-token_ids:token_ids,
-search:None,
-order_by:None,
-order_direction:None,
-limit:Some(8),
-offset:Some(0),
-};
-    let page = 1;
-    if let Some(jsons) = Self::get_assets(Some(query), Some(page)) {
-        if !jsons.is_empty() {
-            if let Some(json) = jsons.get(0){
-return Some((*json).clone());
-}
+    pub fn get_asset(
+        token_address: Option<Vec<u8>>,
+        token_id: Option<Vec<u8>>,
+    ) -> Option<JSONType> {
+        let mut token_ids: Option<Vec<TokenId>> = None;
+        if let Some(token_id) = token_id {
+            token_ids = Some(vec![token_id]);
         }
-    }
-    None
-}
-
-//     Fetch list of assets from the API, returning the page of assets and the count of total assets
-//      query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` type is supported
-//      page Page number, defaults to 1. Can be overridden by
-//     `limit` and `offset` attributes from OpenSeaAssetQuery
-//
-//     getAssets(query?: OpenSeaAssetQuery, page?: number): Promise<{
-//         assets: OpenSeaAsset[];
-//         estimatedCount: number;
-//     }>;
-pub fn get_assets(
-    asset_query: Option<AssetQuery<T::AccountId>>,
-    page: Option<u64>,
-) -> Option<Vec<JSONType>> {
-    let order_query = convert_assetquery_to_orderquery(asset_query);
-
-    if let Some(orders) = Self::get_orders(order_query, page) {
-        if !orders.is_empty() {
-            let mut jsons: Vec<JSONType>= Vec::<JSONType>::with_capacity(orders.len());
-            for order in orders {
-                jsons.push(convert_orderjsontype_to_jsontype(order));
+        let query = AssetQuery::<T::AccountId> {
+            owner: None,
+            asset_contract_address: token_address,
+            token_ids: token_ids,
+            search: None,
+            order_by: None,
+            order_direction: None,
+            limit: Some(8),
+            offset: Some(0),
+        };
+        let page = 1;
+        if let Some(jsons) = Self::get_assets(Some(query), Some(page)) {
+            if !jsons.is_empty() {
+                if let Some(json) = jsons.get(0) {
+                    return Some((*json).clone());
+                }
             }
-            return Some(jsons);
         }
+        None
     }
 
-    None
-}
+    //     Fetch list of assets from the API, returning the page of assets and the count of total assets
+    //      query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` type is supported
+    //      page Page number, defaults to 1. Can be overridden by
+    //     `limit` and `offset` attributes from OpenSeaAssetQuery
+    //
+    //     getAssets(query?: OpenSeaAssetQuery, page?: number): Promise<{
+    //         assets: OpenSeaAsset[];
+    //         estimatedCount: number;
+    //     }>;
+    pub fn get_assets(
+        asset_query: Option<AssetQuery<T::AccountId>>,
+        page: Option<u64>,
+    ) -> Option<Vec<JSONType>> {
+        let order_query = convert_assetquery_to_orderquery(asset_query);
 
+        if let Some(orders) = Self::get_orders(order_query, page) {
+            if !orders.is_empty() {
+                let mut jsons: Vec<JSONType> = Vec::<JSONType>::with_capacity(orders.len());
+                for order in orders {
+                    jsons.push(convert_orderjsontype_to_jsontype(order));
+                }
+                return Some(jsons);
+            }
+        }
 
-
+        None
+    }
 }

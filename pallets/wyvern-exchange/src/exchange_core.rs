@@ -1,4 +1,4 @@
-//! # Substrate Enterprise Sample - OrderType Post example pallet
+//! # Pacific Store - Wyvern Exchange pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -26,16 +26,12 @@ use crate::sale_kind_interface;
 use crate::exchange_common;
 use crate::exchange_common::BalanceOf;
 use crate::exchange_common::Error;
-//  system::Trait + timestamp::Trait + sale_kind_interface::Trait +
 pub trait Trait:
   sale_kind_interface::Trait + exchange_common::Trait
 {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
     type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
-    // type Currency: Into<<Self as exchange_common::Trait>::Currency>;
-    // type Currency: ReservableCurrency<Self::AccountId>
-    //     + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 }
 
 decl_storage! {
@@ -118,36 +114,6 @@ decl_event!(
     }
 );
 
-// decl_error! {
-//     pub enum Error for Module<T: Trait> {
-//         OrderIdMissing,
-//         OrderIdTooLong,
-//         OrderIdExists,
-//         OrdersCannotMatch,
-//         OrdersCannotMatch1,
-//         OrderInvalidFieldName,
-//         ArraySizeNotAsSameAsDesired,
-//         ArraySizeNotAsSameAsMask,
-//         BuyTakerProtocolFeeGreaterThanSellTakerProtocolFee,
-//         BuyTakerRelayerFeeGreaterThanSellTakerRelayerFee,
-//         SellPaymentTokenEqualPaymentToken,
-//         SellTakerProtocolFeeGreaterThanBuyTakerProtocolFee,
-//         SellTakerRelayerFeeGreaterThanBuyTakerRelayerFee,
-//         ValueLessThanRequiredAmount,
-//         ValueNotZero,
-//         BuyPriceLessThanSellPrice,
-//         OrderHashMissing,
-//         OnlyMaker,
-//         OrderHashInvalid,
-//         OrderHashInvalid1,
-//         OrderHashInvalid2,
-//         OrderHashInvalid3,
-//         OrderHashInvalid4,
-//         OrderHashInvalid5,
-//         OrderHashInvalid6,
-//         OrderHashInvalid7,
-//     }
-// }
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
@@ -207,13 +173,11 @@ decl_module! {
 }
 
 impl<T: Trait> Module<T> {
-    //
     // Transfer tokens
     // token Token to transfer
     // from AccountId to charge fees
     // to AccountId to receive fees
     // amount Amount of protocol tokens to charge
-    //
     pub fn transfer_tokens(
         _token: &T::AccountId,
         _from: &T::AccountId,
@@ -276,7 +240,6 @@ impl<T: Trait> Module<T> {
     // from AccountId to charge fees
     // to AccountId to receive fees
     // amount Amount of protocol tokens to charge
-    //
     pub fn charge_protocol_fee(
         from: &T::AccountId,
         to: &T::AccountId,
@@ -285,38 +248,27 @@ impl<T: Trait> Module<T> {
         Self::transfer_tokens(&ExchangeToken::<T>::get(), &from, &to, amount)
     }
 
-    //
     // Hash an order, returning the canonical order hash, without the message prefix
     // order OrderType to hash
-    //#return Hash of order
-    //
+    // Hash of order
     pub fn hash_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<Vec<u8>, Error<T>> {
-        // hash := keccak256(add(array, 0x20), size)
-        //    sp_io::hashing::blake2_256(&h).into()
         Ok(keccak_256(&order.encode()).into())
-        // }
-        // }
-        // return hash;
     }
 
-    //
     // Hash an order, returning the hash that a client must sign, including the standard message prefix
     // order OrderType to hash
-    //#return Hash of message prefix and order hash per Ethereum format
-    //
+    // Hash of message prefix and order hash per Ethereum format
     pub fn hash_to_sign(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<Vec<u8>, Error<T>> {
         Ok(keccak_256(&Self::hash_order(&order)?).to_vec())
     }
 
-    //
     // Assert an order is valid and return its hash
     // order OrderType to validate
     // sig ECDSA signature
-    //
     pub fn require_valid_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &T::Signature,
@@ -324,20 +276,17 @@ impl<T: Trait> Module<T> {
         let hash: Vec<u8> = Self::hash_to_sign(&order)?;
         ensure!(
             Self::validate_order(&hash, order, sig)?,
-            Error::<T>::OrderHashInvalid
+            Error::<T>::InvalidOrderHash
         );
         Ok(hash)
     }
 
-    //
     // Validate order parameters (does *not* check validity:signature)
     // order OrderType to validate
-    //
     pub fn validate_order_parameters(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<bool, Error<T>> {
         // OrderType must be targeted at this protocol version (this contract:Exchange).
-        //TODO
         if order.exchange != ContractSelf::<T>::get() {
             return Ok(false);
         }
@@ -361,21 +310,18 @@ impl<T: Trait> Module<T> {
         Ok(true)
     }
 
-    //
     // Validate a provided previously approved / signed order, hash, and signature.
     // hash OrderType hash (calculated:already, passed to recalculation:avoid)
     // order OrderType to validate
     // sig ECDSA signature
-    //
     pub fn validate_order(
         hash: &[u8],
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &T::Signature,
     ) -> Result<bool, Error<T>> {
         // Not done in an if-conditional to prevent unnecessary ecrecover evaluation, which seems to happen even though it should short-circuit.
-        frame_support::debug::RuntimeLogger::init();
-        debug::error!("exchange is contract self.");
-        print("================");
+        // frame_support::debug::RuntimeLogger::init();
+        // debug::error!("exchange is contract self.");
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order)? {
             return Ok(false);
@@ -392,10 +338,6 @@ impl<T: Trait> Module<T> {
             return Ok(true);
         }
 
-        // or (b) ECDSA-signed by maker.
-        // if ecrecover(hash, sig.v, sig.r, sig.s) == order.maker {
-        //     return true;
-        // }
         if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
             return Ok(true);
         }
@@ -405,26 +347,21 @@ impl<T: Trait> Module<T> {
     // An alterantive way to validate a signature is:
     // Import the codec and traits:
     // Example function to verify the signature.
-
     pub fn check_signature(
         _signature: &T::Signature,
         _msg: &[u8],
         _signer: &T::AccountId,
     ) -> Result<(), Error<T>> {
-        // let mut bytes = [u8; 32];
-        // T::AccountId::decode(&mut &bytes[..]).unwrap_or_default();
         if _signature.verify(_msg, _signer) {
             Ok(())
         } else {
-            Err(Error::<T>::OrderIdMissing.into())
+            Err(Error::<T>::MsgVerifyFailed.into())
         }
     }
 
-    //
     // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
     // order OrderType to approve
     // orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
-    //
     pub fn approve_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -445,7 +382,6 @@ impl<T: Trait> Module<T> {
         );
 
         // EFFECTS
-
         // Mark order as approved.
         ApprovedOrders::insert(hash.clone(), true);
 
@@ -465,7 +401,6 @@ impl<T: Trait> Module<T> {
             order.sale_kind.clone(),
             order.target.clone(),
         ));
-
         Self::deposit_event(RawEvent::OrderApprovedPartTwo(
             hash.clone(),
             order.how_to_call.clone(),
@@ -481,15 +416,12 @@ impl<T: Trait> Module<T> {
             order.salt.clone(),
             orderbook_inclusion_desired,
         ));
-
         Ok(())
     }
 
-    //
     // Cancel an order, preventing it from being matched. Must be called by the maker of the order
     // order OrderType to cancel
     // sig ECDSA signature
-    //
     pub fn cancel_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -513,11 +445,9 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
-    //
     // Calculate the current price of an order (fn:convenience)
     // order OrderType to calculate the price of
-    //#return The current price of the order
-    //
+    // The current price of the order
     pub fn calculate_current_price(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<BalanceOf<T>, Error<T>> {
@@ -531,12 +461,10 @@ impl<T: Trait> Module<T> {
         )
     }
 
-    //
     // Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
     // buy Buy-side order
     // sell Sell-side order
-    //#return Match price
-    //
+    // Match price
     pub fn calculate_match_price(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -577,18 +505,16 @@ impl<T: Trait> Module<T> {
         Ok(price)
     }
 
-    //
-    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
-    //
     pub fn execute_funds_transfer(
         msg_value: BalanceOf<T>,
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<BalanceOf<T>, Error<T>> {
         // let originprotocol_fee_recipient = ProtocolFeeRecipient::<T>::get();
-        // Only payable in the special case of unwrapped Ether.
+        // Only payable in the special case of unwrapped DOT.
         if sell.payment_token != ContractSelf::<T>::get() {
             ensure!(msg_value == Zero::zero(), Error::<T>::ValueNotZero);
         }
@@ -596,15 +522,15 @@ impl<T: Trait> Module<T> {
         // Calculate match price.
         let price: BalanceOf<T> = Self::calculate_match_price(&buy, &sell)?;
 
-        // If paying using a token (Ether:not), transfer tokens. This is done prior to fee payments to that a seller will have tokens before being charged fees.
+        // If paying using a token (DOT:not), transfer tokens. This is done prior to fee payments to that a seller will have tokens before being charged fees.
         if price > Zero::zero() && sell.payment_token != ContractSelf::<T>::get() {
             Self::transfer_tokens(sell.payment_token(), &buy.maker(), sell.maker(), price)?;
         }
 
-        // Amount that will be received by seller (Ether:for).
+        // Amount that will be received by seller (DOT:for).
         let mut receive_amount: BalanceOf<T> = price;
 
-        // Amount that must be sent by buyer (Ether:for).
+        // Amount that must be sent by buyer (DOT:for).
         let mut required_amount: BalanceOf<T> = price;
 
         // Determine maker/taker and charge fees accordingly.
@@ -617,182 +543,13 @@ impl<T: Trait> Module<T> {
                 &mut receive_amount,
                 &mut required_amount,
             )?;
-        // // Assert taker fee is less than or equal to maximum fee specified by buyer.
-        // ensure!(
-        //     sell.taker_relayer_fee <= buy.taker_relayer_fee,
-        //     Error::<T>::OrderIdMissing
-        // );
-
-        // if sell.fee_method == FeeMethod::SplitFee {
-        //     // Assert taker fee is less than or equal to maximum fee specified by buyer.
-        //     ensure!(
-        //         sell.taker_protocol_fee <= buy.taker_protocol_fee,
-        //         Error::<T>::OrderIdMissing
-        //     );
-
-        //     // Maker fees are deducted from the token amount that the maker receives. Taker fees are extra tokens that must be paid by the taker.
-
-        //     if sell.maker_relayer_fee > Zero::zero() {
-        //         let maker_relayer_fee: BalanceOf<T> = sell.maker_relayer_fee * price / INVERSE_BASIS_POINT.into();
-        //         if sell.payment_token == ContractSelf::<T>::get() {
-        //             receive_amount = receive_amount - maker_relayer_fee;
-        //             // sell.fee_recipient.transfer(maker_relayer_fee);
-        //           Self::transfer_tokens(
-        //                 &ContractSelf::<T>::get(),
-        //                 &ContractSelf::<T>::get(),
-        //                 &sell.fee_recipient,
-        //                 maker_relayer_fee,
-        //             )?;
-        //         } else {
-        //           Self::transfer_tokens(
-        //                 sell.payment_token(),
-        //                 sell.maker(),
-        //                 &sell.fee_recipient,
-        //                 maker_relayer_fee,
-        //             )?;
-        //         }
-        //     }
-
-        //     if sell.taker_relayer_fee > Zero::zero() {
-        //         let taker_relayer_fee: BalanceOf<T> = sell.taker_relayer_fee * price / INVERSE_BASIS_POINT.into();
-        //         if sell.payment_token == ContractSelf::<T>::get() {
-        //             required_amount = required_amount + taker_relayer_fee;
-        //             // sell.fee_recipient.transfer(taker_relayer_fee);
-        //           Self::transfer_tokens(
-        //                 &ContractSelf::<T>::get(),
-        //                 &ContractSelf::<T>::get(),
-        //                 &sell.fee_recipient,
-        //                 taker_relayer_fee,
-        //             )?;
-        //         } else {
-        //           Self::transfer_tokens(
-        //                 sell.payment_token(),
-        //                 buy.maker(),
-        //                 &sell.fee_recipient,
-        //                 taker_relayer_fee,
-        //             )?;
-        //         }
-        //     }
-
-        //     if sell.maker_protocol_fee > Zero::zero() {
-        //         let maker_protocol_fee: BalanceOf<T> = sell.maker_protocol_fee * price / INVERSE_BASIS_POINT.into();
-        //         if sell.payment_token == ContractSelf::<T>::get() {
-        //             receive_amount = receive_amount - maker_protocol_fee;
-        //             // ProtocolFeeRecipient.transfer(maker_protocol_fee);
-        //           Self::transfer_tokens(
-        //                 &ContractSelf::<T>::get(),
-        //                 &ContractSelf::<T>::get(),
-        //                 &originprotocol_fee_recipient,
-        //                 maker_protocol_fee,
-        //             )?;
-        //         } else {
-        //           Self::transfer_tokens(
-        //                 sell.payment_token(),
-        //                 sell.maker(),
-        //                 &originprotocol_fee_recipient,
-        //                 maker_protocol_fee,
-        //             )?;
-        //         }
-        //     }
-
-        //     if sell.taker_protocol_fee > Zero::zero() {
-        //         let taker_protocol_fee: BalanceOf<T> = sell.taker_protocol_fee * price / INVERSE_BASIS_POINT.into();
-        //         if sell.payment_token == ContractSelf::<T>::get() {
-        //             required_amount = required_amount + taker_protocol_fee;
-        //             // ProtocolFeeRecipient.transfer(taker_protocol_fee);
-        //           Self::transfer_tokens(
-        //                 &ContractSelf::<T>::get(),
-        //                 &ContractSelf::<T>::get(),
-        //                 &originprotocol_fee_recipient,
-        //                 taker_protocol_fee,
-        //             )?;
-        //         } else {
-        //           Self::transfer_tokens(
-        //                 sell.payment_token(),
-        //                 buy.maker(),
-        //                 &originprotocol_fee_recipient,
-        //                 taker_protocol_fee,
-        //             )?;
-        //         }
-        //     }
-        // } else {
-        //     // Charge maker fee to seller.
-        //   Self::charge_protocol_fee(&sell.maker, &sell.fee_recipient, sell.maker_relayer_fee)?;
-
-        //     // Charge taker fee to buyer.
-        //   Self::charge_protocol_fee(&buy.maker, &sell.fee_recipient, sell.taker_relayer_fee)?;
-        // }
         } else {
             // Buy-side order is maker.
             Self::execute_funds_transfer_buy_side(buy, sell, &price)?;
-
-            // // Assert taker fee is less than or equal to maximum fee specified by seller.
-            // ensure!(
-            //     buy.taker_relayer_fee <= sell.taker_relayer_fee,
-            //     Error::<T>::OrderIdMissing
-            // );
-
-            // if sell.fee_method == FeeMethod::SplitFee {
-            //     // The Exchange does not escrow Ether, so direct Ether can only be used to with sell-side maker / buy-side taker orders.
-            //     ensure!(sell.payment_token != ContractSelf::<T>::get(), Error::<T>::OrderIdMissing);
-
-            //     // Assert taker fee is less than or equal to maximum fee specified by seller.
-            //     ensure!(
-            //         buy.taker_protocol_fee <= sell.taker_protocol_fee,
-            //         Error::<T>::OrderIdMissing
-            //     );
-
-            //     if buy.maker_relayer_fee > Zero::zero() {
-            //        let maker_relayer_fee =buy.maker_relayer_fee * price / INVERSE_BASIS_POINT.into();
-            //       Self::transfer_tokens(
-            //             sell.payment_token(),
-            //             buy.maker(),
-            //             &buy.fee_recipient,
-            //             maker_relayer_fee,
-            //         )?;
-            //     }
-
-            //     if buy.taker_relayer_fee > Zero::zero() {
-            //        let taker_relayer_fee = buy.taker_relayer_fee * price / INVERSE_BASIS_POINT.into();
-            //       Self::transfer_tokens(
-            //             sell.payment_token(),
-            //             sell.maker(),
-            //             &buy.fee_recipient,
-            //             taker_relayer_fee,
-            //         )?;
-            //     }
-
-            //     if buy.maker_protocol_fee > Zero::zero() {
-            //        let maker_protocol_fee = buy.maker_protocol_fee * price / INVERSE_BASIS_POINT.into();
-            //       Self::transfer_tokens(
-            //             sell.payment_token(),
-            //             buy.maker(),
-            //             &originprotocol_fee_recipient,
-            //             maker_protocol_fee,
-            //         )?;
-            //     }
-
-            //     if buy.taker_protocol_fee > Zero::zero() {
-            //         let taker_protocol_fee = buy.taker_protocol_fee * price / INVERSE_BASIS_POINT.into();
-            //       Self::transfer_tokens(
-            //             &sell.payment_token,
-            //             &sell.maker,
-            //             &originprotocol_fee_recipient,
-            //             taker_protocol_fee,
-            //         )?;
-            //     }
-
-            // } else {
-            //     // Charge maker fee to buyer.
-            //   Self::charge_protocol_fee(&buy.maker, &buy.fee_recipient, buy.maker_relayer_fee)?;
-
-            //     // Charge taker fee to seller.
-            //   Self::charge_protocol_fee(&sell.maker, &buy.fee_recipient, buy.taker_relayer_fee)?;
-            // }
         }
 
         if sell.payment_token == ContractSelf::<T>::get() {
-            // Special-case Ether, order must be matched by buyer.
+            // Special-case DOT, order must be matched by buyer.
             ensure!(
                 msg_value >= required_amount,
                 Error::<T>::ValueLessThanRequiredAmount
@@ -817,16 +574,13 @@ impl<T: Trait> Module<T> {
             }
         }
 
-        // This contract should never hold Ether, however, we cannot assert this, since it is impossible to prevent anyone from sending Ether e.g. with selfdestruct.
-
+        // This contract should never hold DOT, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(price)
     }
 
-    //
-    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
-    //
     pub fn execute_funds_transfer_sell_side(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -838,7 +592,6 @@ impl<T: Trait> Module<T> {
 
         // Determine maker/taker and charge fees accordingly.
         // Sell-side order is maker.
-
         // Assert taker fee is less than or equal to maximum fee specified by buyer.
         ensure!(
             sell.taker_relayer_fee <= buy.taker_relayer_fee,
@@ -853,7 +606,6 @@ impl<T: Trait> Module<T> {
             );
 
             // Maker fees are deducted from the token amount that the maker receives. Taker fees are extra tokens that must be paid by the taker.
-
             Self::transfer_tokens_fee_sell(
                 sell.payment_token(),
                 sell.maker(),
@@ -901,16 +653,13 @@ impl<T: Trait> Module<T> {
             Self::charge_protocol_fee(&buy.maker, &sell.fee_recipient, sell.taker_relayer_fee)?;
         }
 
-        // This contract should never hold Ether, however, we cannot assert this, since it is impossible to prevent anyone from sending Ether e.g. with selfdestruct.
-
+        // This contract should never hold token, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(*price)
     }
 
-    //
-    // Execute all ERC20 token / Ether transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
-    //
     pub fn execute_funds_transfer_buy_side(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -928,7 +677,7 @@ impl<T: Trait> Module<T> {
         );
 
         if sell.fee_method == FeeMethod::SplitFee {
-            // The Exchange does not escrow Ether, so direct Ether can only be used to with sell-side maker / buy-side taker orders.
+            // The Exchange does not escrow DOT, so direct DOT can only be used to with sell-side maker / buy-side taker orders.
             ensure!(
                 sell.payment_token != ContractSelf::<T>::get(),
                 Error::<T>::SellPaymentTokenEqualPaymentToken
@@ -979,17 +728,14 @@ impl<T: Trait> Module<T> {
             Self::charge_protocol_fee(&sell.maker, &buy.fee_recipient, buy.taker_relayer_fee)?;
         }
 
-        // This contract should never hold Ether, however, we cannot assert this, since it is impossible to prevent anyone from sending Ether e.g. with selfdestruct.
-
+        // This contract should never hold DOT, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(*price)
     }
 
-    //
     // Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
     // buy Buy-side order
     // sell Sell-side order
-    //#return Whether or not the two orders can be matched
-    //
+    // Whether or not the two orders can be matched
     pub fn orders_can_match(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -1015,13 +761,11 @@ impl<T: Trait> Module<T> {
             <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)?)
     }
 
-    //
     // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
     // buy Buy-side order
     // buy_sig Buy-side order signature
     // sell Sell-side order
     // sell_sig Sell-side order signature
-    //
     pub fn atomic_match(
         msg_sender: T::AccountId,
         msg_value: BalanceOf<T>,
@@ -1031,15 +775,12 @@ impl<T: Trait> Module<T> {
         sell_sig: T::Signature,
         metadata: &[u8],
     ) -> Result<(), Error<T>> {
-        //reentrancyGuard
-        // CHECKS
-
         // Ensure buy order validity and calculate hash if necessary.
         let mut buy_hash: Vec<u8> = vec![];
         if buy.maker == msg_sender {
             ensure!(
                 Self::validate_order_parameters(&buy)?,
-                Error::<T>::OrderIdTooLong
+                Error::<T>::InvalidBuyOrderParameters
             );
         } else {
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
@@ -1050,7 +791,7 @@ impl<T: Trait> Module<T> {
         if sell.maker == msg_sender {
             ensure!(
                 Self::validate_order_parameters(&sell)?,
-                Error::<T>::OrderIdExists
+                Error::<T>::InvalidSellOrderParameters
             );
         } else {
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
@@ -1061,14 +802,6 @@ impl<T: Trait> Module<T> {
             Self::orders_can_match(&buy, &sell)?,
             Error::<T>::OrdersCannotMatch
         );
-
-        // Target must exist (prevent malicious selfdestructs just prior to settlement:order).
-        // BalanceOf<T> size;
-        // AccountId target = sell.target;
-        // assembly {
-        //     size := extcodesize(target)
-        // }
-        // ensure!(size > 0, Error::<T>::OrderIdMissing);
 
         // Must match calldata after replacement, if specified.
         let mut buycalldata = buy.calldata.clone();
@@ -1089,7 +822,7 @@ impl<T: Trait> Module<T> {
         }
         ensure!(
             <exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata),
-            Error::<T>::OrderInvalidFieldName
+            Error::<T>::ArrayNotEqual
         );
 
         // Mark previously signed or approved orders as finalized.
@@ -1107,28 +840,8 @@ impl<T: Trait> Module<T> {
         );
 
         // INTERACTIONS
-
         // Execute funds transfer and pay fees.
         let price: BalanceOf<T> = Self::execute_funds_transfer(msg_value, &buy, &sell)?;
-
-        // Execute specified call through proxy.
-        //TODO
-        // ensure!(
-        //     proxy.proxy(sell.target, sell.how_to_call, sell.calldata),
-        //     Error::<T>::OrderIdMissing
-        // );
-
-        // Static calls are intentionally done after the effectful call so they can check resulting state.
-
-        // Handle buy-side static call if specified.
-        // if buy.static_target != ContractSelf::<T>::get() {
-        //     ensure!(Self::staticCall(buy.static_target, sell.calldata, buy.static_extradata), Error::<T>::OrderIdMissing);
-        // }
-
-        // // Handle sell-side static call if specified.
-        // if sell.static_target != ContractSelf::<T>::get() {
-        //     ensure!(Self::staticCall(sell.static_target, sell.calldata, sell.static_extradata), Error::<T>::OrderIdMissing);
-        // }
 
         // Log match event.
         Self::deposit_event(RawEvent::OrdersMatched(

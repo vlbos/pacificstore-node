@@ -142,21 +142,21 @@ pub struct JSONType {
 pub fn convert_assetquery_to_orderquery<AccountId>(
     asset_query: Option<AssetQuery<AccountId>>,
 ) -> Option<OrderQuery<AccountId>> {
-if let Some(asset_query)=asset_query{
-    let mut token_address = Vec::new();
-    if let Some(asset_contract_address) = asset_query.asset_contract_address {
-        token_address = asset_contract_address;
-    }
+    if let Some(asset_query) = asset_query {
+        let mut token_address = Vec::new();
+        if let Some(asset_contract_address) = asset_query.asset_contract_address {
+            token_address = asset_contract_address;
+        }
 
-    return Some(OrderQuery::<AccountId> {
-        limit: asset_query.limit,
-        offset: asset_query.offset,
-        owner: asset_query.owner,
-        token_ids: asset_query.token_ids,
-        params: Some(vec![OrderField::new(b"token_address", &token_address)]),
-    });
-}
-None
+        return Some(OrderQuery::<AccountId> {
+            limit: asset_query.limit,
+            offset: asset_query.offset,
+            owner: asset_query.owner,
+            token_ids: asset_query.token_ids,
+            params: Some(vec![OrderField::new(b"token_address", &token_address)]),
+        });
+    }
+    None
 }
 
 pub fn convert_orderjsontype_to_jsontype<AccountId, Moment>(
@@ -164,6 +164,6 @@ pub fn convert_orderjsontype_to_jsontype<AccountId, Moment>(
 ) -> JSONType {
     JSONType {
         fields: order_json.fields,
-jsons:None,
+        jsons: None,
     }
 }
