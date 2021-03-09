@@ -14,7 +14,7 @@ use frame_support::{
         print,
         traits::{IdentifyAccount, Member, Verify, Zero},
     },
-    sp_std::prelude::*,
+    sp_std::{if_std,prelude::*},
     traits::{Currency, LockableCurrency, ReservableCurrency},
 };
 
@@ -259,7 +259,7 @@ impl<T: Trait> Module<T> {
 
     // Hash an order, returning the hash that a client must sign, including the standard message prefix
     // order OrderType to hash
-    // Hash of message prefix and order hash per Ethereum format
+    // Hash of  order hash per Polkadot format
     pub fn hash_to_sign(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<Vec<u8>, Error<T>> {
@@ -319,16 +319,17 @@ impl<T: Trait> Module<T> {
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &T::Signature,
     ) -> Result<bool, Error<T>> {
-        // Not done in an if-conditional to prevent unnecessary ecrecover evaluation, which seems to happen even though it should short-circuit.
         // frame_support::debug::RuntimeLogger::init();
         // debug::error!("exchange is contract self.");
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order)? {
+        if_std!{println!("326");}
             return Ok(false);
         }
 
         // OrderType must have not been canceled or already filled.
         if CancelledOrFinalized::get(hash) {
+        if_std!{println!("332");}
             return Ok(false);
         }
 
@@ -341,6 +342,7 @@ impl<T: Trait> Module<T> {
         if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
             return Ok(true);
         }
+        if_std!{println!("343");}
         Ok(false)
     }
 
@@ -741,7 +743,8 @@ impl<T: Trait> Module<T> {
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<bool, Error<T>> {
         //  Must be opposite-side.
-        Ok((buy.side == Side::Buy && sell.side == Side::Sell) &&
+        Ok(
+(buy.side == Side::Buy && sell.side == Side::Sell) &&
             // Must use same fee method.
             (buy.fee_method == sell.fee_method) &&
             // Must use same payment token. 
@@ -758,7 +761,8 @@ impl<T: Trait> Module<T> {
             // Buy-side order must be settleable. 
             <sale_kind_interface::Module<T>>::can_settle_order(buy.listing_time, buy.expiration_time)? &&
             // Sell-side order must be settleable. 
-            <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)?)
+            <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)?
+)
     }
 
     // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
@@ -783,6 +787,7 @@ impl<T: Trait> Module<T> {
                 Error::<T>::InvalidBuyOrderParameters
             );
         } else {
+if_std!{println!("789");}
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
         }
 
@@ -794,6 +799,7 @@ impl<T: Trait> Module<T> {
                 Error::<T>::InvalidSellOrderParameters
             );
         } else {
+if_std!{println!("801");}
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
         }
 

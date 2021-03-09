@@ -62,24 +62,23 @@ where
 	C::Api: OrderbookRuntimeApi<Block,AccountId, Moment>,
     AccountId:Codec,
     Moment:Codec
-{
-	fn get_orders(&self,
-        order_query: Option<OrderQuery<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
-    ) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>{
-		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(||
-			// If the block hash is not supplied assume the best block.
-			self.client.info().best_hash));
+    {
+        fn get_orders(&self,
+            order_query: Option<OrderQuery<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
+        ) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>{
+            let api = self.client.runtime_api();
+            let at = BlockId::hash(at.unwrap_or_else(||
+                // If the block hash is not supplied assume the best block.
+                self.client.info().best_hash));
 
-		let runtime_api_result = api.get_orders(&at,order_query,page);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
-}
-
-}
+            let runtime_api_result = api.get_orders(&at,order_query,page);
+            runtime_api_result.map_err(|e| RpcError {
+                code: ErrorCode::ServerError(9876), // No real reason for this value
+                message: "Something wrong".into(),
+                data: Some(format!("{:?}", e).into()),
+            })
+        }
+    }
 
 
 

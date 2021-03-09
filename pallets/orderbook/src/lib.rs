@@ -18,25 +18,23 @@
 //! ### Dispatchable Functions
 //!
 //! * `post_order` - Send an order to the orderbook.
-//!
+//! * `post_asset_white_list`  -  Create a whitelist entry for an asset to prevent others from buying.Buyers will have to have verified at least one of the emails on an asset in order to buy.
 
 //! ### Public Functions
 //!
 //! * `get_orders` - Get a list of orders from the orderbook, returning the page of orders
 //!   and the count of total orders found.
+//! * `get_asset` - Fetch an asset from the API, throwing if none is found
+//! * `get_assets` - Fetch list of assets from the API, returning the page of assets and the count of total assets
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
 use frame_support::{
     decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
-    sp_runtime::RuntimeDebug, sp_std::orders::btree_set::BTreeSet, sp_std::prelude::*,
+    sp_std::{collections::btree_set::BTreeSet,if_std}, sp_std::prelude::*,
 };
 
-#[cfg(feature = "std")]
-use serde::{Deserialize, Serialize};
-// traits::EnsureOrigin,
 use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
@@ -51,6 +49,7 @@ pub use crate::types::*;
 mod builders;
 use crate::builders::*;
 
+
 pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
 }
@@ -59,8 +58,8 @@ decl_storage! {
     trait Store for Module<T: Trait> as Orderbook {
         NextOrderIndex: u64;
         pub Orders get(fn order_by_index): map hasher(blake2_128_concat) u64 => Option<OrderJSONType<T::AccountId, T::Moment>>;
-        pub Orderi get(fn order_by_id): map hasher(blake2_128_concat) OrderId => u64;
-        pub OrdersByField get(fn orders_by_field): double_map hasher(blake2_128_concat) Vec<u8>, hasher(blake2_128_concat) Vec<u8>  => Vec<u64>;
+        pub OrderIndices get(fn order_index_by_id): map hasher(blake2_128_concat) OrderId => u64;
+        pub OrdersByField get(fn order_index_by_field): double_map hasher(blake2_128_concat) Vec<u8>, hasher(blake2_128_concat) Vec<u8>  => Vec<u64>;
         pub OwnerOf get(fn owner_of): map hasher(blake2_128_concat) OrderId => Option<T::AccountId>;
         pub AssetWhitelist get(fn asset_white_list): double_map hasher(blake2_128_concat) Vec<u8>, hasher(blake2_128_concat) Vec<u8>  => Vec<u8>;
     }
@@ -92,8 +91,8 @@ decl_module! {
         type Error = Error<T>;
         fn deposit_event() = default;
 
-        //     Send an order to the orderbook.
-        //     param order Order JSON to post to the orderbook
+        /// Send an order to the orderbook.
+        /// param order Order JSON to post to the orderbook
         #[weight = 10_000]
         pub fn post_order(
             origin,
@@ -109,15 +108,15 @@ decl_module! {
             // Validate order fields
             Self::validate_order_fields(&fields)?;
 
-            // Check order doesn't exist yet 
+            // Check order doesn't exist yet
             Self::validate_new_order(&order_id)?;
 
             // Generate next order ID
-            let next_id = NextOrderIndex::get()
+            let next_index = NextOrderIndex::get()
                 .checked_add(1)
                 .expect("order id error");
 
-            NextOrderIndex::put(next_id);
+            NextOrderIndex::put(next_index);
 
             if let Some(fields) = &fields {
                 for field in fields {
@@ -125,17 +124,15 @@ decl_module! {
 
                     if <OrdersByField>::contains_key(field.name(), field.value()) {
                         index_arr = <OrdersByField>::get(field.name(), field.value());
-                        if !index_arr.contains(&next_id) {
-                            index_arr.push(next_id);
+                        if !index_arr.contains(&next_index) {
+                            index_arr.push(next_index);
                             <OrdersByField>::mutate(field.name(), field.value(), |arr| *arr = index_arr);
                         }
                     } else {
-                        index_arr.push(next_id);
+                        index_arr.push(next_index);
                         <OrdersByField>::insert(field.name(), field.value(), index_arr);
                     }
-
-                    //   <OrdersByField<T>>::append(&field, &next_id);
-                }
+               }
             }
 
             // Create a order instance
@@ -145,12 +142,12 @@ decl_module! {
                 .registered_on(<timestamp::Module<T>>::now())
                 .with_fields(fields)
                 .build();
-            order.index = next_id;
-            if !<Orders<T>>::contains_key(next_id.clone()) {
-                <Orders<T>>::insert(next_id, order);
+            order.index = next_index;
+            if !<Orders<T>>::contains_key(next_index.clone()) {
+                <Orders<T>>::insert(next_index, order);
             }
-            if !<Orderi>::contains_key(order_id.clone()) {
-                <Orderi>::insert(&order_id, next_id);
+            if !<OrderIndices>::contains_key(order_id.clone()) {
+                <OrderIndices>::insert(&order_id, next_index);
             }
             // <OrdersByField<T>>::append(&owner, &order_id);
             if !<OwnerOf<T>>::contains_key(order_id.clone()) {
@@ -162,14 +159,14 @@ decl_module! {
             Ok(())
         }
 
-        //   Create a whitelist entry for an asset to prevent others from buying.
-        //   Buyers will have to have verified at least one of the emails
-        //   on an asset in order to buy.
-        //   This will return error code if the given API key isn't allowed to create whitelist entries for this contract or asset.
-        //    tokenAddress Address of the asset's contract
-        //    tokenId The asset's token ID
-        //    email The email allowed to buy.
-        //     postAssetWhitelist(tokenAddress: string, tokenId: string | number, email: string): Promise<boolean>;
+        /// Create a whitelist entry for an asset to prevent others from buying.
+        /// Buyers will have to have verified at least one of the emails
+        /// on an asset in order to buy.
+        /// This will return error code if the given API key isn't allowed to create whitelist entries for this contract or asset.
+        /// tokenAddress Address of the asset's contract
+        /// tokenId The asset's token ID
+        /// email The email allowed to buy.
+        /// postAssetWhitelist(tokenAddress: string, tokenId: string | number, email: string): Promise<boolean>;
         #[weight = 10_000]
         pub fn post_asset_white_list(
             origin,
@@ -178,11 +175,11 @@ decl_module! {
             email: Vec<u8>,
         ) -> DispatchResult {
             if <AssetWhitelist>::contains_key(token_address.clone(), token_id.clone()) {
-                <AssetWhitelist>::mutate(token_address, token_id, |_email| *_email = email);
+                <AssetWhitelist>::mutate(token_address.clone(), token_id.clone(), |_email| *_email = email.clone());
             } else {
-                <AssetWhitelist>::insert(token_address, token_id, email);
+                <AssetWhitelist>::insert(token_address.clone(), token_id.clone(), email.clone());
             }
-            Self::deposit_event(RawEvent::OrderPosted(token_address, token_id, email));
+            Self::deposit_event(RawEvent::AssetWhiteListPosted(token_address, token_id, email));
             Ok(())
         }
 
@@ -190,7 +187,7 @@ decl_module! {
 }
 
 impl<T: Trait> Module<T> {
-    // Helper methods
+    /// Helper methods
     fn new_order() -> OrderBuilder<T::AccountId, T::Moment> {
         OrderBuilder::<T::AccountId, T::Moment>::default()
     }
@@ -207,7 +204,10 @@ impl<T: Trait> Module<T> {
 
     pub fn validate_new_order(order_id: &[u8]) -> DispatchResult {
         // Order existence check
-        ensure!(!<Orderi>::contains_key(order_id), Error::<T>::OrderIdExists);
+        ensure!(
+            !<OrderIndices>::contains_key(order_id),
+            Error::<T>::OrderIdExists
+        );
         Ok(())
     }
 
@@ -231,11 +231,9 @@ impl<T: Trait> Module<T> {
         Ok(())
     }
 
-    //     Get an order from the orderbook, throwing if none is found.
-    //      query Query to use for getting orders. A subset of parameters
-    //      on the `OrderJSON` type is supported
-    //
-    //     getOrder(query: OrderQuery): Promise<Order>;
+    /// Get an order from the orderbook, throwing if none is found.
+    /// query Query to use for getting orders. A subset of parameters
+    /// on the `OrderJSON` type is supported
     pub fn get_order(
         order_query: Option<OrderQuery<T::AccountId>>,
     ) -> Option<OrderJSONType<T::AccountId, T::Moment>> {
@@ -258,12 +256,44 @@ impl<T: Trait> Module<T> {
             *order_indices = indexes.into_iter().collect::<BTreeSet<_>>();
         }
     }
+
+    pub fn get_order_by_token_ids(
+        token_ids: Option<Vec<TokenId>>,
+        order_indices: &mut BTreeSet<u64>,
+    ) -> Option<()> {
+        let field_name: Vec<u8> = b"metadata.asset.token_id".to_vec();
+        let mut order_indices_by_token_ids = Vec::<u64>::new();
+        if let Some(token_ids) = &token_ids {
+            if token_ids.len() <= MAX_TOKEN_IDS {
+                return None;
+            }
+            for token_id in token_ids {
+                if <OrdersByField>::contains_key(field_name.clone(), token_id.to_vec()) {
+                    let mut order_indexes =
+                        <OrdersByField>::get(field_name.clone(), token_id.to_vec());
+                    if !order_indexes.is_empty() {
+                        order_indices_by_token_ids.append(&mut order_indexes);
+                    }
+                }
+            }
+        }
+
+        Self::order_intersection(order_indices, order_indices_by_token_ids);
+        if order_indices.is_empty() {
+            return None;
+        }
+        Some(())
+    }
+
     pub fn get_order_by_params(
         params: Option<Vec<OrderField>>,
         order_indices: &mut BTreeSet<u64>,
     ) -> Option<()> {
         if let Some(params) = &params {
-            if params.len() <= ORDER_MAX_FIELDS {
+            if params.len() > ORDER_MAX_PARAMS {
+                if_std! {
+                println!("params' length is greater than ORDER_MAX_FIELDS ");
+                        }
                 return None;
             }
             for field in params {
@@ -273,10 +303,24 @@ impl<T: Trait> Module<T> {
                         <OrdersByField>::get(field.name(), field.value()),
                     );
                     if order_indices.is_empty() {
+                        if_std! {
+                        println!("order_indices is empty");
+                                }
                         return None;
-                    }
+                    } 
+                } else {
+                    if_std! {
+                    println!("OrdersByField doesn't contain {:#?}{:#?}",field.name(), field.value());
+                            }
                 }
             }
+
+            if order_indices.is_empty() {
+                if_std! {
+                println!("order_indices is empty in get_order_by_params");
+                        }
+                return None;
+            } 
         }
         Some(())
     }
@@ -293,21 +337,28 @@ impl<T: Trait> Module<T> {
         offset: usize,
     ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
         if temp_order_indices.is_empty() {
+            if_std! {
+            println!("temp_order_indices is empty in get_orders_by_indices ");
+                    }
             return None;
         }
         let mut result_orders: Vec<OrderJSONType<T::AccountId, T::Moment>> = Vec::new();
         let result_order_indices: Vec<u64> = temp_order_indices.into_iter().collect::<Vec<_>>();
         if result_order_indices.len() <= offset {
+            if_std! {
+            println!("result_order_indices'length is less than offset");
+                    }
             return None;
         }
         let end = if result_order_indices.len() <= offset + limit {
-            result_order_indices.len() - 1
+            result_order_indices.len()
         } else {
             offset + limit
         };
 
         for i in offset..end {
             let index = i as usize;
+
             if <Orders<T>>::contains_key(result_order_indices[index]) {
                 let o = <Orders<T>>::get(result_order_indices[index]);
                 if let Some(o) = o {
@@ -318,12 +369,12 @@ impl<T: Trait> Module<T> {
 
         Some(result_orders)
     }
-    //   Get a list of orders from the orderbook, returning the page of orders
-    //    and the count of total orders found.
-    //   param query Query to use for getting orders. A subset of parameters
-    //    on the `OrderJSON` type is supported
-    //   param page Page number, defaults to 1. Can be overridden by
-    //   `limit` and `offset` attributes from OrderQuery
+    /// Get a list of orders from the orderbook, returning the page of orders
+    /// and the count of total orders found.
+    /// param query Query to use for getting orders. A subset of parameters
+    /// on the `OrderJSON` type is supported
+    /// param page Page number, defaults to 1. Can be overridden by
+    /// `limit` and `offset` attributes from OrderQuery
     pub fn get_orders(
         order_query: Option<OrderQuery<T::AccountId>>,
         page: Option<u64>,
@@ -332,10 +383,34 @@ impl<T: Trait> Module<T> {
         if let Some(page) = page {
             _page = page
         }
+
         let mut temp_order_indices: BTreeSet<u64> = BTreeSet::new();
         if let Some(order_query) = order_query {
             if let None = Self::get_order_by_params(order_query.params, &mut temp_order_indices) {
+                if_std! {
+                    println!("get_order_by_params is empty in get_orders");
+                }
                 return None;
+            }
+
+            if temp_order_indices.is_empty() {
+                if_std! {
+                    println!("temp_order_indices is empty");
+                }
+                return None;
+            }
+
+            if let Some(token_ids) = order_query.token_ids {
+                if !token_ids.is_empty() {
+                    if let None =
+                        Self::get_order_by_token_ids(Some(token_ids), &mut temp_order_indices)
+                    {
+                        if_std! {
+                            println!("get_order_by_token_ids return empty in get_orders");
+                        }
+                        return None;
+                    }
+                }
             }
 
             let limit: usize = Self::convert_option_to_size(order_query.limit, 8);
@@ -350,17 +425,10 @@ impl<T: Trait> Module<T> {
         None
     }
 
-    //
-    // Fetch an asset from the API, throwing if none is found
-    //  tokenAddress Address of the asset's contract
-    //  tokenId The asset's token ID, or null if ERC-20
-    //  retries Number of times to retry if the service is unavailable for any reason
-    //
-    //     getAsset({ tokenAddress, tokenId }: {
-    //         tokenAddress: string;
-    //         tokenId: string | number | null;
-    //     }, retries?: number): Promise<OpenSeaAsset>;
-
+    /// Fetch an asset from the API, throwing if none is found
+    /// tokenAddress Address of the asset's contract
+    /// tokenId The asset's token ID, or null if ERC-20
+    /// retries Number of times to retry if the service is unavailable for any reason
     pub fn get_asset(
         token_address: Option<Vec<u8>>,
         token_id: Option<Vec<u8>>,
@@ -390,15 +458,10 @@ impl<T: Trait> Module<T> {
         None
     }
 
-    //     Fetch list of assets from the API, returning the page of assets and the count of total assets
-    //      query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` type is supported
-    //      page Page number, defaults to 1. Can be overridden by
-    //     `limit` and `offset` attributes from OpenSeaAssetQuery
-    //
-    //     getAssets(query?: OpenSeaAssetQuery, page?: number): Promise<{
-    //         assets: OpenSeaAsset[];
-    //         estimatedCount: number;
-    //     }>;
+    /// Fetch list of assets from the API, returning the page of assets and the count of total assets
+    /// query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` type is supported
+    /// page Page number, defaults to 1. Can be overridden by
+    /// `limit` and `offset` attributes from OpenSeaAssetQuery
     pub fn get_assets(
         asset_query: Option<AssetQuery<T::AccountId>>,
         page: Option<u64>,

@@ -29,7 +29,6 @@ decl_module! {
     }
 }
 
-
 decl_error! {
     pub enum Error for Module<T: Trait> {
         MsgVerifyFailed,

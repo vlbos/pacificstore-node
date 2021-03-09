@@ -4,7 +4,6 @@
 
 use core::result::Result;
 
-use sp_std::if_std;
 
 use frame_support::{decl_error,decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
 use frame_system::{self as system};
@@ -43,12 +42,7 @@ impl<T: Trait> Module<T> {
         listing_time: T::Moment,
         expiration_time: T::Moment,
     ) -> Result<bool, Error<T>> {
-        if_std! {
-            // This code is only being compiled and executed when the `std` feature is enabled.
-            println!("Hello native world!");
-            println!("My value is: {:#?}", listing_time);
-            println!("The caller account is: {:#?}", <timestamp::Module<T>>::now());
-        }
+
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
         ensure!(
             (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time),

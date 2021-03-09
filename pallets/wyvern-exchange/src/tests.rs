@@ -10,31 +10,7 @@ const TEST_SENDER_1: &str = "Bob";
 // mod changes;
 // mod orders;
 // mod transfer;
-//   const makeOrder = (exchange, isMaker) => ({
-//     exchange: exchange,
-//     maker: accounts[0],
-//     taker: accounts[0],
-//     makerRelayerFee: 0,
-//     takerRelayerFee: 0,
-//     makerProtocolFee: 0,
-//     takerProtocolFee: 0,
-//     feeRecipient: isMaker ? accounts[0] : '0x0000000000000000000000000000000000000000',
-//     feeMethod: 0,
-//     side: 0,
-//     saleKind: 0,
-//     target: proxy,
-//     howToCall: 0,
-//     calldata: '0x',
-//     replacementPattern: '0x',
-//     staticTarget: '0x0000000000000000000000000000000000000000',
-//     staticExtradata: '0x',
-//     paymentToken: accounts[0],
-//     basePrice: new BigNumber(0),
-//     extra: 0,
-//     listingTime: 0,
-//     expirationTime: 0,
-//     salt: new BigNumber(0)
-//   })
+
 type AccountId = <Test as system::Trait>::AccountId;
 type Moment = <Test as timestamp::Trait>::Moment;
 type Balance = <Test as balances::Trait>::Balance;
@@ -76,14 +52,65 @@ fn make_order(
         registered: time,
     }
 }
-// fn sig_data(data:&[u8)-> sp_core::sr25519::Signature{
-//         let alice_pair = account_pair("Alice");
-//         let alice_public = alice_pair.public();
-// //         let _calldata_buy = calldata_buy.encode();
-// // let calldata_sell = calldata_sell.encode();
-// //       let alice_sig_buy= alice_pair.sign(&_calldata_buy);
-// //         let alice_sig_sell = alice_pair.sign(&_calldata_sell);
-// }
+
+fn make_order_ex(maker: AccountId,
+    taker: AccountId,
+    fee_recipient: AccountId,
+    side: u8,) ->(Vec<AccountId>,
+         Vec<u64>,
+         FeeMethod,
+         Side,
+         SaleKind,
+         HowToCall,
+         Vec<u8>,
+         Vec<u8>,
+         Vec<u8>,)
+{
+        let order = make_order(maker, taker, fee_recipient, side);
+        let addrs = vec![
+            order.exchange,
+            order.maker,
+            order.taker,
+            order.fee_recipient,
+            order.target,
+            order.static_target,
+            order.payment_token,
+        ]
+        .to_vec();
+        let uints = vec![
+            order.maker_relayer_fee,
+            order.taker_relayer_fee,
+            order.maker_protocol_fee,
+            order.taker_protocol_fee,
+            order.base_price,
+            order.extra,
+            order.listing_time,
+            order.expiration_time,
+            order.salt,
+        ]
+        .to_vec();
+        let fee_method = FeeMethod::from(0);
+        let side = order.side;
+        let sale_kind = SaleKind::from(0);
+        let how_to_call = HowToCall::from(0);
+        let calldata = Vec::<u8>::new();
+        let replacement_pattern = Vec::<u8>::new();
+        let static_extradata = Vec::<u8>::new();
+        (
+            addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,
+        )
+}
+
+
+
 #[test]
 fn change_minimum_maker_protocol_fee() {
     new_test_ext().execute_with(|| {
@@ -136,36 +163,15 @@ fn approve_order_ex() {
         let sender1 = account_key(TEST_SENDER_1);
         create_account_test(sender);
         create_account_test(sender1);
-        let order = make_order(sender, sender, sender, 0);
-        let addrs = vec![
-            order.exchange,
-            order.maker,
-            order.taker,
-            order.fee_recipient,
-            order.target,
-            order.static_target,
-            order.payment_token,
-        ]
-        .to_vec();
-        let uints = vec![
-            order.maker_relayer_fee,
-            order.taker_relayer_fee,
-            order.maker_protocol_fee,
-            order.taker_protocol_fee,
-            order.base_price,
-            order.extra,
-            order.listing_time,
-            order.expiration_time,
-            order.salt,
-        ]
-        .to_vec();
-        let fee_method = FeeMethod::from(0);
-        let side = Side::from(0);
-        let sale_kind = SaleKind::from(0);
-        let how_to_call = HowToCall::from(0);
-        let calldata = Vec::<u8>::new();
-        let replacement_pattern = Vec::<u8>::new();
-        let static_extradata = Vec::<u8>::new();
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchange::approve_order_ex(
             Origin::signed(sender),
@@ -185,47 +191,91 @@ fn approve_order_ex() {
 }
 
 #[test]
-fn cancel_order_ex() {
+fn cancel_order_ex_with_approved_order() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-        let order = make_order(sender, sender, sender, 0);
-        let addrs = vec![
-            order.exchange,
-            order.maker,
-            order.taker,
-            order.fee_recipient,
-            order.target,
-            order.static_target,
-            order.payment_token,
-        ]
-        .to_vec();
-        let uints = vec![
-            order.maker_relayer_fee,
-            order.taker_relayer_fee,
-            order.maker_protocol_fee,
-            order.taker_protocol_fee,
-            order.base_price,
-            order.extra,
-            order.listing_time,
-            order.expiration_time,
-            order.salt,
-        ]
-        .to_vec();
-        let fee_method = FeeMethod::from(0);
-        let side = Side::from(0);
-        let sale_kind = SaleKind::from(0);
-        let how_to_call = HowToCall::from(0);
-        let calldata = Vec::<u8>::new();
-        let replacement_pattern = Vec::<u8>::new();
-        let static_extradata = Vec::<u8>::new();
         let alice_pair = account_pair("Alice");
-        let calldatas = calldata.to_vec().encode();
+        let calldatas = "calldata.to_vec()".encode();
         let alice_sig = alice_pair.sign(&calldatas);
-        let sig = alice_sig; //Signature::default();
+        let sig = alice_sig; 
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let orderbook_inclusion_desired: bool = false;
+        let result = WyvernExchange::approve_order_ex(
+            Origin::signed(sender),
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+            orderbook_inclusion_desired,
+        );
+        assert_ok!(result);
+
+        let result = WyvernExchange::cancel_order_ex(
+            Origin::signed(sender),
+            addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,
+            sig,
+        );
+        assert_ok!(result);
+    });
+}
+
+#[test]
+fn cancel_order_ex_with_signature() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let alice_pair = account_pair("Alice");
+        let hash =  WyvernExchange::hash_to_sign_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+        );
+        let alice_sig = alice_pair.sign(&hash);
+        let sig = alice_sig; 
+
         let result = WyvernExchange::cancel_order_ex(
             Origin::signed(sender),
             addrs,
@@ -254,70 +304,82 @@ fn atomic_match_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-        let buy = make_order(sender, sender, sender, 0);
-        let sell = make_order(sender1, sender, sender1, 1);
-        let addrs = vec![
-            buy.exchange,
-            buy.maker,
-            buy.taker,
-            buy.fee_recipient,
-            buy.target,
-            buy.static_target,
-            buy.payment_token,
-            sell.exchange,
-            sell.maker,
-            sell.taker,
-            sell.fee_recipient,
-            sell.target,
-            sell.static_target,
-            sell.payment_token,
-        ]
-        .to_vec();
-        let uints = vec![
-            buy.maker_relayer_fee,
-            buy.taker_relayer_fee,
-            buy.maker_protocol_fee,
-            buy.taker_protocol_fee,
-            buy.base_price,
-            buy.extra,
-            buy.listing_time,
-            buy.expiration_time,
-            buy.salt,
-            sell.maker_relayer_fee,
-            sell.taker_relayer_fee,
-            sell.maker_protocol_fee,
-            sell.taker_protocol_fee,
-            sell.base_price,
-            sell.extra,
-            sell.listing_time,
-            sell.expiration_time,
-            sell.salt,
-        ]
-        .to_vec();
-        let fee_methods_sides_kinds_how_to_calls: Vec<u8> = vec![
-            buy.fee_method.value(),
-            buy.side.value(),
-            buy.sale_kind.value(),
-            buy.how_to_call.value(),
-            sell.fee_method.value(),
-            sell.side.value(),
-            sell.sale_kind.value(),
-            sell.how_to_call.value(),
-        ]
-        .to_vec();
-        let calldata_buy = Vec::<u8>::new();
-        let calldata_sell = Vec::<u8>::new();
-        let replacement_pattern_buy = Vec::<u8>::new();
-        let replacement_pattern_sell = Vec::<u8>::new();
-        let static_extradata_buy = Vec::<u8>::new();
-        let static_extradata_sell = Vec::<u8>::new();
+       
         let alice_pair = account_pair("Alice");
-        let _calldata_buy = calldata_buy.to_vec().encode();
-        let _calldata_sell = calldata_sell.to_vec().encode();
-        let alice_sig_buy = alice_pair.sign(&_calldata_buy);
-        let alice_sig_sell = alice_pair.sign(&_calldata_sell);
-        // let sig = alice_sig;//Signature::default();
-        let sig = vec![alice_sig_buy, alice_sig_sell];
+ let bob_pair = account_pair("Bob");
+     
+  let (addrs_buy,
+            uints_buy,
+            fee_method_buy,
+            side_buy,
+            sale_kind_buy,
+            how_to_call_buy,
+            calldata_buy,
+            replacement_pattern_buy,
+            static_extradata_buy,) = make_order_ex(sender, sender, sender, 0);
+        let (addrs_sell,
+            uints_sell,
+            fee_method_sell,
+            side_sell,
+            sale_kind_sell,
+            how_to_call_sell,
+            calldata_sell,
+            replacement_pattern_sell,
+            static_extradata_sell,) = make_order_ex(sender1, sender, sender1, 1);
+
+
+         let hash_buy =  WyvernExchange::hash_to_sign_ex(
+            addrs_buy.clone(),
+            uints_buy.clone(),
+            fee_method_buy.clone(),
+            side_buy.clone(),
+            sale_kind_buy.clone(),
+            how_to_call_buy.clone(),
+            calldata_buy.clone(),
+            replacement_pattern_buy.clone(),
+            static_extradata_buy.clone(),
+        );
+
+     let hash_sell =  WyvernExchange::hash_to_sign_ex(
+            addrs_sell.clone(),
+            uints_sell.clone(),
+            fee_method_sell.clone(),
+            side_sell.clone(),
+            sale_kind_sell.clone(),
+            how_to_call_sell.clone(),
+            calldata_sell.clone(),
+            replacement_pattern_sell.clone(),
+            static_extradata_sell.clone(),
+        );
+
+        let alice_sig_buy = alice_pair.sign(&hash_buy);
+        let bob_sig_sell = bob_pair.sign(&hash_sell);
+
+        let sig = vec![alice_sig_buy, bob_sig_sell];
+
+        let mut addrs = addrs_buy;
+        let mut addrs_sell = addrs_sell;
+        addrs.append(& mut addrs_sell);
+        let mut uints = uints_buy;
+        let mut uints_sell = uints_sell;
+        uints.append(& mut uints_sell);
+        let fee_methods_sides_kinds_how_to_calls_buy: Vec<u8> = vec![
+            fee_method_buy.value(),
+            side_buy.value(),
+            sale_kind_buy.value(),
+            how_to_call_buy.value(),
+        ]
+        .to_vec();
+        let mut fee_methods_sides_kinds_how_to_calls_sell: Vec<u8> = vec![
+            fee_method_sell.value(),
+            side_sell.value(),
+            sale_kind_sell.value(),
+            how_to_call_sell.value(),
+        ]
+        .to_vec();
+
+        let mut fee_methods_sides_kinds_how_to_calls =  fee_methods_sides_kinds_how_to_calls_buy;
+        fee_methods_sides_kinds_how_to_calls.append(& mut fee_methods_sides_kinds_how_to_calls_sell);
         let rss_metadata = Vec::<u8>::new();
         let result = WyvernExchange::atomic_match_ex(
             Origin::signed(sender),

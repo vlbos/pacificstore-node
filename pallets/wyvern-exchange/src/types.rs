@@ -17,7 +17,7 @@ use frame_support::{
 pub const ORDER_ID_MAX_LENGTH: usize = 36;
 pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 10;
 pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 20;
-pub const ORDER_MAX_FIELDS: usize = 3;
+pub const ORDER_MAX_FIELDS: usize = 30;
 // // Inverse basis point.
 
 pub const INVERSE_BASIS_POINT: u32 = 10000;

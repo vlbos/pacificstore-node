@@ -1,16 +1,11 @@
-//! # Substrate Enterprise Sample - Order Post example pallet
+//! # Pacific Store node - Orderbook pallet
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
-use frame_support::{
-    decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
-    sp_runtime::RuntimeDebug, sp_std::collections::btree_set::BTreeSet, sp_std::prelude::*,
-};
+use frame_support::{sp_runtime::RuntimeDebug, sp_std::prelude::*};
 
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
-// traits::EnsureOrigin,
-use frame_system::{self as system, ensure_signed};
 
 // General constraints to limit data size
 // Note: these could also be passed as trait config parameters
@@ -18,7 +13,8 @@ pub const ORDER_ID_MAX_LENGTH: usize = 36;
 pub const ORDER_FIELD_NAME_MAX_LENGTH: usize = 200;
 pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400;
 pub const ORDER_MAX_FIELDS: usize = 54;
-
+pub const ORDER_MAX_PARAMS: usize = 54;
+pub const MAX_TOKEN_IDS: usize = 54;
 // Custom types
 pub type OrderId = Vec<u8>;
 pub type TokenId = Vec<u8>;

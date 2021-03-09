@@ -10,12 +10,12 @@ use orderbook::{OrderQuery,OrderJSONType};
 // Here we declare the runtime API. It is implemented it the `impl` block in
 // runtime amalgamator file (the `runtime/src/lib.rs`)
 sp_api::decl_runtime_apis! {
-	pub trait OrderbookApi<AccountId,  Moment> where
-		AccountId: Codec,
-		Moment: Codec,
- {
-	  fn get_orders(
-        order_query: Option<OrderQuery<AccountId>>, page: Option<u64>,
-    ) -> Option<Vec<OrderJSONType<AccountId, Moment>>>;
- }
+    pub trait OrderbookApi<AccountId,  Moment> where
+        AccountId: Codec,
+        Moment: Codec,
+        {
+            fn get_orders(
+                order_query: Option<OrderQuery<AccountId>>, page: Option<u64>,
+            ) -> Option<Vec<OrderJSONType<AccountId, Moment>>>;
+        }
 }
