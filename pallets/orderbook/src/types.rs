@@ -51,23 +51,6 @@ pub struct OrderQuery<AccountId> {
     pub params: Option<Vec<OrderField>>,
 }
 
-//   owner?: string,
-//   sale_kind?: SaleKind,
-//   asset_contract_address?: string,
-//   payment_token_address?: string,
-//   is_english?: boolean
-//   is_expired?: boolean
-//   bundled?: boolean
-//   include_invalid?: boolean
-//   token_id?: number | string
-//   token_ids?: Array<number | string>
-//   // This means listing_time > value in seconds
-//   listed_after?: number | string
-//   // This means listing_time <= value in seconds
-//   listed_before?: number | string
-//   limit?: number
-//   offset?: number
-
 // Contains a name-value pair for a order fielderty e.g. description: Ingredient ABC
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -104,17 +87,6 @@ pub struct JSONField {
     pub json: Option<Vec<OrderField>>,
 }
 
-// export interface OpenSeaAssetQuery {
-//     owner?: string;
-//     asset_contract_address?: string;
-//     token_ids?: Array<number | string>;
-//     search?: string;
-//     order_by?: string;
-//     order_direction?: string;
-//     limit?: number;
-//     offset?: number;
-// }
-
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct AssetQuery<AccountId> {
@@ -149,7 +121,7 @@ pub fn convert_assetquery_to_orderquery<AccountId>(
             offset: asset_query.offset,
             owner: asset_query.owner,
             token_ids: asset_query.token_ids,
-            params: Some(vec![OrderField::new(b"token_address", &token_address)]),
+            params: Some(vec![OrderField::new(b"metadata.asset.address", &token_address)]),
         });
     }
     None

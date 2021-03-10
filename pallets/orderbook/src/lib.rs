@@ -264,7 +264,10 @@ impl<T: Trait> Module<T> {
         let field_name: Vec<u8> = b"metadata.asset.token_id".to_vec();
         let mut order_indices_by_token_ids = Vec::<u64>::new();
         if let Some(token_ids) = &token_ids {
-            if token_ids.len() <= MAX_TOKEN_IDS {
+            if token_ids.len() > MAX_TOKEN_IDS {
+                if_std! {
+                println!("token_ids' length is greater than ORDER_MAX_FIELDS ");
+                        }
                 return None;
             }
             for token_id in token_ids {
@@ -277,11 +280,11 @@ impl<T: Trait> Module<T> {
                 }
             }
         }
-
         Self::order_intersection(order_indices, order_indices_by_token_ids);
         if order_indices.is_empty() {
             return None;
         }
+
         Some(())
     }
 

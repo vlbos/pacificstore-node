@@ -157,6 +157,146 @@ fn change_protocol_fee_recipient() {
 }
 
 #[test]
+fn hash_order_ex() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let hash =  WyvernExchange::hash_order_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+        );
+       
+        assert_eq!(hash,vec![123, 133, 145, 87, 234, 200, 253, 138, 44, 140, 16, 13, 202, 91, 13, 171, 241, 253, 240, 155, 153, 69, 181, 204, 128, 12, 220, 94, 16, 237, 78, 190]);
+    });
+}
+
+#[test]
+fn require_valid_order() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+        let order = make_order(sender, sender, sender, 0);
+        let hash =  ExchangeCore::hash_to_sign(
+            &order
+        ).unwrap();
+        let alice_pair = account_pair("Alice");
+        let alice_sig = alice_pair.sign(&hash);
+        let sig = alice_sig; 
+        let result =  ExchangeCore::require_valid_order(
+            &order,&sig
+        );
+       
+        assert_ok!(result);
+    });
+}
+
+
+#[test]
+fn validate_order_parameters_ex() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let result =  WyvernExchange::validate_order_parameters_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+        );
+       
+        assert_eq!(result,true);
+    });
+}
+
+
+#[test]
+fn validate_order_ex() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+           let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let hash =  WyvernExchange::hash_to_sign_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+        );
+        let alice_pair = account_pair("Alice");
+        let alice_sig = alice_pair.sign(&hash);
+        let sig = alice_sig; 
+        let result =  WyvernExchange::validate_order_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+            sig,
+        );
+       
+        assert_eq!(result,true);
+    });
+}
+
+
+#[test]
 fn approve_order_ex() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
@@ -306,9 +446,9 @@ fn atomic_match_ex() {
         <ContractSelf<Test>>::put(sender);
        
         let alice_pair = account_pair("Alice");
- let bob_pair = account_pair("Bob");
+        let bob_pair = account_pair("Bob");
      
-  let (addrs_buy,
+        let (addrs_buy,
             uints_buy,
             fee_method_buy,
             side_buy,
@@ -340,7 +480,7 @@ fn atomic_match_ex() {
             static_extradata_buy.clone(),
         );
 
-     let hash_sell =  WyvernExchange::hash_to_sign_ex(
+        let hash_sell =  WyvernExchange::hash_to_sign_ex(
             addrs_sell.clone(),
             uints_sell.clone(),
             fee_method_sell.clone(),

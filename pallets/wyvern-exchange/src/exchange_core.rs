@@ -744,7 +744,7 @@ impl<T: Trait> Module<T> {
     ) -> Result<bool, Error<T>> {
         //  Must be opposite-side.
         Ok(
-(buy.side == Side::Buy && sell.side == Side::Sell) &&
+            (buy.side == Side::Buy && sell.side == Side::Sell) &&
             // Must use same fee method.
             (buy.fee_method == sell.fee_method) &&
             // Must use same payment token. 
@@ -762,7 +762,7 @@ impl<T: Trait> Module<T> {
             <sale_kind_interface::Module<T>>::can_settle_order(buy.listing_time, buy.expiration_time)? &&
             // Sell-side order must be settleable. 
             <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)?
-)
+            )
     }
 
     // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
