@@ -5,8 +5,7 @@
 use core::result::Result;
 
 
-use frame_support::{decl_error,decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
-use frame_system::{self as system};
+use frame_support::{decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
 
 use crate::types::*;
 

@@ -20,10 +20,11 @@ pub trait OrderbookApi<BlockHash,AccountId,Moment> {
     fn get_orders(&self,
         order_query: Option<OrderQuery<AccountId>>, page: Option<u64>, at: Option<BlockHash>
     ) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>;
-	#[rpc(name = "orderbook_getAssets")]
+	#[rpc(name = "orderbook_getAsset")]
     fn get_asset(&self,
         token_address: Option<Vec<u8>>,token_id: Option<Vec<u8>>, at: Option<BlockHash>
     ) -> Result<Option<JSONType>>;
+    #[rpc(name = "orderbook_getAssets")]
     fn get_assets(&self,
         asset_query: Option<AssetQuery<AccountId>>, page: Option<u64>, at: Option<BlockHash>
     ) -> Result<Option<Vec<JSONType>>>;

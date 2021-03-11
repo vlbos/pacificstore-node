@@ -15,7 +15,7 @@ use frame_support::{
         traits::{IdentifyAccount, Member, Verify, Zero},
     },
     sp_std::{if_std,prelude::*},
-    traits::{Currency, LockableCurrency, ReservableCurrency},
+    traits::{Currency},
 };
 
 use frame_system::{self as system, ensure_signed};

@@ -41,7 +41,8 @@ balances = { package = 'pallet-balances', version = '2.0.0', default-features = 
 # serde_derive = { version = "1.0.117", optional = true }
 # serde = { version = "1.0.106", optional = true }
 # serde = "1"
-serde = { version = "1.0", default-features = false, features = ['derive'],optional = true }
+# serde = { version = "1.0", default-features = false, features = ['derive'],optional = true }
+serde = { features = ['derive'], optional = true, version = '1.0.119' }
 
 [dev-dependencies]
 sp-core = { default-features = false, version = '2.0.0' }

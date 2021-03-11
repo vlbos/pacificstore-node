@@ -137,12 +137,12 @@ decl_module! {
 
             // Create a order instance
             let mut order = Self::new_order()
+                .index_by(next_index)
                 .identified_by(order_id.clone())
                 .owned_by(owner.clone())
                 .registered_on(<timestamp::Module<T>>::now())
                 .with_fields(fields)
                 .build();
-            order.index = next_index;
             if !<Orders<T>>::contains_key(next_index.clone()) {
                 <Orders<T>>::insert(next_index, order);
             }

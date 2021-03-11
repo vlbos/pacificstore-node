@@ -4,6 +4,7 @@
 
 use codec::{Decode, Encode};
 
+#[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 // use sp_std::if_std;
 
