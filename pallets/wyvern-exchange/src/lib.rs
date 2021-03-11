@@ -342,6 +342,38 @@ impl<T: Trait> Module<T> {
         .unwrap()
     }
 
+ // Call require valid order - .
+    pub fn require_valid_order_ex(
+        addrs: Vec<T::AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+        sig: T::Signature,
+    ) -> Vec<u8> {
+        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+            <exchange_common::Module<T>>::build_order_type_from_array_parameters(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            );
+        <exchange_core::Module<T>>::require_valid_order(
+            &order,
+            &sig,
+        )
+        .unwrap()
+    }
+
     // Call calculate_current_price - .
     pub fn calculate_current_price_ex(
         addrs: Vec<T::AccountId>,

@@ -67,6 +67,18 @@ sp_api::decl_runtime_apis! {
                 static_extradata: Vec<u8>,
                 sig: Signature,
             ) -> bool;
+            fn require_valid_order_ex(
+                addrs: Vec<AccountId>,
+                uints: Vec<u64>,
+                fee_method: FeeMethod,
+                side: Side,
+                sale_kind: SaleKind,
+                how_to_call: HowToCall,
+                calldata: Vec<u8>,
+                replacement_pattern: Vec<u8>,
+                static_extradata: Vec<u8>,
+                sig: Signature,
+            ) -> Vec<u8>;
             fn calculate_current_price_ex(
                 addrs: Vec<AccountId>,
                 uints: Vec<u64>,

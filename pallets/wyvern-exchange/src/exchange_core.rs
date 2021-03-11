@@ -787,7 +787,7 @@ impl<T: Trait> Module<T> {
                 Error::<T>::InvalidBuyOrderParameters
             );
         } else {
-if_std!{println!("789");}
+            if_std!{println!("789");}
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
         }
 
@@ -799,7 +799,7 @@ if_std!{println!("789");}
                 Error::<T>::InvalidSellOrderParameters
             );
         } else {
-if_std!{println!("801");}
+            if_std!{println!("801");}
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
         }
 

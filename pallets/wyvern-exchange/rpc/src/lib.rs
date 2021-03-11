@@ -86,6 +86,22 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
         at: Option<BlockHash>,
     ) -> Result<bool>;
 
+    #[rpc(name = "wyvernExchange_requireValidOrderEx")]
+    fn require_valid_order_ex(
+        &self,
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: String,
+        replacement_pattern: String,
+        static_extradata: String,
+        sig: Signature,
+        at: Option<BlockHash>,
+    ) -> Result<Vec<u8>>;
+
     #[rpc(name = "wyvernExchange_calculateCurrentPriceEx")]
     fn calculate_current_price_ex(
         &self,
@@ -341,6 +357,46 @@ where
             data: Some(format!("{:?}", e).into()),
         })
     }
+
+    fn require_valid_order_ex(
+        &self,
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: String,
+        replacement_pattern: String,
+        static_extradata: String,
+        sig: Signature,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> Result<Vec<u8>> {
+        let api = self.client.runtime_api();
+        let at = BlockId::hash(at.unwrap_or_else(||
+			// If the block hash is not supplied assume the best block.
+			self.client.info().best_hash));
+
+        let runtime_api_result = api.require_valid_order_ex(
+            &at,
+            addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata.clone().into_bytes(),
+            replacement_pattern.clone().into_bytes(),
+            static_extradata.clone().into_bytes(),
+            sig,
+        );
+        runtime_api_result.map_err(|e| RpcError {
+            code: ErrorCode::ServerError(9876), // No real reason for this value
+            message: "Something wrong".into(),
+            data: Some(format!("{:?}", e).into()),
+        })
+    }
+
     fn calculate_current_price_ex(
         &self,
         addrs: Vec<AccountId>,

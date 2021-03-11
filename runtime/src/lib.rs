@@ -38,7 +38,7 @@ pub use frame_support::{
 	},
 };
 
-use orderbook::{OrderQuery,OrderJSONType};
+use orderbook::{OrderQuery,OrderJSONType,AssetQuery,JSONType};
 
 use wyvern_exchange::{Side,SaleKind,FeeMethod,HowToCall};
 /// Import the template pallet.
@@ -483,13 +483,26 @@ impl_runtime_apis! {
 	}
 
 	impl orderbook_runtime_api::OrderbookApi<Block,AccountId, Moment> for Runtime {
+		  fn get_order(
+              order_query: Option<OrderQuery<AccountId>>,
+            ) -> Option<OrderJSONType<AccountId, Moment>> {
+				  Orderbook::get_order(order_query) 
+		    }
 		  fn get_orders(
-        order_query: Option<OrderQuery<AccountId>>, page: Option<u64>,
-    ) -> Option<Vec<OrderJSONType<AccountId, Moment>>> {
-				  Orderbook::get_orders(
-        order_query,page
-    ) 
-		}
+              order_query: Option<OrderQuery<AccountId>>, page: Option<u64>,
+            ) -> Option<Vec<OrderJSONType<AccountId, Moment>>> {
+				  Orderbook::get_orders(order_query,page) 
+		    }
+		  fn get_asset(
+             token_address: Option<Vec<u8>>,token_id: Option<Vec<u8>>,
+            ) -> Option<JSONType> {
+				  Orderbook::get_asset(token_address,token_id) 
+		    }
+		  fn get_assets(
+              asset_query: Option<AssetQuery<AccountId>>, page: Option<u64>,
+            ) -> Option<Vec<JSONType>> {
+				  Orderbook::get_assets(asset_query,page) 
+		    }
 	}
 
 	impl wyvern_exchange_runtime_api::WyvernExchangeApi<Block,AccountId, Balance,Moment,Signature> for Runtime {
@@ -588,6 +601,30 @@ impl_runtime_apis! {
         sig: Signature,
     ) -> bool {
 		WyvernExchange::validate_order_ex(
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata,
+        sig)
+	}
+fn require_valid_order_ex(
+        addrs: Vec<AccountId>,
+        uints: Vec<u64>,
+        fee_method: FeeMethod,
+        side: Side,
+        sale_kind: SaleKind,
+        how_to_call: HowToCall,
+        calldata: Vec<u8>,
+        replacement_pattern: Vec<u8>,
+        static_extradata: Vec<u8>,
+        sig: Signature,
+    ) -> Vec<u8> {
+		WyvernExchange::require_valid_order_ex(
         addrs,
         uints,
         fee_method,

@@ -214,6 +214,56 @@ fn require_valid_order() {
 
 
 #[test]
+fn require_valid_order_ex() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        create_account_test(sender);
+        create_account_test(sender1);
+        <ContractSelf<Test>>::put(sender);
+          let (addrs,
+            uints,
+            fee_method,
+            side,
+            sale_kind,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+        let hash =  WyvernExchange::hash_to_sign_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+        );
+        let alice_pair = account_pair("Alice");
+        let alice_sig = alice_pair.sign(&hash);
+        let sig = alice_sig; 
+        let hash =  WyvernExchange::require_valid_order_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_method.clone(),
+            side.clone(),
+            sale_kind.clone(),
+            how_to_call.clone(),
+            calldata.clone(),
+            replacement_pattern.clone(),
+            static_extradata.clone(),
+            sig,
+        );
+       
+        assert_eq!(hash,vec![37, 49, 117, 31, 84, 85, 213, 82, 131, 89, 165, 235, 73, 255, 49, 61, 233, 44, 133, 116, 14, 159, 125, 27, 157, 50, 252, 154, 134, 82, 90, 216]);
+
+    });
+}
+
+
+#[test]
 fn validate_order_parameters_ex() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
