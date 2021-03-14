@@ -4,7 +4,7 @@ version = '2.0.0'
 description = 'NFT Dex wyvern exchange'
 edition = '2018'
 authors = ['vlbos <https://github.com/vlbos>']
-homepage = 'https://substrate.dev'
+homepage = ''
 repository = 'https://github.com/vlbos/orderbook/'
 license = 'Unlicense'
 
@@ -13,6 +13,12 @@ default-features = false
 features = ['derive']
 package = 'parity-scale-codec'
 version = '1.3.4'
+
+[dependencies.exchange-core]
+default-features = false
+package = 'pallet-wyvern-exchange-core'
+path = '../wyvern-exchange-core'
+version = '2.0.0'
 
 [dependencies.timestamp]
 default_features = false

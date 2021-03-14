@@ -136,7 +136,7 @@ decl_module! {
             }
 
             // Create a order instance
-            let mut order = Self::new_order()
+            let order = Self::new_order()
                 .index_by(next_index)
                 .identified_by(order_id.clone())
                 .owned_by(owner.clone())
@@ -166,7 +166,6 @@ decl_module! {
         /// tokenAddress Address of the asset's contract
         /// tokenId The asset's token ID
         /// email The email allowed to buy.
-        /// postAssetWhitelist(tokenAddress: string, tokenId: string | number, email: string): Promise<boolean>;
         #[weight = 10_000]
         pub fn post_asset_white_list(
             origin,

@@ -10,6 +10,7 @@
 //! * Cancel Order
 //! * Hash Order
 //! * Validate Order
+//! * AtomicMatch Order
 //!
 //! ### Goals
 //!
@@ -22,17 +23,32 @@
 //! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
 //! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
 //! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
+//! * `approve_order_ex ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+//! * `cancel_order_ex` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
+//! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
+//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//!//!
+
+//! ### Public Functions
+//!
+//! * `hash_order_ex` - Hash an order, returning the canonical order hash, without the message prefix
+//! * `hash_to_sign_ex` - Hash an order, returning the hash that a client must sign.
+//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, and signature.
+//! * `validate_order_parameters_ex` - Validate order parameters (does _not_ check validity -signature)
+//! * `calculate_current_price_ex` - Calculate the current price of an order (fn -convenience)
+//! * `calculate_match_price_ex` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
+//! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
+//! * `calculate_final_price_ex` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//!
+//! ### Public ExchangeCore Functions
+//!
 //! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
 //! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
 //! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
 //! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
-//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
-//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-//!
-
-//! ### Public Functions
-//!
 //! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
 //! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
 //! * `calculate_match_price` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
@@ -52,7 +68,7 @@ use frame_support::{
     sp_std::prelude::*, 
 };
 
-use frame_system::{ensure_signed};
+use frame_system::{self as system,ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -60,22 +76,22 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-mod types;
-pub use crate::types::*;
+pub use exchange_core;
 
-pub mod exchange_common;
-use crate::exchange_common::BalanceOf;
-use crate::exchange_common::Error;
+// mod types;
+pub use exchange_core::types::*;
 
-pub mod sale_kind_interface;
-pub mod exchange_core;
-pub use crate::exchange_core::Event;
+// pub mod exchange_common;
+pub use exchange_core::exchange_common;
+pub use exchange_core::exchange_common::BalanceOf;
+pub use exchange_core::exchange_common::Error;
+pub use exchange_core::sale_kind_interface;
+// pub mod sale_kind_interface;
+// pub mod exchange_core;
+// pub use crate::exchange_core::Event;
 
-
-//exchange core
-//system::Trait + timestamp::Trait +
 pub trait Trait:
-     exchange_core::Trait + sale_kind_interface::Trait
+     exchange_core::Trait
 {
 
 }

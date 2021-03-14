@@ -10,14 +10,22 @@ It is inspired by existing projects & standards:
 - [Opensea js](https://github.com/ProjectOpenSea/opensea-js)
 - [Wyvern Ethereum](https://github.com/ProjectOpenSea/wyvern-js/blob/master/src/wyvern-ethereum/contracts/exchange/ExchangeCore.sol)
 
-NOTE: This pallet implements the aforementionned process in a simplified way, thus it is intended for demonstration purposes and is not audited or ready for production use.
+NOTE: This pallet implements the aforementioned process in a simplified way, thus it is intended for demonstration purposes and is not audited or ready for production use.
 
 ## Usage
 
+### postOrder
 To post a order, one must send a transaction with a `orderbook.postOrder` extrinsic with the following arguments:
-- `id` as the Product ID, typically this would be a GS1 GTIN (Global Trade Item Number), or ASIN (Amazon Standard Identification Number), or similar, a numeric or alpha-numeric code with a well-defined data structure.
-- `owner` as the Substrate Account representing the organization owning this product, as in the manufacturer or supplier providing this product within the value chain.
-- `fields` which is a series of fields (name & value) describing the order. Typically, there would at least be a textual description. It could also contain instance / lot master data e.g. expiration, price, harvest date.
+- `order_id` as the Order ID .
+- `owner` as the Substrate Account representing the account owning this order.
+- `fields` which is a series of fields (name & value) describing the order. Typically, there would at least be a textual description. It could also contain instance / lot master data e.g. expiration, price.
+
+### postAssetWhiteList
+Create a whitelist entry for an asset to prevent others from buying.Buyers will have to have verified at least one of the emails on an asset in order to buy. This will return error code if the given API key isn't allowed to create whitelist entries for this contract or asset.one must send a transaction with a `orderbook.postAssetWhiteList` extrinsic with the following arguments:
+- `token_address` as the Address of the asset's contract .
+- `token_id` as the The asset's token ID.
+- `email`  as the email allowed to buy. 
+
 
 ## Dependencies
 

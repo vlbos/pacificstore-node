@@ -1,4 +1,59 @@
-//! # Pacific Store - Wyvern Exchange pallet
+//! # WyvernExchange Pallet
+//!
+//!
+//! ## Overview
+//!
+//! The WyvernExchange pallet provides functionality for WyvernExchanges management.
+//!
+//! * Approve Order
+//! * Cancel Order
+//! * Hash Order
+//! * Validate Order
+//! * AtomicMatch Order
+//!
+//! ### Goals
+//!
+//! The WyvernExchange system in Substrate is designed to make the following possible:
+//!
+//! *Autonomously governed decentralized digital asset exchange.
+//!
+//! ### Dispatchable Functions
+//!
+//! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
+//! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
+//! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
+//! * `approve_order_ex ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+//! * `cancel_order_ex` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
+//! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
+//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//!//!
+
+//! ### Public Functions
+//!
+//! * `hash_order_ex` - Hash an order, returning the canonical order hash, without the message prefix
+//! * `hash_to_sign_ex` - Hash an order, returning the hash that a client must sign.
+//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, and signature.
+//! * `validate_order_parameters_ex` - Validate order parameters (does _not_ check validity -signature)
+//! * `calculate_current_price_ex` - Calculate the current price of an order (fn -convenience)
+//! * `calculate_match_price_ex` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
+//! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
+//! * `calculate_final_price_ex` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//!
+//! ### Public ExchangeCore Functions
+//!
+//! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
+//! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
+//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
+//! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
+//! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
+//! * `calculate_match_price` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
+//! * `orders_can_match` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
+//! * `calculate_final_price ` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//!
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -11,7 +66,6 @@ use frame_support::{
     ensure,
     sp_io::hashing::keccak_256,
     sp_runtime::{
-        print,
         traits::{IdentifyAccount, Member, Verify, Zero},
     },
     sp_std::{if_std,prelude::*},
@@ -20,12 +74,22 @@ use frame_support::{
 
 use frame_system::{self as system, ensure_signed};
 
-use crate::types::*;
 
-use crate::sale_kind_interface;
-use crate::exchange_common;
+#[cfg(test)]
+mod mock;
+
+#[cfg(test)]
+mod tests;
+
+pub mod types;
+pub use crate::types::*;
+
+pub mod exchange_common;
 use crate::exchange_common::BalanceOf;
 use crate::exchange_common::Error;
+
+pub mod sale_kind_interface;
+
 pub trait Trait:
   sale_kind_interface::Trait + exchange_common::Trait
 {
@@ -38,23 +102,17 @@ decl_storage! {
     trait Store for Module<T: Trait> as ExchangeCore {
         NextOrderIndex: BalanceOf<T>;
         pub ContractSelf:T::AccountId;
-        // // The token used to pay exchange fees.
+        //The token used to pay exchange fees.
         pub ExchangeToken:T::AccountId;
-
-        // // Cancelled / finalized orders, by hash.
-        // mapping(Vec<u8> => bool) public CancelledOrFinalized;
+        //Cancelled / finalized orders, by hash.
         pub CancelledOrFinalized get(fn cancelled_or_finalized): map hasher(blake2_128_concat) Vec<u8> => bool;
-        // // Orders verified by on-chain approval (alternative to ECDSA signatures so that smart contracts can place orders directly).
-        // mapping(Vec<u8> => bool) public ApprovedOrders;
+        //Orders verified by on-chain approval (alternative to ECDSA signatures so that smart contracts can place orders directly).
         pub ApprovedOrders get(fn approved_orders): map hasher(blake2_128_concat) Vec<u8> => bool;
-        // // For split fee orders, minimum required protocol maker fee, in basis points. Paid to owner (who can change it).
-        // BalanceOf<T> public MinimumMakerProtocolFee = 0;
+        //For split fee orders, minimum required protocol maker fee, in basis points. Paid to owner (who can change it).
         pub MinimumMakerProtocolFee:BalanceOf<T>;
-        // // For split fee orders, minimum required protocol taker fee, in basis points. Paid to owner (who can change it).
-        // BalanceOf<T> public MinimumTakerProtocolFee = 0;
+        //For split fee orders, minimum required protocol taker fee, in basis points. Paid to owner (who can change it).
         pub MinimumTakerProtocolFee:BalanceOf<T>;
-        // // Recipient of protocol fees.
-        // AccountId public ProtocolFeeRecipient;
+        //Recipient of protocol fees.
         pub ProtocolFeeRecipient:T::AccountId;
 
 
@@ -68,14 +126,6 @@ decl_event!(
         Balance = BalanceOf<T>,
         Moment = <T as timestamp::Trait>::Moment,
     {
-        // event OrderApprovedPartOne    (Vec<u8> indexed hash, AccountId exchange, AccountId indexed maker, AccountId taker,
-        // BalanceOf<T> maker_relayer_fee, BalanceOf<T> taker_relayer_fee, BalanceOf<T> maker_protocol_fee, BalanceOf<T> taker_protocol_fee,
-        // AccountId indexed fee_recipient, FeeMethod fee_method, SaleKindInterface.Side side, SaleKindInterface.SaleKind sale_kind, AccountId target);
-        // event OrderApprovedPartTwo    (Vec<u8> indexed hash, AuthenticatedProxy.Vec<u8> how_to_call, Vec<u8> calldata, Vec<u8> replacement_pattern,
-        // AccountId static_target, Vec<u8> static_extradata, AccountId payment_token, BalanceOf<T> base_price,
-        // BalanceOf<T> extra, BalanceOf<T> listing_time, BalanceOf<T> expiration_time, BalanceOf<T> salt, bool orderbook_inclusion_desired);
-        // event OrderCancelled          (Vec<u8> indexed hash);
-        // event OrdersMatched           (Vec<u8> buy_hash, Vec<u8> sell_hash, AccountId indexed maker, AccountId indexed taker, BalanceOf<T> price, Vec<u8> indexed metadata);
         OrderApprovedPartOne(
             Vec<u8>,
             AccountId,
@@ -162,7 +212,6 @@ decl_module! {
         origin,
         new_protocol_fee_recipient: T::AccountId,
     ) -> DispatchResult {
-        print("================");
         // onlyOwner
         let _user = ensure_signed(origin)?;
         ProtocolFeeRecipient::<T>::put(new_protocol_fee_recipient.clone());
@@ -765,7 +814,7 @@ impl<T: Trait> Module<T> {
             )
     }
 
-    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. 
     // buy Buy-side order
     // buy_sig Buy-side order signature
     // sell Sell-side order

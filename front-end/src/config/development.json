@@ -469,6 +469,104 @@
         ],
         "type": "Balance"
       }
+    },
+    "wyvernExchangeCore": {
+      "hashOrder": {
+        "description": "Hash an order, returning the canonical order hash, without the message prefix.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "hashToSign": {
+        "description": "Hash an order, returning the hash that a client must sign.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrderParameters": {
+        "description": "Validate order parameters (does *not* check validity:signature).",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "bool"
+      },
+      "requireValidOrder": {
+        "description": "Assert an order is valid and return its hash.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrder": {
+        "description": "Validate a provided previously approved / signed order, hash, and signature.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "bool"
+      },
+      "calculateCurrentPrice": {
+        "description": "Calculate the current price of an order ",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Balance"
+      },
+      "ordersCanMatch": {
+        "description": "Return whether or not two orders can be matched with each other by basic parameters.",
+        "params": [
+          {
+            "name": "buy",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          },
+          {
+            "name": "sell",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          }
+        ],
+        "type": "Balance"
+      },
+      "calculateMatchPrice": {
+        "description": "Calculate the price two orders would match at, if in fact they would match (fail:otherwise).",
+        "params": [
+          {
+            "name": "buy",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          },
+          {
+            "name": "sell",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          }
+        ],
+        "type": "Balance"
+      }
     }
   },
   "PROVIDER_SOCKET": "ws://127.0.0.1:9944"

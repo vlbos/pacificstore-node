@@ -18,6 +18,8 @@ use orderbook_rpc;
 use orderbook_runtime_api;
 use wyvern_exchange_rpc;
 use wyvern_exchange_runtime_api;
+use wyvern_exchange_core_rpc;
+use wyvern_exchange_core_runtime_api;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -39,8 +41,9 @@ pub fn create_full<C, P>(
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
-C::Api: orderbook_runtime_api::OrderbookApi<Block,AccountId,Moment>,
-C::Api: wyvern_exchange_runtime_api::WyvernExchangeApi<Block,AccountId,Balance,Moment,Signature>,
+    C::Api: orderbook_runtime_api::OrderbookApi<Block,AccountId,Moment>,
+    C::Api: wyvern_exchange_runtime_api::WyvernExchangeApi<Block,AccountId,Balance,Moment,Signature>,
+    C::Api: wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<Block,AccountId,Balance,Moment,Signature>,
 	P: TransactionPool + 'static,
 {
 	use substrate_frame_rpc_system::{FullSystem, SystemApi};
@@ -73,5 +76,10 @@ C::Api: wyvern_exchange_runtime_api::WyvernExchangeApi<Block,AccountId,Balance,M
 	io.extend_with(
 		wyvern_exchange_rpc::WyvernExchangeApi::to_delegate(wyvern_exchange_rpc::WyvernExchange::new(client.clone()))
 	);
+
+	io.extend_with(
+		wyvern_exchange_core_rpc::WyvernExchangeCoreApi::to_delegate(wyvern_exchange_core_rpc::WyvernExchangeCore::new(client.clone()))
+	);
+
 	io
 }

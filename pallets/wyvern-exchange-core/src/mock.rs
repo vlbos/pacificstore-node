@@ -1,7 +1,7 @@
 // Creating mock runtime here
 
-pub use crate as wyvern_exchange;
-pub use crate::exchange_core::*;
+pub use crate as wyvern_exchange_core;
+// pub use crate::exchange_core::*;
 pub use crate::exchange_common::*;
 pub use crate::{Module, Trait};
 use core::marker::PhantomData;
@@ -28,15 +28,15 @@ impl_outer_origin! {
 // impl_outer_dispatch! {
 //     pub enum Call for Test where origin: Origin {
 //         balances::Balances,
-//         // WyvernExchange,
+//         // WyvernExchangeCore,
 //     }
 // }
 
 impl_outer_event! {
     pub enum TestEvent for Test {
-        balances<T>,
+balances<T>,
         system<T>,
-        exchange_core<T>,
+        wyvern_exchange_core<T>,
     }
 }
 
@@ -101,23 +101,25 @@ impl timestamp::Trait for Test {
 }
 
 impl Trait for Test {
-}
-
-impl wyvern_exchange::exchange_common::Trait for Test {
-    type Currency = Balances;
-}
-
-impl wyvern_exchange::sale_kind_interface::Trait for Test {
-
-}
-impl exchange_core::Trait for Test {
     type Event = TestEvent;
     type Public = sr25519::Public;
     type Signature = sr25519::Signature;
 }
 
-pub type WyvernExchange = Module<Test>;
-pub type ExchangeCore = exchange_core::Module<Test>;
+impl wyvern_exchange_core::exchange_common::Trait for Test {
+    type Currency = Balances;
+}
+
+impl wyvern_exchange_core::sale_kind_interface::Trait for Test {
+
+}
+// impl wyvern_exchange_core::Trait for Test {
+//     type Event = TestEvent;
+//     type Public = sr25519::Public;
+//     type Signature = sr25519::Signature;
+// }
+
+pub type WyvernExchangeCore = Module<Test>;
 pub type System = system::Module<Test>;
 pub type Timestamp = timestamp::Module<Test>;
 pub type Balances = balances::Module<Test>;
@@ -130,7 +132,7 @@ pub fn run_to_block(n: u64) {
         }
         System::set_block_number(System::block_number() + 1);
         System::on_initialize(System::block_number());
-        WyvernExchange::on_initialize(System::block_number());
+        WyvernExchangeCore::on_initialize(System::block_number());
     }
 }
 

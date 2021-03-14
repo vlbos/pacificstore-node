@@ -3713,6 +3713,8 @@ dependencies = [
  "structopt",
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
+ "wyvern-exchange-core-rpc",
+ "wyvern-exchange-core-runtime-api",
  "wyvern-exchange-rpc",
  "wyvern-exchange-runtime-api",
 ]
@@ -3739,6 +3741,7 @@ dependencies = [
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-wyvern-exchange",
+ "pallet-wyvern-exchange-core",
  "parity-scale-codec",
  "serde",
  "sp-api",
@@ -3753,6 +3756,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "wyvern-exchange-core-runtime-api",
  "wyvern-exchange-runtime-api",
 ]
 
@@ -3984,6 +3988,23 @@ dependencies = [
 
 [[package]]
 name = "pallet-wyvern-exchange"
+version = "2.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-wyvern-exchange-core"
 version = "2.0.0"
 dependencies = [
  "frame-support",
@@ -8304,6 +8325,34 @@ checksum = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
+]
+
+[[package]]
+name = "wyvern-exchange-core-rpc"
+version = "2.0.0"
+dependencies = [
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "serde",
+ "sp-api",
+ "sp-blockchain",
+ "sp-rpc",
+ "sp-runtime",
+ "wyvern-exchange-core-runtime-api",
+]
+
+[[package]]
+name = "wyvern-exchange-core-runtime-api"
+version = "2.0.0"
+dependencies = [
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "serde_json",
+ "sp-api",
+ "sp-std",
 ]
 
 [[package]]

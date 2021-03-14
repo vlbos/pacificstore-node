@@ -184,6 +184,7 @@ impl From<u8> for Side {
 // to be shared with other network participants, and remains largely static.
 // It can also be used for instance-level (lot) master data.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderType<AccountId, Moment, Balance> {
     // // An order on the exchange.
     pub index: u64,

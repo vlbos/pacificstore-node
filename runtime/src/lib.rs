@@ -40,7 +40,8 @@ pub use frame_support::{
 
 use orderbook::{OrderQuery,OrderJSONType,AssetQuery,JSONType};
 
-use wyvern_exchange::{Side,SaleKind,FeeMethod,HowToCall};
+use wyvern_exchange_core::{OrderType,Side,SaleKind,FeeMethod,HowToCall};
+
 /// Import the template pallet.
 // pub use pallet_template;
 
@@ -281,20 +282,28 @@ impl wyvern_exchange::Trait for Runtime {
     // type Signature = Signature;
 }
 
-impl wyvern_exchange::exchange_common::Trait for Runtime {
+// impl wyvern_exchange::exchange_common::Trait for Runtime {
+//     // type Event = Event;
+// 	type Currency = Balances;
+//     // type Public = MultiSigner;
+//     // type Signature = Signature;
+// }
+
+impl wyvern_exchange_core::sale_kind_interface::Trait for Runtime {
+    // type Event = Event;
+	// type Currency = Balances;
+    // type Public = MultiSigner;
+    // type Signature = Signature;
+}
+
+impl wyvern_exchange_core::exchange_common::Trait for Runtime {
     // type Event = Event;
 	type Currency = Balances;
     // type Public = MultiSigner;
     // type Signature = Signature;
 }
 
-impl wyvern_exchange::sale_kind_interface::Trait for Runtime {
-    // type Event = Event;
-	// type Currency = Balances;
-    // type Public = MultiSigner;
-    // type Signature = Signature;
-}
-impl wyvern_exchange::exchange_core::Trait for Runtime {
+impl wyvern_exchange_core::Trait for Runtime {
     type Event = Event;
 	// type Currency = Balances;
     type Public = MultiSigner;
@@ -317,7 +326,8 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the template pallet in the runtime.
         Orderbook: orderbook::{Module, Call, Storage, Event<T>},
-        WyvernExchange: wyvern_exchange::{Module, Call, Storage, Event<T>},
+        WyvernExchange: wyvern_exchange::{Module, Call, Storage},
+        WyvernExchangeCore: wyvern_exchange_core::{Module, Call, Storage, Event<T>},
 		// TemplateModule: pallet_template::{Module, Call, Storage, Event<T>},
 	}
 );
@@ -545,7 +555,7 @@ impl_runtime_apis! {
 	}
 
     fn hash_to_sign_ex(
- addrs: Vec<AccountId>,
+        addrs: Vec<AccountId>,
         uints: Vec<u64>,
         fee_method: FeeMethod,
         side: Side,
@@ -612,7 +622,7 @@ impl_runtime_apis! {
         static_extradata,
         sig)
 	}
-fn require_valid_order_ex(
+    fn require_valid_order_ex(
         addrs: Vec<AccountId>,
         uints: Vec<u64>,
         fee_method: FeeMethod,
@@ -680,7 +690,7 @@ fn require_valid_order_ex(
         static_extradata_buy,
         static_extradata_sell)
 	}
-fn calculate_match_price_ex(
+        fn calculate_match_price_ex(
         addrs: Vec<AccountId>,
         uints: Vec<u64>,
         fee_methods_sides_kinds_how_to_calls: Vec<u8>,
@@ -691,7 +701,7 @@ fn calculate_match_price_ex(
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
     ) -> u64 
-{
+        {
 		 WyvernExchange::calculate_match_price_ex(
         addrs,
         uints,
@@ -705,6 +715,57 @@ fn calculate_match_price_ex(
 	
 	}
 	}
+
+impl wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<Block,AccountId, Balance,Moment,Signature> for Runtime {
+    fn hash_order(
+        order: OrderType<AccountId, Moment, Balance>,
+    ) -> Vec<u8>{
+		 WyvernExchangeCore::hash_order(&order).unwrap()
+	}
+
+    fn hash_to_sign(
+        order: OrderType<AccountId, Moment, Balance>,
+    ) -> Vec<u8>{
+		 WyvernExchangeCore::hash_to_sign(&order).unwrap()
+	}
+   fn validate_order_parameters(
+        order: OrderType<AccountId, Moment, Balance>,
+    ) -> bool{
+		WyvernExchangeCore::validate_order_parameters(&order).unwrap()
+	}
+   fn validate_order(
+        hash:  Vec<u8>,
+        order: OrderType<AccountId, Moment, Balance>,
+        sig: Signature,
+    ) -> bool {
+		WyvernExchangeCore::validate_order(&hash,&order,&sig).unwrap()
+	}
+    fn require_valid_order(
+        order: OrderType<AccountId, Moment, Balance>,
+        sig: Signature,
+    ) -> Vec<u8> {
+		WyvernExchangeCore::require_valid_order(&order,&sig).unwrap()
+	}
+ fn calculate_current_price(
+        order: OrderType<AccountId, Moment, Balance>,
+    ) -> Balance{
+		WyvernExchangeCore::calculate_current_price(&order).unwrap()
+	}
+   fn orders_can_match(
+        buy: OrderType<AccountId, Moment, Balance>,
+        sell: OrderType<AccountId, Moment, Balance>,
+    ) -> bool {
+		WyvernExchangeCore::orders_can_match(&buy,&sell).unwrap()
+	}
+        fn calculate_match_price(
+        buy: OrderType<AccountId, Moment, Balance>,
+        sell: OrderType<AccountId, Moment, Balance>,
+    ) -> Balance 
+        {
+		 WyvernExchangeCore::calculate_match_price(&buy,&sell).unwrap()
+	    }
+	}
+
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
 		fn dispatch_benchmark(

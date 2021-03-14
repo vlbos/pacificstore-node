@@ -79,6 +79,20 @@ default-features = false
 package = 'wyvern-exchange-runtime-api'
 path = '../pallets/wyvern-exchange/runtime-api'
 version = '2.0.0'
+
+[dependencies.wyvern-exchange-core]
+default-features = false
+package = 'pallet-wyvern-exchange-core'
+path = '../pallets/wyvern-exchange-core'
+version = '2.0.0'
+
+[dependencies.wyvern-exchange-core-runtime-api]
+default-features = false
+package = 'wyvern-exchange-core-runtime-api'
+path = '../pallets/wyvern-exchange-core/runtime-api'
+version = '2.0.0'
+
+
 [features]
 default = ['std']
 runtime-benchmarks = [
@@ -117,6 +131,7 @@ std = [
     'sp-std/std',
     'sp-transaction-pool/std',
     'sp-version/std',
-    'wyvern-exchange/std',
     'orderbook/std',
+    'wyvern-exchange/std',
+    'wyvern-exchange-core/std',
 ]
