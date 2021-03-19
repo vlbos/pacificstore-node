@@ -1,9 +1,9 @@
 [package]
 name = "wyvern-exchange-runtime-api"
 version = "2.0.0"
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['']
 edition = "2018"
-license = "GPL-3.0-or-later"
+license = "unlicense"
 
 [dependencies.wyvern-exchange]
 default-features = false

@@ -608,7 +608,7 @@ impl_runtime_apis! {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: Signature,
+        sig: Vec<u8>,
     ) -> bool {
 		WyvernExchange::validate_order_ex(
         addrs,
@@ -632,7 +632,7 @@ impl_runtime_apis! {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: Signature,
+        sig: Vec<u8>,
     ) -> Vec<u8> {
 		WyvernExchange::require_valid_order_ex(
         addrs,
@@ -736,13 +736,13 @@ impl wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<Block,AccountId, Ba
    fn validate_order(
         hash:  Vec<u8>,
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
     ) -> bool {
 		WyvernExchangeCore::validate_order(&hash,&order,&sig).unwrap()
 	}
     fn require_valid_order(
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
     ) -> Vec<u8> {
 		WyvernExchangeCore::require_valid_order(&order,&sig).unwrap()
 	}

@@ -50,6 +50,7 @@ decl_error! {
         OrderHashMissing,
         OnlyMaker,
         InvalidOrderHash,
+        InvalidSignature,
     }
 }
 

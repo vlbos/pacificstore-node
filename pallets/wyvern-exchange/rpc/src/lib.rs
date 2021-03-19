@@ -82,7 +82,7 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
         calldata: String,
         replacement_pattern: String,
         static_extradata: String,
-        sig: Signature,
+        sig: String,
         at: Option<BlockHash>,
     ) -> Result<bool>;
 
@@ -98,7 +98,7 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
         calldata: String,
         replacement_pattern: String,
         static_extradata: String,
-        sig: Signature,
+        sig: String,
         at: Option<BlockHash>,
     ) -> Result<Vec<u8>>;
 
@@ -330,14 +330,13 @@ where
         calldata: String,
         replacement_pattern: String,
         static_extradata: String,
-        sig: Signature,
+        sig: String,
         at: Option<<Block as BlockT>::Hash>,
     ) -> Result<bool> {
         let api = self.client.runtime_api();
         let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
-
         let runtime_api_result = api.validate_order_ex(
             &at,
             addrs,
@@ -349,7 +348,7 @@ where
             calldata.clone().into_bytes(),
             replacement_pattern.clone().into_bytes(),
             static_extradata.clone().into_bytes(),
-            sig,
+            sig.clone().into_bytes(),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -369,14 +368,13 @@ where
         calldata: String,
         replacement_pattern: String,
         static_extradata: String,
-        sig: Signature,
+        sig: String,
         at: Option<<Block as BlockT>::Hash>,
     ) -> Result<Vec<u8>> {
         let api = self.client.runtime_api();
         let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
-
         let runtime_api_result = api.require_valid_order_ex(
             &at,
             addrs,
@@ -388,7 +386,7 @@ where
             calldata.clone().into_bytes(),
             replacement_pattern.clone().into_bytes(),
             static_extradata.clone().into_bytes(),
-            sig,
+            sig.clone().into_bytes(),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value

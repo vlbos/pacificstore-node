@@ -2,10 +2,10 @@
 name = "orderbook-rpc"
 version = "2.0.0"
 edition = "2018"
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
-repository = 'https://github.com/substrate-developer-hub/recipes'
+authors = ['']
+repository = ''
 description = "A pallet that nft orders management"
-license = "GPL-3.0-or-later"
+license = "unlicense"
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "1.3.0" }

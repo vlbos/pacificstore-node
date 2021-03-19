@@ -140,7 +140,7 @@ decl_module! {
                 .index_by(next_index)
                 .identified_by(order_id.clone())
                 .owned_by(owner.clone())
-                .registered_on(<timestamp::Module<T>>::now())
+                .created_on(<timestamp::Module<T>>::now())
                 .with_fields(fields)
                 .build();
             if !<Orders<T>>::contains_key(next_index.clone()) {

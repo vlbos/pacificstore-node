@@ -4,10 +4,9 @@
   "license": "Unlicense",
   "scripts": {
     "start": "node ./src/init.js",
-  "start1": "node  ./src/init1.js",
-  "start1u": "node --trace-uncaught ./src/init1.js",
-"start1w": "node --trace-warnings ./src/init1.js"
-
+    "start1": "node  ./src/init1.js",
+    "start1u": "node --trace-uncaught ./src/init1.js",
+    "start1w": "node --trace-warnings ./src/init1.js"
   },
   "type": "module",
   "engines": {
@@ -15,7 +14,7 @@
     "npm": ">=6"
   },
   "dependencies": {
-    "@polkadot/api": "^2.9.1",
+    "@polkadot/api": "^3.9.3",
     "uuid": "^8.3.1"
   }
 }

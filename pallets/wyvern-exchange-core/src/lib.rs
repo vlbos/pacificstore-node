@@ -22,27 +22,12 @@
 //! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
 //! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
 //! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
-//! * `approve_order_ex ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-//! * `cancel_order_ex` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
-//! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
 //! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
 //! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
 //! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
 //!//!
 
-//! ### Public Functions
-//!
-//! * `hash_order_ex` - Hash an order, returning the canonical order hash, without the message prefix
-//! * `hash_to_sign_ex` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
-//! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, and signature.
-//! * `validate_order_parameters_ex` - Validate order parameters (does _not_ check validity -signature)
-//! * `calculate_current_price_ex` - Calculate the current price of an order (fn -convenience)
-//! * `calculate_match_price_ex` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
-//! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
-//! * `calculate_final_price_ex` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
-//!
-//! ### Public ExchangeCore Functions
+//! ### Public  Functions
 //!
 //! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
 //! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
@@ -71,6 +56,7 @@ use frame_support::{
     sp_std::{if_std,prelude::*},
     traits::{Currency},
 };
+use sp_core::sr25519;
 
 use frame_system::{self as system, ensure_signed};
 
@@ -320,7 +306,7 @@ impl<T: Trait> Module<T> {
     // sig ECDSA signature
     pub fn require_valid_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &T::Signature,
+        sig: &[u8],
     ) -> Result<Vec<u8>, Error<T>> {
         let hash: Vec<u8> = Self::hash_to_sign(&order)?;
         ensure!(
@@ -366,7 +352,7 @@ impl<T: Trait> Module<T> {
     pub fn validate_order(
         hash: &[u8],
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &T::Signature,
+        sig: &[u8],
     ) -> Result<bool, Error<T>> {
         // frame_support::debug::RuntimeLogger::init();
         // debug::error!("exchange is contract self.");
@@ -388,9 +374,13 @@ impl<T: Trait> Module<T> {
             return Ok(true);
         }
 
-        if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
+        // if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
+        //     return Ok(true);
+        // }
+        if Self::check_signature_bytes(&sig, &hash, order.maker()).is_ok() {
             return Ok(true);
         }
+
         if_std!{println!("343");}
         Ok(false)
     }
@@ -409,6 +399,27 @@ impl<T: Trait> Module<T> {
             Err(Error::<T>::MsgVerifyFailed.into())
         }
     }
+
+    pub fn check_signature_bytes(
+        _signature: &[u8],
+        _msg: &[u8],
+        _signer: &T::AccountId,
+    ) -> Result<(), Error<T>> {
+// sr25519 always expects a 64 byte signature.
+		ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
+		let signature:Signature = sr25519::Signature::from_slice(_signature).into();
+
+		// In Polkadot, the AccountId is always the same as the 32 byte public key.
+		let account_bytes: [u8; 32] = account_to_bytes(_signer)?;
+		// let public_key = sr25519::Public::from_raw(account_bytes);
+
+		// Check if everything is good or not.
+		match signature.verify(_msg, &account_bytes.into()) {
+			true => Ok(()),
+			false => Err(Error::<T>::MsgVerifyFailed)?,
+		}
+    }
+
 
     // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
     // order OrderType to approve
@@ -476,7 +487,7 @@ impl<T: Trait> Module<T> {
     pub fn cancel_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sig: &T::Signature,
+        sig: &[u8],
     ) -> DispatchResult {
         // CHECKS
         let _user = ensure_signed(origin)?;
@@ -823,9 +834,9 @@ impl<T: Trait> Module<T> {
         msg_sender: T::AccountId,
         msg_value: BalanceOf<T>,
         buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        buy_sig: T::Signature,
+        buy_sig: Vec<u8>,
         sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-        sell_sig: T::Signature,
+        sell_sig: Vec<u8>,
         metadata: &[u8],
     ) -> Result<(), Error<T>> {
         // Ensure buy order validity and calculate hash if necessary.
@@ -918,4 +929,17 @@ impl<T: Trait> Module<T> {
 
         Ok(())
     }
+}
+
+
+
+// This function converts a 32 byte AccountId to its byte-array equivalent form.
+fn account_to_bytes<AccountId,T:exchange_common::Trait>(account: &AccountId) -> Result<[u8; 32], Error<T>>
+	where AccountId: Encode,
+{
+	let account_vec = account.encode();
+	ensure!(account_vec.len() == 32, Error::<T>::InvalidSignature);
+	let mut bytes = [0u8; 32];
+	bytes.copy_from_slice(&account_vec);
+	Ok(bytes)
 }

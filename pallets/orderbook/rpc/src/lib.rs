@@ -7,27 +7,121 @@ use sp_blockchain::HeaderBackend;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 use std::sync::Arc;
 use orderbook_runtime_api::OrderbookApi as OrderbookRuntimeApi;
-use orderbook::{OrderQuery,OrderJSONType,AssetQuery,JSONType};
+use orderbook::{OrderQuery,OrderJSONType,AssetQuery,JSONType,OrderField};
 use codec::Codec;
+use codec::{Decode, Encode};
+// #[cfg(feature = "std")]
+use serde::{Deserialize, Serialize};
 
-#[rpc]
+#[rpc] 
 pub trait OrderbookApi<BlockHash,AccountId,Moment> {
 	#[rpc(name = "orderbook_getOrder")]
     fn get_order(&self,
-        order_query: Option<OrderQuery<AccountId>>,  at: Option<BlockHash>
+        order_query: Option<OrderQueryJSON<AccountId>>,  at: Option<BlockHash>
     ) -> Result<Option<OrderJSONType<AccountId, Moment>>>;
 	#[rpc(name = "orderbook_getOrders")]
     fn get_orders(&self,
-        order_query: Option<OrderQuery<AccountId>>, page: Option<u64>, at: Option<BlockHash>
+        order_query: Option<OrderQueryJSON<AccountId>>, page: Option<u64>, at: Option<BlockHash>
     ) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>;
 	#[rpc(name = "orderbook_getAsset")]
     fn get_asset(&self,
-        token_address: Option<Vec<u8>>,token_id: Option<Vec<u8>>, at: Option<BlockHash>
+        token_address: String,token_id: String, at: Option<BlockHash>
     ) -> Result<Option<JSONType>>;
     #[rpc(name = "orderbook_getAssets")]
     fn get_assets(&self,
-        asset_query: Option<AssetQuery<AccountId>>, page: Option<u64>, at: Option<BlockHash>
+        asset_query: Option<AssetQueryJSON<AccountId>>, page: Option<u64>, at: Option<BlockHash>
     ) -> Result<Option<Vec<JSONType>>>;
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct OrderQueryJSON<AccountId> {
+    pub limit: Option<u64>,
+    pub offset: Option<u64>,
+    pub owner: Option<AccountId>,
+    pub token_ids: Option<Vec<String>>,
+    pub params: Option<Vec<QueryParameter>>,
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct QueryParameter {
+    // Name of the order field e.g. desc or description
+    pub name: String,
+    // Value of the order field e.g. tokenjson
+    pub value: String,
+}
+
+#[derive(Encode, Decode, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+pub struct AssetQueryJSON<AccountId> {
+    pub owner: Option<AccountId>,
+    pub asset_contract_address: Option<String>,
+    pub token_ids: Option<Vec<String>>,
+    pub search: Option<String>,
+    pub order_by: Option<String>,
+    pub order_direction: Option<String>,
+    pub limit: Option<u64>,
+    pub offset: Option<u64>,
+}
+
+pub fn convert_json_to_assetquery<AccountId>(
+    asset_query_json: Option<AssetQueryJSON<AccountId>>,
+) -> Option<AssetQuery<AccountId>> {
+
+    if let Some(json) = asset_query_json{
+        let mut asset_query = AssetQuery::<AccountId>{
+                    limit: json.limit,
+                    offset: json.offset,
+                    owner: json.owner,
+                    token_ids: None,
+                    asset_contract_address: None,
+                    search: None,
+                    order_by: None,
+                    order_direction:None,
+        };
+
+        if let Some(token_ids) = json.token_ids{
+        asset_query.token_ids  = Some(token_ids.into_iter().map(|t|t.into_bytes()).collect());      
+        }
+
+        if let Some(search) = json.search{
+        asset_query.search  =  Some(search.into_bytes());
+        }
+        if let Some(order_by) = json.order_by{
+        asset_query.order_by =Some(order_by.into_bytes()) ;
+        }
+        if let Some(order_direction) = json.order_direction{
+        asset_query.order_direction =Some(order_direction.into_bytes()) ;
+        }
+        return Some(asset_query);
+         }               
+
+        None
+}
+
+pub fn convert_json_to_orderquery<AccountId>(
+    order_query_json: Option<OrderQueryJSON<AccountId>>
+) -> Option<OrderQuery<AccountId>> {
+    if let Some(json) = order_query_json{
+        let  mut order_query = OrderQuery::<AccountId> {
+            limit: json.limit,
+            offset: json.offset,
+            owner: json.owner,
+            token_ids: None,
+            params: None,
+        };
+        if let Some(token_ids) = json.token_ids{
+        order_query.token_ids = Some(token_ids.into_iter().map(|t|t.into_bytes()).collect());
+        }
+        if let Some(params) = json.params{
+        order_query.params  =  Some(params.into_iter().map(|t|OrderField::new(&t.name.into_bytes(),&t.value.into_bytes())).collect());
+        }
+        return Some(order_query);
+   
+        }
+
+    None
 }
 
 /// A struct that implements the `OrderbookApi`.
@@ -59,14 +153,14 @@ where
     Moment:Codec
     {
         fn get_order(&self,
-            order_query: Option<OrderQuery<AccountId>>,  at:Option<<Block as BlockT>::Hash>
+            order_query: Option<OrderQueryJSON<AccountId>>,  at:Option<<Block as BlockT>::Hash>
         ) -> Result<Option<OrderJSONType<AccountId, Moment>>>{
             let api = self.client.runtime_api();
             let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
                 self.client.info().best_hash));
 
-            let runtime_api_result = api.get_order(&at,order_query);
+            let runtime_api_result = api.get_order(&at,convert_json_to_orderquery::<AccountId>(order_query));
             runtime_api_result.map_err(|e| RpcError {
                 code: ErrorCode::ServerError(9876), // No real reason for this value
                 message: "Something wrong".into(),
@@ -75,14 +169,14 @@ where
         }
 
         fn get_orders(&self,
-            order_query: Option<OrderQuery<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
+            order_query: Option<OrderQueryJSON<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
         ) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>{
             let api = self.client.runtime_api();
             let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
                 self.client.info().best_hash));
 
-            let runtime_api_result = api.get_orders(&at,order_query,page);
+            let runtime_api_result = api.get_orders(&at,convert_json_to_orderquery::<AccountId>(order_query),page);
             runtime_api_result.map_err(|e| RpcError {
                 code: ErrorCode::ServerError(9876), // No real reason for this value
                 message: "Something wrong".into(),
@@ -91,14 +185,14 @@ where
         }
 
         fn get_asset(&self,
-            token_address: Option<Vec<u8>>,token_id: Option<Vec<u8>>, at:Option<<Block as BlockT>::Hash>
+            token_address: String,token_id: String, at:Option<<Block as BlockT>::Hash>
         ) -> Result<Option<JSONType>>{
             let api = self.client.runtime_api();
             let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
                 self.client.info().best_hash));
 
-            let runtime_api_result = api.get_asset(&at,token_address,token_id);
+            let runtime_api_result = api.get_asset(&at,Some(token_address.clone().into_bytes()),Some(token_id.clone().into_bytes()));
             runtime_api_result.map_err(|e| RpcError {
                 code: ErrorCode::ServerError(9876), // No real reason for this value
                 message: "Something wrong".into(),
@@ -106,14 +200,14 @@ where
             })
         }
         fn get_assets(&self,
-            asset_query: Option<AssetQuery<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
+            asset_query: Option<AssetQueryJSON<AccountId>>, page: Option<u64>, at:Option<<Block as BlockT>::Hash>
         ) -> Result<Option<Vec<JSONType>>>{
             let api = self.client.runtime_api();
             let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
                 self.client.info().best_hash));
 
-            let runtime_api_result = api.get_assets(&at,asset_query,page);
+            let runtime_api_result = api.get_assets(&at,convert_json_to_assetquery::<AccountId>(asset_query),page);
             runtime_api_result.map_err(|e| RpcError {
                 code: ErrorCode::ServerError(9876), // No real reason for this value
                 message: "Something wrong".into(),

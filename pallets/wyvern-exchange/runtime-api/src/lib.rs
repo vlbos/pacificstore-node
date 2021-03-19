@@ -65,7 +65,7 @@ sp_api::decl_runtime_apis! {
                 calldata: Vec<u8>,
                 replacement_pattern: Vec<u8>,
                 static_extradata: Vec<u8>,
-                sig: Signature,
+                sig: Vec<u8>,
             ) -> bool;
             fn require_valid_order_ex(
                 addrs: Vec<AccountId>,
@@ -77,7 +77,7 @@ sp_api::decl_runtime_apis! {
                 calldata: Vec<u8>,
                 replacement_pattern: Vec<u8>,
                 static_extradata: Vec<u8>,
-                sig: Signature,
+                sig: Vec<u8>,
             ) -> Vec<u8>;
             fn calculate_current_price_ex(
                 addrs: Vec<AccountId>,

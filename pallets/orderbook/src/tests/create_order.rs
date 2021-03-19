@@ -31,7 +31,7 @@ fn create_order_without_fields() {
                 index: 1,
                 order_id: order_id.clone(),
                 owner: owner,
-                registered: now,
+                created_date: now,
                 fields: None
             })
         );
@@ -68,7 +68,7 @@ fn create_order_with_valid_fields() {
                 index: index,
                 order_id: order_id.clone(),
                 owner: owner,
-                registered: now,
+                created_date: now,
                 fields: Some(fields.clone()),
             })
         );

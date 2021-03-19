@@ -1,7 +1,7 @@
 {
 "Address": "MultiAddress",
 "LookupSource": "MultiAddress",
-    "Signature": "Vec<u8>",
+    "Signature": "H512",
     "OrderId": "Vec<u8>",
     "TokenId": "Vec<u8>",
     "FieldName": "Vec<u8>",

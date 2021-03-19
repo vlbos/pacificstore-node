@@ -20,16 +20,10 @@
 //!
 //! ### Dispatchable Functions
 //!
-//! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
-//! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
-//! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
 //! * `approve_order_ex ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
 //! * `cancel_order_ex` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
 //! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
-//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-//!//!
+//!
 
 //! ### Public Functions
 //!
@@ -42,18 +36,6 @@
 //! * `calculate_match_price_ex` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
 //! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
 //! * `calculate_final_price_ex` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
-//!
-//! ### Public ExchangeCore Functions
-//!
-//! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
-//! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
-//! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
-//! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
-//! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
-//! * `calculate_match_price` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
-//! * `orders_can_match` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
-//! * `calculate_final_price ` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -68,7 +50,7 @@ use frame_support::{
     sp_std::prelude::*, 
 };
 
-use frame_system::{self as system,ensure_signed};
+use frame_system::{ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -149,7 +131,7 @@ decl_module! {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: T::Signature,
+        sig: Vec<u8>,
     ) -> DispatchResult {
         let _user = ensure_signed(origin.clone())?;
         <exchange_core::Module<T>>::cancel_order(
@@ -182,7 +164,7 @@ decl_module! {
         replacement_pattern_sell: Vec<u8>,
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
-        sig: Vec<T::Signature>,
+        sig: Vec<Vec<u8>>,
         rss_metadata: Vec<u8>,
     ) -> DispatchResult {
         let _user = ensure_signed(origin)?;
@@ -336,7 +318,7 @@ impl<T: Trait> Module<T> {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: T::Signature,
+        sig: Vec<u8>,
     ) -> bool {
         let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
             <exchange_common::Module<T>>::build_order_type_from_array_parameters(
@@ -369,7 +351,7 @@ impl<T: Trait> Module<T> {
         calldata: Vec<u8>,
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
-        sig: T::Signature,
+        sig: Vec<u8>,
     ) -> Vec<u8> {
         let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
             <exchange_common::Module<T>>::build_order_type_from_array_parameters(

@@ -3,7 +3,7 @@
 #![allow(clippy::unnecessary_mut_passed)]
 use codec::Codec;
 use sp_std::vec::Vec;
-use wyvern_exchange_core::{OrderType,FeeMethod, HowToCall, SaleKind, Side};
+use wyvern_exchange_core::{OrderType};
 // Here we declare the runtime API. It is implemented it the `impl` block in
 // runtime amalgamator file (the `runtime/src/lib.rs`)
 sp_api::decl_runtime_apis! {
@@ -26,11 +26,11 @@ sp_api::decl_runtime_apis! {
             fn validate_order(
                 hash:  Vec<u8>,
                 order: OrderType<AccountId, Moment, Balance>,
-                sig: Signature,
+                sig: Vec<u8>,
             ) -> bool;
             fn require_valid_order(
                 order: OrderType<AccountId, Moment, Balance>,
-                sig: Signature,
+                sig: Vec<u8>,
             ) -> Vec<u8>;
             fn calculate_current_price(
                 order: OrderType<AccountId, Moment, Balance>,

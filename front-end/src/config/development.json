@@ -15,7 +15,7 @@
       "id": "OrderId",
       "owner": "AccountId",
       "fields": "Option<Vec<OrderField>>",
-      "registered": "Moment"
+      "created_date": "Moment"
     },
     "Side": {
       "_enum": ["Buy", "Sell"]

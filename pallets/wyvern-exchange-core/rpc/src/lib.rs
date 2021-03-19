@@ -8,7 +8,7 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 // use sp_core::Bytes;
 use codec::Codec;
 use std::sync::Arc;
-use wyvern_exchange_core::{OrderType,FeeMethod, HowToCall, SaleKind, Side};
+use wyvern_exchange_core::{OrderType};
 use wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi as WyvernExchangeCoreRuntimeApi;
 
 #[rpc]
@@ -39,7 +39,7 @@ pub trait WyvernExchangeCoreApi<BlockHash, AccountId, Balance, Moment, Signature
         &self,
         hash:String,
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
         at: Option<BlockHash>,
     ) -> Result<bool>;
 
@@ -47,7 +47,7 @@ pub trait WyvernExchangeCoreApi<BlockHash, AccountId, Balance, Moment, Signature
     fn require_valid_order(
         &self,
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
         at: Option<BlockHash>,
     ) -> Result<Vec<u8>>;
 
@@ -172,7 +172,7 @@ where
         &self,
         hash:String,
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
         at: Option<<Block as BlockT>::Hash>,
     ) -> Result<bool> {
         let api = self.client.runtime_api();
@@ -196,7 +196,7 @@ where
     fn require_valid_order(
         &self,
         order: OrderType<AccountId, Moment, Balance>,
-        sig: Signature,
+        sig: Vec<u8>,
         at: Option<<Block as BlockT>::Hash>,
     ) -> Result<Vec<u8>> {
         let api = self.client.runtime_api();

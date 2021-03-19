@@ -39,7 +39,7 @@ fn get_orders_with_valid_parameters() {
                 index: index,
                 order_id: order_id.clone(),
                 owner: owner,
-                registered: now,
+                created_date: now,
                 fields: Some(order_fields),
             }])
         );
@@ -87,7 +87,7 @@ fn get_order_with_valid_parameters() {
                 index: index,
                 order_id: order_id.clone(),
                 owner: owner,
-                registered: now,
+                created_date: now,
                 fields: Some(order_fields),
             })
         );

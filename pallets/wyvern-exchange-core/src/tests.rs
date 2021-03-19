@@ -49,7 +49,7 @@ fn make_order(
         listing_time: Zero::zero(),
         expiration_time: Zero::zero(),
         salt: 0,
-        registered: time,
+        created_date: time,
     }
 }
 

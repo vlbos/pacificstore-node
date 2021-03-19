@@ -22,7 +22,7 @@ pub type FieldName = Vec<u8>;
 pub type FieldValue = Vec<u8>;
 
 // Order contains master data (aka class-level) about a trade item.
-// This data is typically registered once by the order's manufacturer / supplier,
+// This data is typically created_date once by the order's manufacturer / supplier,
 // to be shared with other network participants, and remains largely static.
 // It can also be used for instance-level (lot) master data.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
@@ -37,8 +37,8 @@ pub struct OrderJSONType<AccountId, Moment> {
     // This a series of fields describing the order.
     // Typically, there would at least be a textual description.
     pub fields: Option<Vec<OrderField>>,
-    // Timestamp (approximate) at which the Order was registered on-chain.
-    pub registered: Moment,
+    // Timestamp (approximate) at which the Order was created_date on-chain.
+    pub created_date: Moment,
 }
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
@@ -135,3 +135,7 @@ pub fn convert_orderjsontype_to_jsontype<AccountId, Moment>(
         jsons: None,
     }
 }
+
+
+
+

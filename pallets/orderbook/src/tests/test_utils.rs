@@ -5,7 +5,7 @@ pub fn store_test_order<T: Trait>(
     index: u64,
     order_id: OrderId,
     owner: T::AccountId,
-    registered: T::Moment,
+    created_date: T::Moment,
 ) {
     let order_fields = get_test_order();
     Orders::<T>::insert(
@@ -14,7 +14,7 @@ pub fn store_test_order<T: Trait>(
             index,
             order_id: order_id.clone(),
             owner,
-            registered,
+            created_date,
             fields: Some(order_fields),
         },
     );

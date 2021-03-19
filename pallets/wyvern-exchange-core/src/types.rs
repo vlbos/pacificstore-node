@@ -180,7 +180,7 @@ impl From<u8> for Side {
 }
 
 // OrderType contains master data (aka class-level) about a trade item.
-// This data is typically registered once by the order's manufacturer / supplier,
+// This data is typically created_date once by the order's manufacturer / supplier,
 // to be shared with other network participants, and remains largely static.
 // It can also be used for instance-level (lot) master data.
 #[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
@@ -234,7 +234,7 @@ pub struct OrderType<AccountId, Moment, Balance> {
     pub expiration_time: Moment,
     // OrderType salt, used to prevent duplicate hashes.
     pub salt: u64,
-    pub registered: Moment,
+    pub created_date: Moment,
 }
 
 impl<AccountId, Moment, Balance> OrderType<AccountId, Moment, Balance>
@@ -293,7 +293,7 @@ where
                 listing_time: listing_time,
                 expiration_time: expiration_time,
                 salt: salt,
-                registered: Moment::default(),
+                created_date: Moment::default(),
         }
     }
 
