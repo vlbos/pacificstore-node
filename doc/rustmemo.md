@@ -5,6 +5,7 @@ SKIP_WASM_BUILD=1 cargo check
 ```
 
 ```
+RUST_LOG=debug RUST_BACKTRACE=1 cargo run -- --dev --tmp
 SKIP_WASM_BUILD=1 cargo test -- --nocapture
 ```
 

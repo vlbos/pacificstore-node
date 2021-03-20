@@ -46,12 +46,12 @@ use codec::{Decode, Encode};
 use core::result::Result;
 
 use frame_support::{
-    debug, decl_event, decl_module, decl_storage,
-    dispatch::DispatchResult,
+    debug,  decl_error,decl_event, decl_module, decl_storage,
+    dispatch::{DispatchError,DispatchResult},
     ensure,
     sp_io::hashing::keccak_256,
-    sp_runtime::{
-        traits::{IdentifyAccount, Member, Verify, Zero},
+    sp_runtime::{print,
+        traits::{IdentifyAccount, Member, Verify, Zero,Printable},
     },
     sp_std::{if_std,prelude::*},
     traits::{Currency},
@@ -72,7 +72,6 @@ pub use crate::types::*;
 
 pub mod exchange_common;
 use crate::exchange_common::BalanceOf;
-use crate::exchange_common::Error;
 
 pub mod sale_kind_interface;
 
@@ -147,9 +146,36 @@ decl_event!(
         MinimumMakerProtocolFeeChanged(Balance),
         MinimumTakerProtocolFeeChanged(Balance),
         ProtocolFeeRecipientChanged(AccountId, AccountId),
+        OwnerChanged(AccountId, AccountId),
     }
 );
 
+
+decl_error! {
+    pub enum Error for Module<T: Trait> {
+        MsgVerifyFailed,
+        InvalidBuyOrderParameters,
+        InvalidSellOrderParameters,
+        OrdersCannotMatch,
+        ListingTimeExpired,
+        ArrayNotEqual,
+        BuyArrayNotEqual,
+        SellArrayNotEqual,
+        BuyTakerProtocolFeeGreaterThanSellTakerProtocolFee,
+        BuyTakerRelayerFeeGreaterThanSellTakerRelayerFee,
+        SellPaymentTokenEqualPaymentToken,
+        SellTakerProtocolFeeGreaterThanBuyTakerProtocolFee,
+        SellTakerRelayerFeeGreaterThanBuyTakerRelayerFee,
+        ValueLessThanRequiredAmount,
+        ValueNotZero,
+        BuyPriceLessThanSellPrice,
+        OrderHashMissing,
+        OnlyMaker,
+        InvalidOrderHash,
+        InvalidSignature,
+        OnlyOwner,
+    }
+}
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
@@ -204,6 +230,28 @@ decl_module! {
         Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(_user,new_protocol_fee_recipient.clone()));
         Ok(())
     }
+
+    #[weight = 10_000]
+    pub fn change_owner(
+        origin,
+        new_owner: T::AccountId,
+    ) -> DispatchResult {
+        // onlyOwner
+        let _user = ensure_signed(origin)?;
+         frame_support::debug::RuntimeLogger::init();
+ frame_support::debug::native::debug!("================ContractSelf::<T>::get()==== {:?}",   ContractSelf::<T>::get());
+        frame_support::debug::error!("===================change_owner====debug::error============################={:#?}{:#?}",T::AccountId::default(), ContractSelf::<T>::get());
+        if_std! {
+                    println!("======================change_ownerif_std=========================== {:#?}{:#?}",T::AccountId::default(), ContractSelf::<T>::get());
+                            }
+        print("=================change_owner=====print============");
+// print(ContractSelf::<T>::get());
+ ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(), Error::<T>::OnlyOwner);
+        ContractSelf::<T>::put(new_owner.clone());
+        Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
+        Ok(())
+    }
+
     }
 }
 
@@ -320,18 +368,18 @@ impl<T: Trait> Module<T> {
     // order OrderType to validate
     pub fn validate_order_parameters(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-    ) -> Result<bool, Error<T>> {
+    ) -> bool {
         // OrderType must be targeted at this protocol version (this contract:Exchange).
         if order.exchange != ContractSelf::<T>::get() {
-            return Ok(false);
+            return false;
         }
 
         // OrderType must possess valid sale kind parameter combination.
         if !<sale_kind_interface::Module<T>>::validate_parameters(
             &order.sale_kind,
             order.expiration_time,
-        )? {
-            return Ok(false);
+        ) {
+            return false;
         }
 
         // If using the split fee method, order must have sufficient protocol fees.
@@ -339,10 +387,10 @@ impl<T: Trait> Module<T> {
             && (order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get()
                 || order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get())
         {
-            return Ok(false);
+            return false;
         }
 
-        Ok(true)
+        true
     }
 
     // Validate a provided previously approved / signed order, hash, and signature.
@@ -354,10 +402,9 @@ impl<T: Trait> Module<T> {
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &[u8],
     ) -> Result<bool, Error<T>> {
-        // frame_support::debug::RuntimeLogger::init();
-        // debug::error!("exchange is contract self.");
+    
         // OrderType must have valid parameters.
-        if !Self::validate_order_parameters(&order)? {
+        if !Self::validate_order_parameters(&order) {
         if_std!{println!("326");}
             return Ok(false);
         }
@@ -513,14 +560,14 @@ impl<T: Trait> Module<T> {
     pub fn calculate_current_price(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<BalanceOf<T>, Error<T>> {
-        <sale_kind_interface::Module<T>>::calculate_final_price(
+       Ok(<sale_kind_interface::Module<T>>::calculate_final_price(
             &order.side,
             &order.sale_kind,
             order.base_price,
             order.extra,
             order.listing_time,
             order.expiration_time,
-        )
+        ))
     }
 
     // Calculate the price two orders would match at, if in fact they would match (fail:otherwise)
@@ -539,7 +586,7 @@ impl<T: Trait> Module<T> {
             sell.extra,
             sell.listing_time,
             sell.expiration_time,
-        )?;
+        );
 
         // Calculate buy price.
         let buy_price: BalanceOf<T> = <sale_kind_interface::Module<T>>::calculate_final_price(
@@ -549,7 +596,7 @@ impl<T: Trait> Module<T> {
             buy.extra,
             buy.listing_time,
             buy.expiration_time,
-        )?;
+        );
 
         // Require price cross.
         ensure!(
@@ -801,9 +848,8 @@ impl<T: Trait> Module<T> {
     pub fn orders_can_match(
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-    ) -> Result<bool, Error<T>> {
+    ) -> bool {
         //  Must be opposite-side.
-        Ok(
             (buy.side == Side::Buy && sell.side == Side::Sell) &&
             // Must use same fee method.
             (buy.fee_method == sell.fee_method) &&
@@ -819,10 +865,9 @@ impl<T: Trait> Module<T> {
             // Must match how_to_call. 
             (buy.how_to_call == sell.how_to_call) &&
             // Buy-side order must be settleable. 
-            <sale_kind_interface::Module<T>>::can_settle_order(buy.listing_time, buy.expiration_time)? &&
+            <sale_kind_interface::Module<T>>::can_settle_order(buy.listing_time, buy.expiration_time) &&
             // Sell-side order must be settleable. 
-            <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)?
-            )
+            <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)
     }
 
     // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. 
@@ -838,58 +883,70 @@ impl<T: Trait> Module<T> {
         sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell_sig: Vec<u8>,
         metadata: &[u8],
-    ) -> Result<(), Error<T>> {
+    ) -> DispatchResult {
+            if_std!{println!("========================864");}
+
         // Ensure buy order validity and calculate hash if necessary.
         let mut buy_hash: Vec<u8> = vec![];
         if buy.maker == msg_sender {
-            ensure!(
-                Self::validate_order_parameters(&buy)?,
-                Error::<T>::InvalidBuyOrderParameters
-            );
+               if  !Self::validate_order_parameters(&buy){
+                  return Err(Error::<T>::InvalidBuyOrderParameters.into());
+                }   
         } else {
             if_std!{println!("789");}
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
         }
+            if_std!{println!("========================864");}
 
         // Ensure sell order validity and calculate hash if necessary.
         let mut sell_hash: Vec<u8> = vec![];
         if sell.maker == msg_sender {
-            ensure!(
-                Self::validate_order_parameters(&sell)?,
-                Error::<T>::InvalidSellOrderParameters
-            );
+            if Self::validate_order_parameters(&sell){
+               return  Err(Error::<T>::InvalidSellOrderParameters.into());
+            }
         } else {
             if_std!{println!("801");}
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
         }
+            if_std!{println!("========================864");}
 
         // Must be matchable.
-        ensure!(
-            Self::orders_can_match(&buy, &sell)?,
-            Error::<T>::OrdersCannotMatch
-        );
+          if  !Self::orders_can_match(&buy, &sell){
+             return   Err(Error::<T>::OrdersCannotMatch.into());
+          }
+            if_std!{println!("========================864");}
 
         // Must match calldata after replacement, if specified.
         let mut buycalldata = buy.calldata.clone();
         let mut sellcalldata = sell.calldata.clone();
         if buy.replacement_pattern.len() > 0 {
-             <exchange_common::Module<T>>::guarded_array_replace(
+            if ! <exchange_common::Module<T>>::guarded_array_replace(
                 &mut buycalldata,
                 &sell.calldata,
                 &buy.replacement_pattern,
-            )?;
+            ){
+           return  Err(Error::<T>::BuyArrayNotEqual.into());
+            }
         }
+            if_std!{println!("========================864");}
+
         if sell.replacement_pattern.len() > 0 {
-             <exchange_common::Module<T>>::guarded_array_replace(
+             if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut sellcalldata,
                 &buy.calldata,
                 &sell.replacement_pattern,
-            )?;
+            ){
+           return  Err(Error::<T>::SellArrayNotEqual.into());
+            }
         }
-        ensure!(
-            <exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata),
-            Error::<T>::ArrayNotEqual
-        );
+
+            if_std!{println!("========================864");}
+
+        if  !<exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata){
+           return  Err(Error::<T>::ArrayNotEqual.into());
+        }
+
+            if_std!{println!("========================864");}
 
         // Mark previously signed or approved orders as finalized.
         let buymaker: T::AccountId = buy.maker.clone();
@@ -902,12 +959,13 @@ impl<T: Trait> Module<T> {
         }
 
         debug::info!(
-            "[product_tracking_ocw] Error reading product_tracking_ocw::last_proccessed_block."
+            "========================================929====."
         );
 
         // INTERACTIONS
         // Execute funds transfer and pay fees.
         let price: BalanceOf<T> = Self::execute_funds_transfer(msg_value, &buy, &sell)?;
+            if_std!{println!("========================864");}
 
         // Log match event.
         Self::deposit_event(RawEvent::OrdersMatched(
@@ -926,6 +984,7 @@ impl<T: Trait> Module<T> {
             price,
             metadata.to_vec(),
         ));
+            if_std!{println!("========================864");}
 
         Ok(())
     }
@@ -934,7 +993,7 @@ impl<T: Trait> Module<T> {
 
 
 // This function converts a 32 byte AccountId to its byte-array equivalent form.
-fn account_to_bytes<AccountId,T:exchange_common::Trait>(account: &AccountId) -> Result<[u8; 32], Error<T>>
+fn account_to_bytes<AccountId,T:Trait>(account: &AccountId) -> Result<[u8; 32], Error<T>>
 	where AccountId: Encode,
 {
 	let account_vec = account.encode();

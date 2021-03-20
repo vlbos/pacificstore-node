@@ -8,7 +8,7 @@ use core::result::Result;
 // use sp_std::if_std;
 
 use frame_support::{
-    decl_error, decl_module, ensure,
+    decl_module, ensure,
     sp_runtime::traits::Zero,
     sp_std::prelude::*,
     traits::{Currency, LockableCurrency, ReservableCurrency},
@@ -29,30 +29,6 @@ decl_module! {
     }
 }
 
-decl_error! {
-    pub enum Error for Module<T: Trait> {
-        MsgVerifyFailed,
-        InvalidBuyOrderParameters,
-        InvalidSellOrderParameters,
-        OrdersCannotMatch,
-        ListingTimeExpired,
-        ArrayNotEqual,
-        ArraySizeNotAsSameAsDesired,
-        ArraySizeNotAsSameAsMask,
-        BuyTakerProtocolFeeGreaterThanSellTakerProtocolFee,
-        BuyTakerRelayerFeeGreaterThanSellTakerRelayerFee,
-        SellPaymentTokenEqualPaymentToken,
-        SellTakerProtocolFeeGreaterThanBuyTakerProtocolFee,
-        SellTakerRelayerFeeGreaterThanBuyTakerRelayerFee,
-        ValueLessThanRequiredAmount,
-        ValueNotZero,
-        BuyPriceLessThanSellPrice,
-        OrderHashMissing,
-        OnlyMaker,
-        InvalidOrderHash,
-        InvalidSignature,
-    }
-}
 
 impl<T: Trait> Module<T> {
     //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
@@ -66,21 +42,17 @@ impl<T: Trait> Module<T> {
         array: &mut Vec<u8>,
         desired: &[u8],
         mask: &[u8],
-    ) -> Result<(), Error<T>> {
-        ensure!(
-            array.len() == desired.len(),
-            Error::<T>::ArraySizeNotAsSameAsDesired
-        );
-        ensure!(
-            array.len() == mask.len(),
-            Error::<T>::ArraySizeNotAsSameAsMask
-        );
+    ) -> bool {
+        if    array.len() != desired.len()||array.len() != mask.len(){
+             return false;
+        }
+
         let arr = array.clone();
         for (i, &_item) in arr.iter().enumerate() {
             // Conceptually: array[i] = (!mask[i] && array[i]) || (mask[i] && desired[i]), bitwise in word chunks.
             array[i] = (!mask[i] & _item) | (mask[i] & desired[i]);
         }
-        Ok(())
+        true
     }
 
     //Test if two arrays are equal

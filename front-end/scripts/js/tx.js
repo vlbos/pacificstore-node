@@ -122,8 +122,6 @@ async function main() {
 
                 break;
             case "atomicMatchEx":
-
-
                 submit(api, api.tx.wyvernExchange.approveOrderEx(users.bob.key.address,
                     accounts7,//[buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
                     [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],

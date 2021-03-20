@@ -731,7 +731,7 @@ impl wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<Block,AccountId, Ba
    fn validate_order_parameters(
         order: OrderType<AccountId, Moment, Balance>,
     ) -> bool{
-		WyvernExchangeCore::validate_order_parameters(&order).unwrap()
+		WyvernExchangeCore::validate_order_parameters(&order)
 	}
    fn validate_order(
         hash:  Vec<u8>,
@@ -755,7 +755,7 @@ impl wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<Block,AccountId, Ba
         buy: OrderType<AccountId, Moment, Balance>,
         sell: OrderType<AccountId, Moment, Balance>,
     ) -> bool {
-		WyvernExchangeCore::orders_can_match(&buy,&sell).unwrap()
+		WyvernExchangeCore::orders_can_match(&buy,&sell)
 	}
         fn calculate_match_price(
         buy: OrderType<AccountId, Moment, Balance>,

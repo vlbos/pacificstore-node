@@ -202,7 +202,7 @@ fn require_valid_order() {
             &order
         ).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
         let sig = alice_sig; 
         let result =  ExchangeCore::require_valid_order(
             &order,&sig
@@ -242,7 +242,7 @@ fn require_valid_order_ex() {
             static_extradata.clone(),
         );
         let alice_pair = account_pair("Alice");
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
         let sig = alice_sig; 
         let hash =  WyvernExchange::require_valid_order_ex(
             addrs.clone(),
@@ -326,7 +326,7 @@ fn validate_order_ex() {
             static_extradata.clone(),
         );
         let alice_pair = account_pair("Alice");
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
         let sig = alice_sig; 
         let result =  WyvernExchange::validate_order_ex(
             addrs.clone(),
@@ -390,7 +390,7 @@ fn cancel_order_ex_with_approved_order() {
         <ContractSelf<Test>>::put(sender);
         let alice_pair = account_pair("Alice");
         let calldatas = "calldata.to_vec()".encode();
-        let alice_sig = alice_pair.sign(&calldatas);
+        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&calldatas))).to_vec();
         let sig = alice_sig; 
            let (addrs,
             uints,
@@ -463,7 +463,7 @@ fn cancel_order_ex_with_signature() {
             replacement_pattern.clone(),
             static_extradata.clone(),
         );
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
         let sig = alice_sig; 
 
         let result = WyvernExchange::cancel_order_ex(
@@ -542,10 +542,10 @@ fn atomic_match_ex() {
             static_extradata_sell.clone(),
         );
 
-        let alice_sig_buy = alice_pair.sign(&hash_buy);
-        let bob_sig_sell = bob_pair.sign(&hash_sell);
+        let alice_sig_buy = (<[u8;64]>::from(alice_pair.sign(&hash_buy))).to_vec();
+        let bob_sig_sell = (<[u8;64]>::from(bob_pair.sign(&hash_sell))).to_vec();
 
-        let sig = vec![alice_sig_buy, bob_sig_sell];
+        // let sig = vec![alice_sig_buy, bob_sig_sell];
 
         let mut addrs = addrs_buy;
         let mut addrs_sell = addrs_sell;
@@ -582,7 +582,8 @@ fn atomic_match_ex() {
             replacement_pattern_sell,
             static_extradata_buy,
             static_extradata_sell,
-            sig,
+            alice_sig_buy,
+            bob_sig_sell,
             rss_metadata,
         );
         assert_ok!(result);

@@ -249,8 +249,6 @@ cargo doc --open
         OrdersCannotMatch,
         ListingTimeExpired,
         ArrayNotEqual,
-        ArraySizeNotAsSameAsDesired,
-        ArraySizeNotAsSameAsMask,
         BuyTakerProtocolFeeGreaterThanSellTakerProtocolFee,
         BuyTakerRelayerFeeGreaterThanSellTakerRelayerFee,
         SellPaymentTokenEqualPaymentToken,

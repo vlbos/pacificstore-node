@@ -11,7 +11,7 @@ use crate::types::*;
 
 use crate::exchange_common;
 use crate::exchange_common::BalanceOf;
-use crate::exchange_common::Error;
+use crate::Error;
 pub trait Trait: exchange_common::Trait  {}
 
 decl_module! {
@@ -28,9 +28,9 @@ impl<T: Trait> Module<T> {
     pub fn validate_parameters(
         sale_kind: &SaleKind,
         expiration_time: T::Moment,
-    ) -> Result<bool, Error<T>> {
+    ) -> bool {
         // Auctions must have a set expiration date.
-        Ok(*sale_kind == SaleKind::FixedPrice || expiration_time > Zero::zero())
+        *sale_kind == SaleKind::FixedPrice || expiration_time > Zero::zero()
     }
 
     // Return whether or not an order can be settled
@@ -40,14 +40,9 @@ impl<T: Trait> Module<T> {
     pub fn can_settle_order(
         listing_time: T::Moment,
         expiration_time: T::Moment,
-    ) -> Result<bool, Error<T>> {
-
+    ) -> bool {
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
-        ensure!(
-            (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time),
-            Error::<T>::ListingTimeExpired
-        );
-        Ok((listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time))
+        (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }
 
     // Calculate the settlement price of an order
@@ -65,21 +60,21 @@ impl<T: Trait> Module<T> {
         extra: T::Moment,
         listing_time: T::Moment,
         expiration_time: T::Moment,
-    ) -> Result<BalanceOf<T>, Error<T>> {
+    ) -> BalanceOf<T> {
         if *sale_kind == SaleKind::FixedPrice {
-            Ok(base_price)
+            base_price
         } else if *sale_kind == SaleKind::DutchAuction {
             let now: T::Moment = Zero::zero(); // <system::Module<T>>::block_number();//<timestamp::Module<T>>::now() ;
             let diff: T::Moment = extra * (now - listing_time) / (expiration_time - listing_time);
             if *side == Side::Sell {
                 // Sell-side - start price: base_price. End price: base_price - extra.
-                Ok(base_price - <exchange_common::Module<T>>::moment_to_balance(&diff))
+                base_price - <exchange_common::Module<T>>::moment_to_balance(&diff)
             } else {
                 // Buy-side - start price: base_price. End price: base_price + extra.
-                Ok(base_price - <exchange_common::Module<T>>::moment_to_balance(&diff))
+                base_price - <exchange_common::Module<T>>::moment_to_balance(&diff)
             }
         } else {
-            Ok(Zero::zero())
+            Zero::zero()
         }
     }
 }

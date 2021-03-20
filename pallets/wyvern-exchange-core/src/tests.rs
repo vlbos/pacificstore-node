@@ -126,7 +126,7 @@ fn require_valid_order() {
             &order
         ).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
         let sig = alice_sig; 
         let result =  WyvernExchangeCore::require_valid_order(
             &order,&sig
@@ -147,7 +147,7 @@ fn validate_order_parameters() {
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
-        let result =  WyvernExchangeCore::validate_order_parameters(&order).unwrap();
+        let result =  WyvernExchangeCore::validate_order_parameters(&order);
        
         assert_eq!(result,true);
     });
@@ -165,7 +165,7 @@ fn validate_order() {
         let  order = make_order(sender, sender, sender, 0);
         let hash =  WyvernExchangeCore::hash_to_sign(&order).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
         let sig = alice_sig; 
         let result =  WyvernExchangeCore::validate_order(&hash,&order,&sig).unwrap();
         assert_eq!(result,true);
@@ -198,7 +198,7 @@ fn cancel_order_ex_with_approved_order() {
         <ContractSelf<Test>>::put(sender);
         let alice_pair = account_pair("Alice");
         let calldatas = "calldata.to_vec()".encode();
-        let alice_sig = alice_pair.sign(&calldatas);
+        let alice_sig = <[u8;64]>::from(alice_pair.sign(&calldatas));
         let sig = alice_sig; 
         let order = make_order(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
@@ -225,7 +225,7 @@ fn cancel_order_ex_with_signature() {
         let order = make_order(sender, sender, sender, 0);
         let alice_pair = account_pair("Alice");
         let hash =  WyvernExchangeCore::hash_to_sign(&order).unwrap();
-        let alice_sig = alice_pair.sign(&hash);
+        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
         let sig = alice_sig; 
         let result = WyvernExchangeCore::cancel_order(
             Origin::signed(sender),&order,&sig,
@@ -251,12 +251,12 @@ fn atomic_match() {
         let sell = make_order(sender1, sender, sender1, 1);
         let hash_buy =  WyvernExchangeCore::hash_to_sign(&buy).unwrap();
         let hash_sell =  WyvernExchangeCore::hash_to_sign(&sell).unwrap();
-        let alice_sig_buy = alice_pair.sign(&hash_buy);
-        let bob_sig_sell = bob_pair.sign(&hash_sell);
+        let alice_sig_buy = <[u8;64]>::from(alice_pair.sign(&hash_buy));
+        let bob_sig_sell = <[u8;64]>::from(bob_pair.sign(&hash_sell));
         let rss_metadata = Vec::<u8>::new();
         let amount = 42;
         let result = WyvernExchangeCore::atomic_match(
-            sender,amount,buy,alice_sig_buy,sell,bob_sig_sell,&rss_metadata,
+            sender,amount,buy,(&alice_sig_buy).to_vec(),sell,(&bob_sig_sell).to_vec(),&rss_metadata,
         );
         assert_ok!(result);
     });

@@ -43,14 +43,14 @@
 
 use core::result::Result;
 
-// use sp_std::if_std;
+use sp_std::if_std;
 
 use frame_support::{
-    decl_module, decl_storage, dispatch::DispatchResult, sp_runtime::traits::Zero,
+    decl_module, decl_storage, dispatch::DispatchResult, sp_runtime::{traits::{Zero,Printable},print},
     sp_std::prelude::*, 
 };
 
-use frame_system::{ensure_signed};
+use frame_system::{self as system,ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -66,7 +66,7 @@ pub use exchange_core::types::*;
 // pub mod exchange_common;
 pub use exchange_core::exchange_common;
 pub use exchange_core::exchange_common::BalanceOf;
-pub use exchange_core::exchange_common::Error;
+pub use exchange_core::Error;
 pub use exchange_core::sale_kind_interface;
 // pub mod sale_kind_interface;
 // pub mod exchange_core;
@@ -164,9 +164,14 @@ decl_module! {
         replacement_pattern_sell: Vec<u8>,
         static_extradata_buy: Vec<u8>,
         static_extradata_sell: Vec<u8>,
-        sig: Vec<Vec<u8>>,
+        sig_buy: Vec<u8>,
+        sig_sell: Vec<u8>,
         rss_metadata: Vec<u8>,
     ) -> DispatchResult {
+    frame_support::debug::RuntimeLogger::init();
+ frame_support::debug::native::debug!("==================atomic_match_ex==frame_support::debug::native::debug!=called by {:?}", sig_buy);
+      
+        // print("======================print============");
         let _user = ensure_signed(origin)?;
         let buy_sell_orders = <exchange_common::Module<T>>::build_buy_sell_order_type(
             addrs,
@@ -179,15 +184,22 @@ decl_module! {
             &static_extradata_buy,
             &static_extradata_sell,
         );
-        <exchange_core::Module<T>>::atomic_match(
+        if let Err(err) = <exchange_core::Module<T>>::atomic_match(
             _user,
             Zero::zero(),
             buy_sell_orders[0].clone(),
-            sig[0].clone(),
+            sig_buy.clone(),
             buy_sell_orders[1].clone(),
-            sig[1].clone(),
+            sig_sell.clone(),
             &rss_metadata,
-        )?;
+        )
+{
+  frame_support::debug::error!("=====================atomic_match_ex==debug::error============################={:#?}{:#?}",err, err);
+        if_std! {
+                    println!("====================atomic_match_ex==if_std=========================== {:#?}{:#?}",err, err);
+                            }
+        //  return DispatchError::other("ssss");
+}
         Ok(())
     }
 
@@ -218,8 +230,7 @@ impl<T: Trait> Module<T> {
             extra,
             listing_time,
             expiration_time,
-        )
-        .unwrap();
+        );
         let mut bb: u64 = 0;
         if let Some(bbb) = <exchange_common::Module<T>>::balance_to_u64_option(_price) {
             bb = bbb;
@@ -304,7 +315,7 @@ impl<T: Trait> Module<T> {
                 &replacement_pattern,
                 &static_extradata,
             );
-        <exchange_core::Module<T>>::validate_order_parameters(&order).unwrap()
+        <exchange_core::Module<T>>::validate_order_parameters(&order)
     }
 
     // Call validate_order - .
@@ -429,7 +440,7 @@ impl<T: Trait> Module<T> {
             &static_extradata_buy,
             &static_extradata_sell,
         );
-        <exchange_core::Module<T>>::orders_can_match(&buy_sell_orders[0], &buy_sell_orders[1]).unwrap()
+        <exchange_core::Module<T>>::orders_can_match(&buy_sell_orders[0], &buy_sell_orders[1])
     }
 
     // Return whether or not two orders' calldata specifications can match
@@ -447,18 +458,22 @@ impl<T: Trait> Module<T> {
         let mut tmpbuy_calldata = buy_calldata.clone();
         let mut tmpsell_calldata = sell_calldata.clone();
         if buy_replacement_pattern.len() > 0 {
-              <exchange_common::Module<T>>::guarded_array_replace(
+              if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpbuy_calldata,
                 &sell_calldata,
                 &buy_replacement_pattern,
-            )?;
+            ){
+                return Ok(false);
+                }
         }
         if sell_replacement_pattern.len() > 0 {
-             <exchange_common::Module<T>>::guarded_array_replace(
+            if ! <exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpsell_calldata,
                 &buy_calldata,
                 &sell_replacement_pattern,
-            )?;
+            ){
+                return Ok(false);
+            }
         }
 
         Ok(<exchange_common::Module<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata))

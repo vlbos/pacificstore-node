@@ -72,7 +72,7 @@ const makeOrderArrayEx = () => {
     ordersJSON.map((orderJSON, index) => {
         let obj = flattenObject(orderJSON);
         let arr = [];
-        Object.keys(obj).reduce((a, o) => { a.push([o, obj[o]]); return a; }, arr);
+        Object.keys(obj).reduce((a, o) => { a.push([o, obj[o]+""]); return a; }, arr);
         objs.push(arr);
 
     })
