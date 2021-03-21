@@ -83,7 +83,7 @@ const makeOrderArrayEx = () => {
 
 const accounts = ["Alice"];
 const proxy = "proxy";
-const makeOrder = (exchange, isMaker) => ({
+const makeOrder = (exchange, isMaker,side) => ({
     exchange: exchange,
     maker: accounts[0],
     taker: accounts[0],
@@ -93,14 +93,14 @@ const makeOrder = (exchange, isMaker) => ({
     takerProtocolFee: 0,
     feeRecipient: isMaker ? accounts[0] : '0x0000000000000000000000000000000000000000',
     feeMethod: 0,
-    side: 0,
+    side: side,
     saleKind: 0,
     target: proxy,
     howToCall: 0,
-    calldata: '0x',
-    replacementPattern: '0x',
+    calldata: '0x01f2',
+    replacementPattern: '',
     staticTarget: '0x0000000000000000000000000000000000000000',
-    staticExtradata: '0x',
+    staticExtradata: '',
     paymentToken: accounts[0],
     basePrice: 0,
     extra: 0,
@@ -222,7 +222,7 @@ function cancelOrder() {
     //                 order.calldata,
     //                 order.replacementPattern,
     //                 order.staticExtradata,
-    //                 0, '0x', '0x',
+    //                 0, '', '',
     //                 {from: accounts[1]}
     //               );
     //                 // assert.equal(ret, true, 'Order did not validate')
@@ -236,7 +236,7 @@ function cancelOrder() {
     //                   order.calldata,
     //                   order.replacementPattern,
     //                   order.staticExtradata,
-    //                   0, '0x', '0x'
+    //                   0, '', ''
     //                 );
     // validateOrder_(
     //                     [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
@@ -248,7 +248,7 @@ function cancelOrder() {
     //                     order.calldata,
     //                     order.replacementPattern,
     //                     order.staticExtradata,
-    //                     0, '0x', '0x'
+    //                     0, '', ''
     //                   )
 }
 

@@ -20,7 +20,7 @@ sp-api = { version = '2.0.0', default-features = false }
 sp-blockchain = { version = '2.0.0', default-features = false}
 sp-rpc = { version = '2.0.0', default-features = false}
 sp-runtime = { version = '2.0.0', default-features = false}
-
+sp-core = { version = '2.0.0', default-features = false}
 # local packages
 
 wyvern-exchange-runtime-api = { version = "2.0.0", path = "../runtime-api", default-features = false }
@@ -36,6 +36,7 @@ std = [
   "serde",
   "sp-api/std",
   "sp-runtime/std",
+  "sp-core/std",
   "wyvern-exchange-runtime-api/std",
   "wyvern-exchange/std"
 ]

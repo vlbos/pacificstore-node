@@ -5,7 +5,7 @@ use jsonrpc_derive::rpc;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
-// use sp_core::Bytes;
+use sp_core::bytes;
 use codec::Codec;
 use std::sync::Arc;
 use wyvern_exchange::{FeeMethod, HowToCall, SaleKind, Side};
@@ -166,6 +166,7 @@ impl<C, M> WyvernExchange<C, M> {
     }
 }
 
+
 impl<C, Block, AccountId, Balance, Moment, Signature>
     WyvernExchangeApi<<Block as BlockT>::Hash, AccountId, Balance, Moment, Signature>
     for WyvernExchange<C, Block>
@@ -236,9 +237,9 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -262,9 +263,8 @@ where
     ) -> Result<Vec<u8>> {
         let api = self.client.runtime_api();
         let at = BlockId::hash(at.unwrap_or_else(||
-			// If the block hash is not supplied assume the best block.
-			self.client.info().best_hash));
-
+		// If the block hash is not supplied assume the best block.
+		self.client.info().best_hash));
         let runtime_api_result = api.hash_to_sign_ex(
             &at,
             addrs,
@@ -273,9 +273,9 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -309,9 +309,9 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -345,10 +345,10 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
-            sig.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
+            from_hex(sig),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -383,10 +383,10 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
-            sig.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
+            from_hex(sig),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -421,9 +421,9 @@ where
             side,
             sale_kind,
             how_to_call,
-            calldata.clone().into_bytes(),
-            replacement_pattern.clone().into_bytes(),
-            static_extradata.clone().into_bytes(),
+            from_hex(calldata),
+            from_hex(replacement_pattern),
+            from_hex(static_extradata),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -453,13 +453,13 @@ where
             &at,
             addrs,
             uints,
-            fee_methods_sides_kinds_how_to_calls.clone().into_bytes(),
-            calldata_buy.clone().into_bytes(),
-            calldata_sell.clone().into_bytes(),
-            replacement_pattern_buy.clone().into_bytes(),
-            replacement_pattern_sell.clone().into_bytes(),
-            static_extradata_buy.clone().into_bytes(),
-            static_extradata_sell.clone().into_bytes(),
+            from_hex(fee_methods_sides_kinds_how_to_calls),
+            from_hex(calldata_buy),
+            from_hex(calldata_sell),
+            from_hex(replacement_pattern_buy),
+            from_hex(replacement_pattern_sell),
+            from_hex(static_extradata_buy),
+            from_hex(static_extradata_sell),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -489,13 +489,13 @@ where
             &at,
             addrs,
             uints,
-            fee_methods_sides_kinds_how_to_calls.clone().into_bytes(),
-            calldata_buy.clone().into_bytes(),
-            calldata_sell.clone().into_bytes(),
-            replacement_pattern_buy.clone().into_bytes(),
-            replacement_pattern_sell.clone().into_bytes(),
-            static_extradata_buy.clone().into_bytes(),
-            static_extradata_sell.clone().into_bytes(),
+            from_hex(fee_methods_sides_kinds_how_to_calls),
+            from_hex(calldata_buy),
+            from_hex(calldata_sell),
+            from_hex(replacement_pattern_buy),
+            from_hex(replacement_pattern_sell),
+            from_hex(static_extradata_buy),
+            from_hex(static_extradata_sell),
         );
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
@@ -503,4 +503,94 @@ where
             data: Some(format!("{:?}", e).into()),
         })
     }
+}
+
+
+
+// fn parse_hex(hex_asm: &str) -> Vec<u8> {
+//     let mut hex_bytes = hex_asm.as_bytes().iter().filter_map(|b| {
+//         match b {
+//             b'0'..=b'9' => Some(b - b'0'),
+//             b'a'..=b'f' => Some(b - b'a' + 10),
+//             b'A'..=b'F' => Some(b - b'A' + 10),
+//             _ => None,
+//         }
+//     }).fuse();
+
+//     let mut bytes = Vec::new();
+//     while let (Some(h), Some(l)) = (hex_bytes.next(), hex_bytes.next()) {
+//         bytes.push(h << 4 | l)
+//     }
+//     bytes
+// }
+
+
+
+// fn parse_hex(hex_asm: &str) -> Vec<u8> {
+//     let hex_chars: Vec<char> = hex_asm.as_bytes().iter().filter_map(|b| {
+//         let ch = char::from(*b);
+//         if ('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F') {
+//             Some(ch)
+//         } else {
+//             None
+//         }
+//     }).collect();
+
+//     let mut index = 0usize;
+//     let (odd_chars, even_chars): (Vec<char>, Vec<char>) = hex_chars.into_iter().partition(|_| { 
+//         index = index + 1;
+//         index % 2 == 1
+//     });
+
+//     odd_chars.into_iter().zip(even_chars.into_iter()).map(|(c0, c1)| {
+//         fn hexchar2int(ch: char) -> u8 {
+//             if '0' <= ch && ch <= '9' {
+//                 ch as u8 - '0' as u8
+//             } else {
+//                 0xa + 
+//                 if 'a' <= ch && ch <= 'f' {
+//                     ch as u8 - 'a' as u8
+//                 } else if 'A' <= ch && ch <= 'F' {
+//                     ch as u8 - 'A' as u8
+//                 } else {
+//                     unreachable!()
+//                 }
+//             }
+//         }
+//         hexchar2int(c0) * 0x10 + hexchar2int(c1)            
+//     }).collect::<Vec<u8>>()
+// }
+
+
+// use std::{fmt::Write, num::ParseIntError};
+
+// pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
+//     (0..s.len())
+//         .step_by(2)
+//         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+//         .collect()
+// }
+
+// pub fn encode_hex(bytes: &[u8]) -> String {
+//     let mut s = String::with_capacity(bytes.len() * 2);
+//     for &b in bytes {
+//         write!(&mut s, "{:02x}", b);
+//     }
+//     s
+// }
+
+pub fn from_hex(str: String) -> Vec<u8> {
+decode_hex(&(str.strip_prefix("0x").unwrap()))
+}
+pub fn decode_hex(s: &str) -> Vec<u8> {
+    let len = if s.len()%2!=0{s.len()-1}else{s.len()};
+
+    if 0==len{
+      return Vec::<u8>::new();
+    }
+
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
 }

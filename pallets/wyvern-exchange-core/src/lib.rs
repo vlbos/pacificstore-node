@@ -346,6 +346,8 @@ impl<T: Trait> Module<T> {
     pub fn hash_to_sign(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<Vec<u8>, Error<T>> {
+        if_std!{println!("======================hash_to_sign==={:?}={:?}",order,keccak_256(&Self::hash_order(&order)?).to_vec());}
+
         Ok(keccak_256(&Self::hash_order(&order)?).to_vec())
     }
 
@@ -371,6 +373,7 @@ impl<T: Trait> Module<T> {
     ) -> bool {
         // OrderType must be targeted at this protocol version (this contract:Exchange).
         if order.exchange != ContractSelf::<T>::get() {
+        if_std!{println!("======================374");}
             return false;
         }
 
@@ -379,6 +382,8 @@ impl<T: Trait> Module<T> {
             &order.sale_kind,
             order.expiration_time,
         ) {
+        if_std!{println!("======================383");}
+
             return false;
         }
 
@@ -387,6 +392,8 @@ impl<T: Trait> Module<T> {
             && (order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get()
                 || order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get())
         {
+        if_std!{println!("======================393");}
+
             return false;
         }
 
@@ -405,13 +412,13 @@ impl<T: Trait> Module<T> {
     
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order) {
-        if_std!{println!("326");}
+        if_std!{println!("======================326");}
             return Ok(false);
         }
 
         // OrderType must have not been canceled or already filled.
         if CancelledOrFinalized::get(hash) {
-        if_std!{println!("332");}
+        if_std!{println!("=============================332");}
             return Ok(false);
         }
 
@@ -428,7 +435,7 @@ impl<T: Trait> Module<T> {
             return Ok(true);
         }
 
-        if_std!{println!("343");}
+        if_std!{println!("====================343");}
         Ok(false)
     }
 
@@ -453,6 +460,8 @@ impl<T: Trait> Module<T> {
         _signer: &T::AccountId,
     ) -> Result<(), Error<T>> {
 // sr25519 always expects a 64 byte signature.
+                if_std!{println!("===============_signature.len()={:#?}========864",_signature.len());}
+
 		ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
 		let signature:Signature = sr25519::Signature::from_slice(_signature).into();
 
@@ -884,7 +893,7 @@ impl<T: Trait> Module<T> {
         sell_sig: Vec<u8>,
         metadata: &[u8],
     ) -> DispatchResult {
-            if_std!{println!("========================864");}
+            if_std!{println!("=====================side={:?}={:?}=864",buy,sell);}
 
         // Ensure buy order validity and calculate hash if necessary.
         let mut buy_hash: Vec<u8> = vec![];
@@ -997,6 +1006,8 @@ fn account_to_bytes<AccountId,T:Trait>(account: &AccountId) -> Result<[u8; 32], 
 	where AccountId: Encode,
 {
 	let account_vec = account.encode();
+        if_std!{println!("===============account_vec.len()={:#?}========864",account_vec.len());}
+
 	ensure!(account_vec.len() == 32, Error::<T>::InvalidSignature);
 	let mut bytes = [0u8; 32];
 	bytes.copy_from_slice(&account_vec);

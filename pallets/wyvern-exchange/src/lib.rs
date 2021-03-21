@@ -198,7 +198,7 @@ decl_module! {
         if_std! {
                     println!("====================atomic_match_ex==if_std=========================== {:#?}{:#?}",err, err);
                             }
-        //  return DispatchError::other("ssss");
+         return Err(err);
 }
         Ok(())
     }
@@ -231,12 +231,12 @@ impl<T: Trait> Module<T> {
             listing_time,
             expiration_time,
         );
-        let mut bb: u64 = 0;
-        if let Some(bbb) = <exchange_common::Module<T>>::balance_to_u64_option(_price) {
-            bb = bbb;
+
+        if let Some(price) = <exchange_common::Module<T>>::balance_to_u64_option(_price) {
+            return price;
         }
 
-        bb
+        0
     }
 
     // Call hash_order - .
@@ -277,6 +277,9 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
+  if_std! {
+                    println!("====================hash_to_sign_ex==if_std=======side==================== {:#?}{:#?}",calldata, side);
+                            }
         <exchange_core::Module<T>>::hash_to_sign(&<exchange_common::Module<T>>::build_order_type_from_array_parameters(
             addrs,
             uints,

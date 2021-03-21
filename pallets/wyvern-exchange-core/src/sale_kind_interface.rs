@@ -3,6 +3,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use core::result::Result;
+use sp_std::if_std;
 
 
 use frame_support::{decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
@@ -41,8 +42,11 @@ impl<T: Trait> Module<T> {
         listing_time: T::Moment,
         expiration_time: T::Moment,
     ) -> bool {
+
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
-        (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
+               if_std!{println!("======================can_settle_order==={:?}={:?}={:?}",expiration_time,listing_time,now);}
+
+ (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }
 
     // Calculate the settlement price of an order
