@@ -32,8 +32,17 @@ cargo run -- --dev --tmp
 start front-end
 ```bash
 cd front-end
+yarn install
 yarn start
 ```
+
+Test example
+```bash
+cd front-end/scripts
+yarn install
+yarn example
+```
+
 
 ## Milestone 1
 ### Orderbook Module
@@ -357,6 +366,33 @@ and include it in your `construct_runtime!` macro:
 
 ```rust
 WyvernExchange: wyvern_exchange::{Module, Call, Storage, Event<T>},
+```
+## Test Guide
+
+### Guntime Module Unit Test
+##### Testing
+Run the tests with:
+```
+git clone https://github.com/vlbos/pacific-store-node.git
+cd pacific-store-node
+cargo test
+```
+
+### RPC API Example
+##### Example
+Run the Node
+```shell
+git clone https://github.com/vlbos/pacific-store-node.git
+cd pacific-store-node
+
+cargo run -- --dev --tmp
+```
+
+Run the examples with:
+```
+cd front-end/scripts
+yarn install
+yarn examples 
 ```
 
 ###### Genesis Configuration

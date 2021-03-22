@@ -77,11 +77,23 @@ async function main() {
     console.log(`The value from the getAssets is ${assets}\n`);
     let accounts = Object.values(users).map((u) => u.key.address);
     let accounts7 = accounts.splice(0, 7);
-    let accounts14 = accounts.splice(0, 14);
+    let accounts77 = accounts.splice(2, 7);
     let buy = makeOrder(users.betty.key.address, true);
     let sell = makeOrder(users.bob.key.address, false);
+    [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken] = accounts77;
+    [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = accounts7;
+    console.log("hashOrderEx(",
+        [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
+        sell.feeMethod,
+        sell.side,
+        sell.saleKind,
+        sell.howToCall,
+        sell.calldata,
+        sell.replacementPattern,
+        sell.staticExtradata);
     let sell_hash = await api.rpc.wyvernExchange.hashOrderEx(
-        accounts7,//[sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
         [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
         sell.feeMethod,
         sell.side,
@@ -92,9 +104,19 @@ async function main() {
         sell.staticExtradata);
     console.log(`The value from  hashOrderEx is ${sell_hash}\n`);
 
+    console.log("hashToSignEx(",
+        [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
+        sell.feeMethod,
+        sell.side,
+        sell.saleKind,
+        sell.howToCall,
+        sell.calldata,
+        sell.replacementPattern,
+        sell.staticExtradata);
 
     let order_hash = await api.rpc.wyvernExchange.hashToSignEx(
-        accounts7,//[sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
         [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
         sell.feeMethod,
         sell.side,
@@ -107,7 +129,7 @@ async function main() {
     console.log(`The value from  hashToSignEx is ${order_hash}\n`);
 
     // let order_sig = await api.sign(users.betty.key,order_hash);
-    let s = await users.betty.key.sign(order_hash, { withType: true });
+    let s = await users.betty.key.sign(order_hash);
     // let order_sig =api.createType("Signature","Sr25519(\""+s+"\")");//registry.createType('Signature',users.betty.key.sign(order_hash,{withType: true}));
     //   let order_sig = "Sr25519(\""+s+"\")";
     let order_sig = s;//{"Sr25519":s};//[1].concat(s);
@@ -143,8 +165,21 @@ async function main() {
 
     const SIG = '0x659effefbbe5ab4d7136ebb5084b959eb424e32b862307371be4721ac2c46334245af4f1476c36c5e5aff04396c2fdd2ce561ec90382821d4aa071b559b1db0f';
     // order_sig=SIG;
+    order = buy;
+    console.log("===========validateOrderEx(",
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+        [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+        order.feeMethod,
+        order.side,
+        order.saleKind,
+        order.howToCall,
+        order.calldata,
+        order.replacementPattern,
+        order.staticExtradata,
+        order_sig
+    );
     let result = await api.rpc.wyvernExchange.validateOrderEx(
-        accounts7,//[order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -157,8 +192,19 @@ async function main() {
     );
     console.log(`The value from  validateOrderEx is ${result}\n`);
 
+    console.log("validateOrderParametersEx(",
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+        [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
+        order.feeMethod,
+        order.side,
+        order.saleKind,
+        order.howToCall,
+        order.calldata,
+        order.replacementPattern,
+        order.staticExtradata
+    );
     result = await api.rpc.wyvernExchange.validateOrderParametersEx(
-        accounts7,//[order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
+        [order.exchange, order.maker, order.taker, order.feeRecipient, order.target, order.staticTarget, order.paymentToken],
         [order.makerRelayerFee, order.takerRelayerFee, order.makerProtocolFee, order.takerProtocolFee, order.basePrice, order.extra, order.listingTime, order.expirationTime, order.salt],
         order.feeMethod,
         order.side,
@@ -170,9 +216,19 @@ async function main() {
     );
     console.log(`The value from  validateOrderParametersEx is ${result}\n`);
 
-
-    result = api.rpc.wyvernExchange.ordersCanMatchEx(
-        accounts14,//[buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+    console.log("ordersCanMatchEx(",
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
+        [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
+        buy.calldata,
+        sell.calldata,
+        buy.replacementPattern,
+        sell.replacementPattern,
+        buy.staticExtradata,
+        sell.staticExtradata
+    );
+    result = await api.rpc.wyvernExchange.ordersCanMatchEx(
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
         [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
         buy.calldata,
@@ -184,9 +240,20 @@ async function main() {
     );
     console.log(`The value from  ordersCanMatchEx is ${result}\n`);
 
+    console.log("calculateMatchPriceEx(",
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
+        [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
+        buy.calldata,
+        sell.calldata,
+        buy.replacementPattern,
+        sell.replacementPattern,
+        buy.staticExtradata,
+        sell.staticExtradata
+    );
     // assert.equal(ret, true, 'Orders were not matchable!')
-    result = api.rpc.wyvernExchange.calculateMatchPriceEx(
-        accounts14,//[buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+    result = await api.rpc.wyvernExchange.calculateMatchPriceEx(
+        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
         [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
         buy.calldata,
@@ -197,26 +264,6 @@ async function main() {
         sell.staticExtradata
     );
     console.log(`The value from  calculateMatchPriceEx is ${result}\n`);
-
-    // assert.equal(matchPrice.toNumber(), buy.basePrice.toNumber(), 'Incorrect match price!')
-
-    //   // Query the custom SillyRpc
-    //   let silly7 = await api.rpc.silly.seven();
-    //   let silly14 = await api.rpc.silly.double(7);
-    //   console.log(`The value from the silly_seven is ${silly7}\n`);
-    //   console.log(`The double of 7 according to silly_double is ${silly14}\n`);
-
-    //   // Query raw storage values, the oldschool way
-    //   const v1 = ( await api.query.sumStorage.thing1() ).toNumber();
-    //   const v2 = ( await api.query.sumStorage.thing2() ).toNumber();
-    //   console.log(`The individual storage values are ${v1}, and ${v2}.`);
-    //   console.log(`The sum calculated in javascript is ${v1 + v2}\n`);
-
-    //   // Query the custom RPC that uses the runtimeAPI
-    //   let directSum = ( await api.rpc.sumStorage.getSum() ).toNumber();
-    //   console.log(`The sum queried directly from the RPC is ${directSum}`);
-
-
 }
 
 main().catch(console.error).finally(() => process.exit());

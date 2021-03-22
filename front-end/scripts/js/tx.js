@@ -1,7 +1,7 @@
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const  { v4 : uuidv4 } =require( 'uuid');
 
-const  {submit} =require( './lib/submit-signed-xt.js');
+const  {submit} =require( './lib/submit-signed-tx.js');
 const  types =require( './types.json');
 const rpcs = require(`./rpcs.json`);
 const rpc = { ...rpcs };
@@ -41,8 +41,6 @@ async function main() {
         const day = 24 * hour;
         await new Promise(r => setTimeout(r, block));
 
-
-        console.log("======1====67=8888====");
 
         await new Promise(r => setTimeout(r, block));
 

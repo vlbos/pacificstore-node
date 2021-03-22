@@ -4,9 +4,15 @@
   "license": "Unlicense",
   "scripts": {
     "start": "node ./src/init.js",
-    "start1": "node  ./src/init1.js",
-    "start1u": "node --trace-uncaught ./src/init1.js",
-    "start1w": "node --trace-warnings ./src/init1.js"
+    "examples": "yarn example:orderbook && yarn example:wyvernexchange",
+    "example:orderbook": "yarn example:orderbook:tx && yarn example:orderbook:rpc",
+    "example:wyvernexchange": "yarn example:wyvernexchange:tx && yarn example:wyvernexchange:tx:cancel && yarn example:wyvernexchange:tx:match && yarn example:wyvernexchange:rpc",
+    "example:orderbook:rpc": "node  ./src/rpc-orderbook.js",
+    "example:wyvernexchange:rpc": "node  ./src/rpc-wyvernexchange.js",
+    "example:orderbook:tx": "node  ./src/tx-orderbook.js",
+    "example:wyvernexchange:tx": "node  ./src/tx-wyvernexchange.js",
+    "example:wyvernexchange:tx:cancel": "node  ./src/tx-wyvernexchange-cancel-order.js",
+    "example:wyvernexchange:tx:match": "node  ./src/tx-wyvernexchange-match-order.js"
   },
   "type": "module",
   "engines": {

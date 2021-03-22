@@ -1,7 +1,7 @@
 import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { v4 as uuidv4 } from 'uuid';
 
-import submit from './lib/submit-signed-xt.js';
+import submit from './lib/submit-signed-tx.js';
 import types from './lib/types.js';
 
 async function main() {

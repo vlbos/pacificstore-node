@@ -1,37 +1,80 @@
 {
-  "Address": "AccountId",
-  "LookupSource": "AccountId",
-  "ContinuousAccountData": {
-    "principal": "u64",
-    "deposit_date": "BlockNumber"
+  "Address": "MultiAddress",
+  "LookupSource": "MultiAddress",
+  "Signature": "H512",
+  "OrderId": "Vec<u8>",
+  "TokenId": "Vec<u8>",
+  "FieldName": "Vec<u8>",
+  "FieldValue": "Vec<u8>",
+  "OrderField": {
+    "name": "FieldName",
+    "value": "FieldValue"
   },
-  "U16F16": "[u8; 4]",
-  "GroupIndex": "u32",
-  "ValueStruct": {
-    "integer": "i32",
-    "boolean": "bool"
+  "JSONField": {
+    "name": "FieldName",
+    "json": "Option<Vec<OrderField>>"
   },
-  "BufferIndex": "u8",
-  "AccountIdOf": "AccountId",
-  "BalanceOf": "Balance",
-  "FundInfoOf": "FundInfo",
-  "FundInfo": {
-    "beneficiary": "AccountId",
-    "deposit": "Balance",
-    "raised": "Balance",
-    "end": "BlockNumber",
-    "goal": "Balance"
+  "OrderJSONType": {
+    "index": "u64",
+    "id": "OrderId",
+    "owner": "AccountId",
+    "fields": "Option<Vec<OrderField>>",
+    "created_date": "Moment"
   },
-  "FundIndex": "u32",
-  "InnerThing": {
-    "number": "u32",
-    "hash": "Hash",
-    "balance": "Balance"
+  "Side": {
+    "_enum": ["Buy", "Sell"]
   },
-  "SuperThing": {
-    "super_number": "u32",
-    "inner_thing": "InnerThing"
+  "SaleKind": {
+    "_enum": ["FixedPrice", "DutchAuction"]
   },
-  "InnerThingOf": "InnerThing"
-
+  "FeeMethod": {
+    "_enum": ["ProtocolFee", "SplitFee"]
+  },
+  "HowToCall": {
+    "_enum": ["Call", "DelegateCall"]
+  },
+  "OrderQuery": {
+    "limit": "Option<u64>",
+    "offset": "Option<u64>",
+    "owner": "Option<AccountId>",
+    "token_ids": "Option<Vec<TokenId>>",
+    "params": "Option<Vec<OrderField>>"
+  },
+  "AssetQuery": {
+    "owner": "Option<AccountId>",
+    "asset_contract_address": "Option<Vec<u8>>",
+    "token_ids": "Option<Vec<TokenId>>",
+    "search": "Option<Vec<u8>>",
+    "order_by": "Option<Vec<u8>>",
+    "order_direction": "Option<Vec<u8>>",
+    "limit": "Option<u64>",
+    "offset": "Option<u64>"
+  },
+  "QueryParameter": {
+    "name": "String",
+    "value": "String"
+  },
+  "OrderQueryJSON": {
+    "limit": "Option<u64>",
+    "offset": "Option<u64>",
+    "owner": "Option<AccountId>",
+    "token_ids": "Option<Vec<String>>",
+    "params": "Option<Vec<QueryParameter>>"
+  },
+  "AssetQueryJSON": {
+    "owner": "Option<AccountId>",
+    "asset_contract_address": "Option<String>",
+    "token_ids": "Option<Vec<String>>",
+    "search": "Option<String>",
+    "order_by": "Option<String>",
+    "order_direction": "Option<String>",
+    "limit": "Option<u64>",
+    "offset": "Option<u64>"
+  },
+  "JSONType": {
+    "fields": "Option<Vec<OrderField>>",
+    "jsons": "Option<Vec<JSONField>>"
+  },
+  "Identifier": "Vec<u8>",
+  "Decimal": "i32"
 }

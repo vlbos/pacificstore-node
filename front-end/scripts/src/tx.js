@@ -2,7 +2,7 @@ import { ApiPromise, WsProvider, Keyring } from '@polkadot/api';
 import { v4 as uuidv4 } from 'uuid';
 import { u8aToString, u8aToHex } from '@polkadot/util';
 
-import submit from './lib/submit-signed-xt.js';
+import submit from './lib/submit-signed-tx.js';
 // import types from './lib/types.json';
 // import { readFile } from 'fs/promises'
 // const types = JSON.parse(await readFile(new URL('./lib/types.json', import.meta.url)))
@@ -15,7 +15,7 @@ const require = createRequire(import.meta.url);
 const types = require('./types.json');
 const rpcs = require(`./rpcs.json`);
 const rpc = { ...rpcs };
-import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './order.js'
+import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
 
 
 async function main() {
@@ -52,13 +52,23 @@ async function main() {
         const day = 24 * hour;
 
         const salary = 100_000_000_000_000;
-
+        let senders = [users.bobBank, users.bob, users.betty];
+        for (let sender of senders) {
+            if (0 == sender.nonce) {
+                console.log("sender.nonce==7==", sender.nonce);
+                let nonce = await api.rpc.system.accountNextIndex(sender.key.address);
+                if (0 != nonce.words[0]) {
+                    sender.nonce = nonce.words[0];
+                    console.log("sender.nonce==77==", sender.nonce);
+                }
+            }
+        }
 
         const arg_offset = 2;
         const user_arg_offset = 0;
 
         var argumentss = process.argv.splice(arg_offset);
-        console.log('所传递的参数是：', argumentss);
+        console.log('arguments：', argumentss);
 
         // // //////////////////////////
         // // // print process.argv
@@ -68,7 +78,7 @@ async function main() {
 
 
         // await new Promise(r => setTimeout(r, block));
-   
+
         let index = 0;
         if (undefined != argumentss[0]) {
             index = argumentss[0];
@@ -76,7 +86,7 @@ async function main() {
         let accounts = Object.values(users).map((u) => u.key.address);
         let accounts7 = accounts.splice(0, 7);
         let accounts77 = accounts.splice(2, 7);
-        console.log(accounts,"=======account=====",accounts77);
+        console.log(accounts, "=======account=====", accounts77);
         const buy = makeOrder(users.bob.key.address, true, 0);
         const sell = makeOrder(users.bob.key.address, false, 1);
         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken] = accounts77;
@@ -87,15 +97,15 @@ async function main() {
         buy.exchange = users.bob.key.address;
         sell.exchange = users.bob.key.address;
         buy.target = sell.target;
-        buy.paymentToken=sell.paymentToken;
-        let buy_hash="";
-        let sell_hash="";
-        let buy_sig="";
-        let sell_sig="";
-        const cmds = ["transfer", "changeOwner", "atomicMatchEx"];
+        buy.paymentToken = sell.paymentToken;
+        let buy_hash = "";
+        let sell_hash = "";
+        let buy_sig = "";
+        let sell_sig = "";
+        // const cmds = ["transfer", "changeOwner", "atomicMatchEx"];
         // const cmds = ["transfer", "changeOwner", "cancelOrderEx"];
         // const cmds = [ "transfer","changeOwner","approveOrderEx", "cancelOrderEx", "atomicMatchEx"];
-        // const cmds = ["transfer", "postOrder", "postAssetWhiteList", "changeMinimumMakerProtocolFee", "changeMinimumTakerProtocolFee", "changeProtocolFeeRecipient"];//
+        const cmds = ["transfer", "postOrder", "postAssetWhiteList", "changeMinimumMakerProtocolFee", "changeMinimumTakerProtocolFee", "changeProtocolFeeRecipient"];//
         // const cmd = cmds[index];
         for (let cmd of cmds) {
             switch (cmd) {
@@ -121,13 +131,19 @@ async function main() {
                     break;
                 case "postAssetWhiteList":
                     console.log("========postAssetWhiteList=======");
-
                     submit(api, api.tx.orderbook.postAssetWhiteList('users.bob.key.address', 'token id', "test@test.com"), users.betty);
-
-
                     break;
                 case "approveOrderEx":
-                    console.log("========approveOrderEx=======");
+                    console.log("========approveOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+                        buy.feeMethod,
+                        buy.side,
+                        buy.saleKind,
+                        buy.howToCall,
+                        buy.calldata,
+                        buy.replacementPattern,
+                        buy.staticExtradata,
+                        true);
                     buy.maker = users.betty.key.address;
                     submit(api, api.tx.wyvernExchange.approveOrderEx(
                         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
@@ -145,21 +161,31 @@ async function main() {
 
                     break;
                 case "cancelOrderEx":
-                    console.log("========approveOrderEx=======");
                     buy.maker = users.bob.key.address;
-                    // submit(api, api.tx.wyvernExchange.approveOrderEx(
-                    //     [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
-                    //     [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
-                    //     buy.feeMethod,
-                    //     buy.side,
-                    //     buy.saleKind,
-                    //     buy.howToCall,
-                    //     buy.calldata,
-                    //     buy.replacementPattern,
-                    //     buy.staticExtradata,
-                    //     true
-                    // ), users.betty);
-                    console.log("========hashToSignEx=======",[buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+
+                    console.log("========approveOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+                        buy.feeMethod,
+                        buy.side,
+                        buy.saleKind,
+                        buy.howToCall,
+                        buy.calldata,
+                        buy.replacementPattern,
+                        buy.staticExtradata,
+                        true);
+                    submit(api, api.tx.wyvernExchange.approveOrderEx(
+                        [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+                        buy.feeMethod,
+                        buy.side,
+                        buy.saleKind,
+                        buy.howToCall,
+                        buy.calldata,
+                        buy.replacementPattern,
+                        buy.staticExtradata,
+                        true
+                    ), users.betty);
+                    console.log("========hashToSignEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
                         buy.feeMethod,
                         buy.side,
@@ -168,7 +194,7 @@ async function main() {
                         buy.calldata,
                         buy.replacementPattern,
                         buy.staticExtradata);
-                     buy_hash = await api.rpc.wyvernExchange.hashToSignEx(
+                    buy_hash = await api.rpc.wyvernExchange.hashToSignEx(
                         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
                         buy.feeMethod,
@@ -178,8 +204,17 @@ async function main() {
                         buy.calldata,
                         buy.replacementPattern,
                         buy.staticExtradata);
-                     buy_sig = users.bob.key.sign(buy_hash);
-                    console.log("========cancelOrderEx=======");
+                    buy_sig = users.bob.key.sign(buy_hash);
+                    console.log("========cancelOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+                        buy.feeMethod,
+                        buy.side,
+                        buy.saleKind,
+                        buy.howToCall,
+                        buy.calldata,
+                        buy.replacementPattern,
+                        buy.staticExtradata,
+                        u8aToHex(buy_sig));
 
                     submit(api, api.tx.wyvernExchange.cancelOrderEx(
                         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
@@ -195,7 +230,16 @@ async function main() {
 
                     break;
                 case "atomicMatchEx":
-                    console.log("========approveOrderEx=======");
+                    console.log("========approveOrderEx=====buy==", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                        [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+                        buy.feeMethod,
+                        buy.side,
+                        buy.saleKind,
+                        buy.howToCall,
+                        buy.calldata,
+                        buy.replacementPattern,
+                        buy.staticExtradata,
+                        true);
                     buy.maker = users.bob.key.address;
                     submit(api, api.tx.wyvernExchange.approveOrderEx(
                         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
@@ -209,7 +253,16 @@ async function main() {
                         buy.staticExtradata,
                         true
                     ), users.bob);
-                    console.log("========approveOrderEx=======");
+                    console.log("========approveOrderEx=====sell==", [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
+                        [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
+                        sell.feeMethod,
+                        sell.side,
+                        sell.saleKind,
+                        sell.howToCall,
+                        sell.calldata,
+                        sell.replacementPattern,
+                        sell.staticExtradata,
+                        true);
                     sell.maker = users.betty.key.address;
                     submit(api, api.tx.wyvernExchange.approveOrderEx(
                         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
@@ -234,7 +287,7 @@ async function main() {
                         sell.replacementPattern,
                         sell.staticExtradata);
 
-                     sell_hash = await api.rpc.wyvernExchange.hashToSignEx(
+                    sell_hash = await api.rpc.wyvernExchange.hashToSignEx(
                         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
                         [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
                         sell.feeMethod,
@@ -245,7 +298,7 @@ async function main() {
                         sell.replacementPattern,
                         sell.staticExtradata);
                     console.log(`The value from  hashToSignEx is ${sell_hash}\n`);
-                    console.log("========hashToSignEx===buy====",[buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+                    console.log("========hashToSignEx===buy====", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
                         buy.feeMethod,
                         buy.side,
@@ -271,8 +324,8 @@ async function main() {
 
                     // let buy_sig = users.betty.key.sign(buy_hash, { withType: true });
                     // let sell_sig = users.betty.key.sign(sell_hash, { withType: true });
-                     buy_sig = users.bob.key.sign(buy_hash);
-                     sell_sig = users.betty.key.sign(sell_hash);
+                    buy_sig = users.bob.key.sign(buy_hash);
+                    sell_sig = users.betty.key.sign(sell_hash);
                     console.log([buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
                         [buy.feeMethod, buy.side, buy.saleKind, buy.howToCall, sell.feeMethod, sell.side, sell.saleKind, sell.howToCall],
@@ -283,7 +336,7 @@ async function main() {
                         buy.staticExtradata,
                         sell.staticExtradata,
                         u8aToHex(buy_sig), u8aToHex(sell_sig),
-                        '0x0000000000000000000000000000000000000000000000000000000000000000',"========atomicMatchEx=======", buy_sig, sell_sig, u8aToHex(buy_sig), u8aToHex(sell_sig));
+                        '0x0000000000000000000000000000000000000000000000000000000000000000', "========atomicMatchEx=======", buy_sig, sell_sig, u8aToHex(buy_sig), u8aToHex(sell_sig));
                     submit(api, api.tx.wyvernExchange.atomicMatchEx(
                         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken, sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt, sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],
