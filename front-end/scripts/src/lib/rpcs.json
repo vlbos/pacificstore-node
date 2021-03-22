@@ -1,0 +1,530 @@
+{
+ "orderbook": {
+      "getOrder": {
+        "description": "Get an order from the orderbook, throwing if none is found.",
+        "params": [
+          {
+            "name": "order_query",
+            "type": "Option<OrderQueryJSON<AccountId>>"
+          }
+        ],
+        "type": "Option<OrderJSONType<AccountId, Moment>>"
+      },
+      "getOrders": {
+        "description": " Get a list of orders from the orderbook, returning the page of orders",
+        "params": [
+          {
+            "name": "order_query",
+            "type": "Option<OrderQueryJSON<AccountId>>"
+          },
+          {
+            "name": "page",
+            "type": "Option<u64>"
+          }
+        ],
+        "type": "Option<Vec<OrderJSONType<AccountId, Moment>>>"
+      },
+      "getAsset": {
+        "description": "Fetch an asset from the API, throwing if none is found",
+        "params": [
+          {
+            "name": "token_address",
+            "type": "String"
+          },
+          {
+            "name": "token_id",
+            "type": "String"
+          }
+        ],
+        "type": "Option<JSONType>"
+      },
+      "getAssets": {
+        "description": "Fetch list of assets from the API, returning the page of assets and the count of total assets",
+        "params": [
+          {
+            "name": "asset_query",
+            "type": "Option<AssetQueryJSON<AccountId>>"
+          },
+          {
+            "name": "page",
+            "type": "Option<u64>"
+          }
+        ],
+        "type": "Option<Vec<JSONType>>"
+      }
+    },
+    "wyvernExchange": {
+      "calculateFinalPriceEx": {
+        "description": "Calculate the settlement price of an order",
+        "params": [
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "base_price",
+            "type": "Balance"
+          },
+          {
+            "name": "extra",
+            "type": "Moment"
+          },
+          {
+            "name": "listing_time",
+            "type": "Moment"
+          },
+          {
+            "name": "expiration_time",
+            "type": "Moment"
+          }
+        ],
+        "type": "Balance"
+      },
+      "hashOrderEx": {
+        "description": "Hash an order, returning the canonical order hash, without the message prefix.",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "hashToSignEx": {
+        "description": "Hash an order, returning the hash that a client must sign.",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrderParametersEx": {
+        "description": "Validate order parameters (does *not* check validity:signature).",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "bool"
+      },
+      "requireValidOrderEx": {
+        "description": "Assert an order is valid and return its hash.",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrderEx": {
+        "description": "Validate a provided previously approved / signed order, hash, and signature.",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "bool"
+      },
+      "calculateCurrentPriceEx": {
+        "description": "Calculate the current price of an order ",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_method",
+            "type": "FeeMethod"
+          },
+          {
+            "name": "side",
+            "type": "Side"
+          },
+          {
+            "name": "sale_kind",
+            "type": "SaleKind"
+          },
+          {
+            "name": "how_to_call",
+            "type": "HowToCall"
+          },
+          {
+            "name": "calldata",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "Balance"
+      },
+      "ordersCanMatchEx": {
+        "description": "Return whether or not two orders can be matched with each other by basic parameters.",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_methods_sides_kinds_how_to_calls",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "calldata_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "calldata_sell",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_sell",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata_sell",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "Balance"
+      },
+      "calculateMatchPriceEx": {
+        "description": "Calculate the price two orders would match at, if in fact they would match (fail:otherwise).",
+        "params": [
+          {
+            "name": "addrs",
+            "type": "Vec<AccountId>"
+          },
+          {
+            "name": "uints",
+            "type": "Vec<u64>"
+          },
+          {
+            "name": "fee_methods_sides_kinds_how_to_calls",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "calldata_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "calldata_sell",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "replacement_pattern_sell",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata_buy",
+            "type": "Vec<u8>"
+          },
+          {
+            "name": "static_extradata_sell",
+            "type": "Vec<u8>"
+          }
+        ],
+        "type": "Balance"
+      }
+    },
+    "wyvernExchangeCore": {
+      "hashOrder": {
+        "description": "Hash an order, returning the canonical order hash, without the message prefix.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "hashToSign": {
+        "description": "Hash an order, returning the hash that a client must sign.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrderParameters": {
+        "description": "Validate order parameters (does *not* check validity:signature).",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "bool"
+      },
+      "requireValidOrder": {
+        "description": "Assert an order is valid and return its hash.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "Vec<u8>"
+      },
+      "validateOrder": {
+        "description": "Validate a provided previously approved / signed order, hash, and signature.",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          },
+          {
+            "name": "sig",
+            "type": "Signature"
+          }
+        ],
+        "type": "bool"
+      },
+      "calculateCurrentPrice": {
+        "description": "Calculate the current price of an order ",
+        "params": [
+          {
+            "name": "order",
+            "type": "OrderType<AccountId, Moment, Balance>,"
+          }
+        ],
+        "type": "Balance"
+      },
+      "ordersCanMatch": {
+        "description": "Return whether or not two orders can be matched with each other by basic parameters.",
+        "params": [
+          {
+            "name": "buy",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          },
+          {
+            "name": "sell",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          }
+        ],
+        "type": "Balance"
+      },
+      "calculateMatchPrice": {
+        "description": "Calculate the price two orders would match at, if in fact they would match (fail:otherwise).",
+        "params": [
+          {
+            "name": "buy",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          },
+          {
+            "name": "sell",
+            "type": "OrderType<AccountId, Moment, Balance>"
+          }
+        ],
+        "type": "Balance"
+      }
+    }
+}
