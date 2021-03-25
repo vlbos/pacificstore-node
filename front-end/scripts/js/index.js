@@ -10,8 +10,8 @@ const { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } = require('./o
 
 // Construct parameters for API instance
 const wsProvider = new WsProvider('ws://localhost:9944');
-const types = require('./types.json');
-const rpcs = require(`./rpcs.json`);
+const types = require('./lib/types.json');
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 const { TypeRegistry } = require('@polkadot/types/create');
 const registry = new TypeRegistry();

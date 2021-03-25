@@ -580,7 +580,10 @@ where
 // }
 
 pub fn from_hex(str: String) -> Vec<u8> {
-decode_hex(&(str.strip_prefix("0x").unwrap()))
+    if let Some(s)= str.strip_prefix("0x"){
+         return decode_hex(&s);
+    }
+    str.into_bytes()
 }
 pub fn decode_hex(s: &str) -> Vec<u8> {
     let len = if s.len()%2!=0{s.len()-1}else{s.len()};

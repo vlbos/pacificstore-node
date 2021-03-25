@@ -31,7 +31,7 @@
 //!
 //! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
 //! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig  signature.
 //! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
 //! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
 //! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
@@ -91,7 +91,7 @@ decl_storage! {
         pub ExchangeToken:T::AccountId;
         //Cancelled / finalized orders, by hash.
         pub CancelledOrFinalized get(fn cancelled_or_finalized): map hasher(blake2_128_concat) Vec<u8> => bool;
-        //Orders verified by on-chain approval (alternative to ECDSA signatures so that smart contracts can place orders directly).
+        //Orders verified by on-chain approval (alternative to  signatures so that smart contracts can place orders directly).
         pub ApprovedOrders get(fn approved_orders): map hasher(blake2_128_concat) Vec<u8> => bool;
         //For split fee orders, minimum required protocol maker fee, in basis points. Paid to owner (who can change it).
         pub MinimumMakerProtocolFee:BalanceOf<T>;
@@ -238,15 +238,9 @@ decl_module! {
     ) -> DispatchResult {
         // onlyOwner
         let _user = ensure_signed(origin)?;
-         frame_support::debug::RuntimeLogger::init();
- frame_support::debug::native::debug!("================ContractSelf::<T>::get()==== {:?}",   ContractSelf::<T>::get());
-        frame_support::debug::error!("===================change_owner====debug::error============################={:#?}{:#?}",T::AccountId::default(), ContractSelf::<T>::get());
-        if_std! {
-                    println!("======================change_ownerif_std=========================== {:#?}{:#?}",T::AccountId::default(), ContractSelf::<T>::get());
-                            }
-        print("=================change_owner=====print============");
-// print(ContractSelf::<T>::get());
- ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(), Error::<T>::OnlyOwner);
+        frame_support::debug::RuntimeLogger::init();
+  
+        ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(), Error::<T>::OnlyOwner);
         ContractSelf::<T>::put(new_owner.clone());
         Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
         Ok(())
@@ -346,14 +340,12 @@ impl<T: Trait> Module<T> {
     pub fn hash_to_sign(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<Vec<u8>, Error<T>> {
-        if_std!{println!("======================hash_to_sign==={:?}={:?}",order,keccak_256(&Self::hash_order(&order)?).to_vec());}
-
         Ok(keccak_256(&Self::hash_order(&order)?).to_vec())
     }
 
     // Assert an order is valid and return its hash
     // order OrderType to validate
-    // sig ECDSA signature
+    // sig  signature
     pub fn require_valid_order(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &[u8],
@@ -373,7 +365,6 @@ impl<T: Trait> Module<T> {
     ) -> bool {
         // OrderType must be targeted at this protocol version (this contract:Exchange).
         if order.exchange != ContractSelf::<T>::get() {
-        if_std!{println!("======================374");}
             return false;
         }
 
@@ -382,8 +373,6 @@ impl<T: Trait> Module<T> {
             &order.sale_kind,
             order.expiration_time,
         ) {
-        if_std!{println!("======================383");}
-
             return false;
         }
 
@@ -392,8 +381,6 @@ impl<T: Trait> Module<T> {
             && (order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get()
                 || order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get())
         {
-        if_std!{println!("======================393");}
-
             return false;
         }
 
@@ -403,7 +390,7 @@ impl<T: Trait> Module<T> {
     // Validate a provided previously approved / signed order, hash, and signature.
     // hash OrderType hash (calculated:already, passed to recalculation:avoid)
     // order OrderType to validate
-    // sig ECDSA signature
+    // sig  signature
     pub fn validate_order(
         hash: &[u8],
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -412,13 +399,11 @@ impl<T: Trait> Module<T> {
     
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order) {
-        if_std!{println!("======================326");}
             return Ok(false);
         }
 
         // OrderType must have not been canceled or already filled.
         if CancelledOrFinalized::get(hash) {
-        if_std!{println!("=============================332");}
             return Ok(false);
         }
 
@@ -435,7 +420,6 @@ impl<T: Trait> Module<T> {
             return Ok(true);
         }
 
-        if_std!{println!("====================343");}
         Ok(false)
     }
 
@@ -459,9 +443,7 @@ impl<T: Trait> Module<T> {
         _msg: &[u8],
         _signer: &T::AccountId,
     ) -> Result<(), Error<T>> {
-// sr25519 always expects a 64 byte signature.
-                if_std!{println!("===============_signature.len()={:#?}========864",_signature.len());}
-
+        // sr25519 always expects a 64 byte signature.
 		ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
 		let signature:Signature = sr25519::Signature::from_slice(_signature).into();
 
@@ -539,7 +521,7 @@ impl<T: Trait> Module<T> {
 
     // Cancel an order, preventing it from being matched. Must be called by the maker of the order
     // order OrderType to cancel
-    // sig ECDSA signature
+    // sig  signature
     pub fn cancel_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -893,8 +875,6 @@ impl<T: Trait> Module<T> {
         sell_sig: Vec<u8>,
         metadata: &[u8],
     ) -> DispatchResult {
-            if_std!{println!("=====================side={:?}={:?}=864",buy,sell);}
-
         // Ensure buy order validity and calculate hash if necessary.
         let mut buy_hash: Vec<u8> = vec![];
         if buy.maker == msg_sender {
@@ -902,10 +882,8 @@ impl<T: Trait> Module<T> {
                   return Err(Error::<T>::InvalidBuyOrderParameters.into());
                 }   
         } else {
-            if_std!{println!("789");}
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
         }
-            if_std!{println!("========================864");}
 
         // Ensure sell order validity and calculate hash if necessary.
         let mut sell_hash: Vec<u8> = vec![];
@@ -914,16 +892,13 @@ impl<T: Trait> Module<T> {
                return  Err(Error::<T>::InvalidSellOrderParameters.into());
             }
         } else {
-            if_std!{println!("801");}
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
         }
-            if_std!{println!("========================864");}
 
         // Must be matchable.
           if  !Self::orders_can_match(&buy, &sell){
              return   Err(Error::<T>::OrdersCannotMatch.into());
           }
-            if_std!{println!("========================864");}
 
         // Must match calldata after replacement, if specified.
         let mut buycalldata = buy.calldata.clone();
@@ -937,7 +912,6 @@ impl<T: Trait> Module<T> {
            return  Err(Error::<T>::BuyArrayNotEqual.into());
             }
         }
-            if_std!{println!("========================864");}
 
         if sell.replacement_pattern.len() > 0 {
              if !<exchange_common::Module<T>>::guarded_array_replace(
@@ -949,13 +923,9 @@ impl<T: Trait> Module<T> {
             }
         }
 
-            if_std!{println!("========================864");}
-
         if  !<exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata){
            return  Err(Error::<T>::ArrayNotEqual.into());
         }
-
-            if_std!{println!("========================864");}
 
         // Mark previously signed or approved orders as finalized.
         let buymaker: T::AccountId = buy.maker.clone();
@@ -967,14 +937,9 @@ impl<T: Trait> Module<T> {
             CancelledOrFinalized::insert(sell_hash.clone(), true);
         }
 
-        debug::info!(
-            "========================================929====."
-        );
-
         // INTERACTIONS
         // Execute funds transfer and pay fees.
         let price: BalanceOf<T> = Self::execute_funds_transfer(msg_value, &buy, &sell)?;
-            if_std!{println!("========================864");}
 
         // Log match event.
         Self::deposit_event(RawEvent::OrdersMatched(
@@ -993,7 +958,6 @@ impl<T: Trait> Module<T> {
             price,
             metadata.to_vec(),
         ));
-            if_std!{println!("========================864");}
 
         Ok(())
     }
@@ -1006,7 +970,6 @@ fn account_to_bytes<AccountId,T:Trait>(account: &AccountId) -> Result<[u8; 32], 
 	where AccountId: Encode,
 {
 	let account_vec = account.encode();
-        if_std!{println!("===============account_vec.len()={:#?}========864",account_vec.len());}
 
 	ensure!(account_vec.len() == 32, Error::<T>::InvalidSignature);
 	let mut bytes = [0u8; 32];

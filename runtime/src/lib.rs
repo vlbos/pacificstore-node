@@ -266,46 +266,23 @@ impl pallet_sudo::Trait for Runtime {
 	type Call = Call;
 }
 
-/// Configure the template pallet in pallets/template.
-// impl pallet_template::Trait for Runtime {
-// 	type Event = Event;
-// }
-
 impl orderbook::Trait for Runtime {
     type Event = Event;
 }
 
 impl wyvern_exchange::Trait for Runtime {
-    // type Event = Event;
-	// type Currency = Balances;
-    // type Public = MultiSigner;
-    // type Signature = Signature;
+ 
 }
 
-// impl wyvern_exchange::exchange_common::Trait for Runtime {
-//     // type Event = Event;
-// 	type Currency = Balances;
-//     // type Public = MultiSigner;
-//     // type Signature = Signature;
-// }
-
 impl wyvern_exchange_core::sale_kind_interface::Trait for Runtime {
-    // type Event = Event;
-	// type Currency = Balances;
-    // type Public = MultiSigner;
-    // type Signature = Signature;
 }
 
 impl wyvern_exchange_core::exchange_common::Trait for Runtime {
-    // type Event = Event;
 	type Currency = Balances;
-    // type Public = MultiSigner;
-    // type Signature = Signature;
 }
 
 impl wyvern_exchange_core::Trait for Runtime {
     type Event = Event;
-	// type Currency = Balances;
     type Public = MultiSigner;
     type Signature = Signature;
 }

@@ -78,7 +78,6 @@ impl<T: Trait> Module<T> {
         replacement_pattern: &[u8],
         static_extradata: &[u8],
     ) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
-        if_std!{println!("======================build_order_type_from_array_parameters==={:?}={:?}",calldata,calldata);}
 
         Self::build_order_type(
             addrs[0].clone(),
@@ -118,9 +117,7 @@ impl<T: Trait> Module<T> {
         static_extradata_buy: &[u8],
         static_extradata_sell: &[u8],
     ) -> Vec<OrderType<T::AccountId, T::Moment, BalanceOf<T>>> {
-        if_std!{println!("======================    pub fn build_buy_sell_order_type(
-==={:?}={:?}",addrs,fee_methods_sides_kinds_how_to_calls);}
-
+ 
         let buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = Self::build_order_type(
             addrs[0].clone(),
             addrs[1].clone(),
@@ -171,8 +168,6 @@ impl<T: Trait> Module<T> {
             Self::u64_to_moment_saturated(uints[16]),
             uints[17].into(),
         );
- if_std!{println!("=============sell=========    pub fn build_buy_sell_order_type(
-==={:?}={:?}",buy,sell);}
         vec![buy, sell]
     }
 
@@ -201,7 +196,6 @@ impl<T: Trait> Module<T> {
         expiration_time: T::Moment,
         salt: u64,
     ) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
-        if_std!{println!("======================build_order_type==side={:?}={:?}",side,side);}
 
         OrderType::<T::AccountId, T::Moment, BalanceOf<T>>::new(
             exchange,

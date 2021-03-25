@@ -14,8 +14,8 @@ import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './order
 
 // Construct parameters for API instance
 const wsProvider = new WsProvider('ws://localhost:9944');
-import types from './types.json';
-const rpcs = require(`./rpcs.json`);
+import types from './lib/types.json';
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 import { TypeRegistry } from '@polkadot/types/create';
 const registry = new TypeRegistry();

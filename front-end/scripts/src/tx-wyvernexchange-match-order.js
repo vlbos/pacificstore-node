@@ -12,8 +12,8 @@ import { createRequire } from 'module';
 // import { object } from 'prop-types';
 const require = createRequire(import.meta.url);
 
-const types = require('./types.json');
-const rpcs = require(`./rpcs.json`);
+const types = require('./lib/types.json');
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
 

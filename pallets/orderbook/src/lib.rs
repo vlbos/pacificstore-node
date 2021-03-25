@@ -101,7 +101,7 @@ decl_module! {
             fields: Option<Vec<OrderField>>,
         ) -> DispatchResult {
             // T::CreateRoleOrigin::ensure_origin(origin.clone())?;
-            let who = ensure_signed(origin)?;
+             let who = ensure_signed(origin)?;
             // Validate order ID
             Self::validate_order_id(&order_id)?;
 
@@ -260,13 +260,11 @@ impl<T: Trait> Module<T> {
         token_ids: Option<Vec<TokenId>>,
         order_indices: &mut BTreeSet<u64>,
     ) -> Option<()> {
-        let field_name: Vec<u8> = b"metadata.asset.token_id".to_vec();
+        let field_name: Vec<u8> = b"metadata.asset.id".to_vec();
         let mut order_indices_by_token_ids = Vec::<u64>::new();
         if let Some(token_ids) = &token_ids {
             if token_ids.len() > MAX_TOKEN_IDS {
-                if_std! {
-                println!("token_ids' length is greater than ORDER_MAX_FIELDS ");
-                        }
+                frame_support::debug::error!("token_ids' length is greater than ORDER_MAX_FIELDS ");
                 return None;
             }
             for token_id in token_ids {
@@ -293,9 +291,7 @@ impl<T: Trait> Module<T> {
     ) -> Option<()> {
         if let Some(params) = &params {
             if params.len() > ORDER_MAX_PARAMS {
-                if_std! {
-                println!("params' length is greater than ORDER_MAX_FIELDS ");
-                        }
+                frame_support::debug::error!("params' length is greater than ORDER_MAX_FIELDS ");
                 return None;
             }
             for field in params {
@@ -305,22 +301,17 @@ impl<T: Trait> Module<T> {
                         <OrdersByField>::get(field.name(), field.value()),
                     );
                     if order_indices.is_empty() {
-                        if_std! {
-                        println!("order_indices is empty");
-                                }
+                        frame_support::debug::error!("order_indices is empty");
                         return None;
                     } 
                 } else {
-                    if_std! {
-                    println!("OrdersByField doesn't contain {:#?}{:#?}",field.name(), field.value());
-                            }
+                        frame_support::debug::error!("OrdersByField doesn't contain {:?}{:?}",field.name(), field.value());
+                        return None;
                 }
             }
 
             if order_indices.is_empty() {
-                if_std! {
-                println!("order_indices is empty in get_order_by_params");
-                        }
+                frame_support::debug::error!("order_indices is empty in get_order_by_params");
                 return None;
             } 
         }
@@ -339,17 +330,13 @@ impl<T: Trait> Module<T> {
         offset: usize,
     ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
         if temp_order_indices.is_empty() {
-            if_std! {
-            println!("temp_order_indices is empty in get_orders_by_indices ");
-                    }
+            frame_support::debug::error!("temp_order_indices is empty in get_orders_by_indices ");
             return None;
         }
         let mut result_orders: Vec<OrderJSONType<T::AccountId, T::Moment>> = Vec::new();
         let result_order_indices: Vec<u64> = temp_order_indices.into_iter().collect::<Vec<_>>();
         if result_order_indices.len() <= offset {
-            if_std! {
-            println!("result_order_indices'length is less than offset");
-                    }
+            frame_support::debug::error!("result_order_indices'length is less than offset");
             return None;
         }
         let end = if result_order_indices.len() <= offset + limit {
@@ -381,7 +368,7 @@ impl<T: Trait> Module<T> {
         order_query: Option<OrderQuery<T::AccountId>>,
         page: Option<u64>,
     ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
-        let mut _page = 1;
+         let mut _page = 1;
         if let Some(page) = page {
             _page = page
         }
@@ -389,16 +376,12 @@ impl<T: Trait> Module<T> {
         let mut temp_order_indices: BTreeSet<u64> = BTreeSet::new();
         if let Some(order_query) = order_query {
             if let None = Self::get_order_by_params(order_query.params, &mut temp_order_indices) {
-                if_std! {
-                    println!("get_order_by_params is empty in get_orders");
-                }
+                frame_support::debug::error!("get_order_by_params is empty in get_orders");
                 return None;
             }
 
             if temp_order_indices.is_empty() {
-                if_std! {
-                    println!("temp_order_indices is empty");
-                }
+                frame_support::debug::error!("temp_order_indices is empty");
                 return None;
             }
 
@@ -407,9 +390,7 @@ impl<T: Trait> Module<T> {
                     if let None =
                         Self::get_order_by_token_ids(Some(token_ids), &mut temp_order_indices)
                     {
-                        if_std! {
-                            println!("get_order_by_token_ids return empty in get_orders");
-                        }
+                        frame_support::debug::error!("get_order_by_token_ids return empty in get_orders");
                         return None;
                     }
                 }

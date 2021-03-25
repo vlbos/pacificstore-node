@@ -44,9 +44,7 @@ impl<T: Trait> Module<T> {
     ) -> bool {
 
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
-               if_std!{println!("======================can_settle_order==={:?}={:?}={:?}",expiration_time,listing_time,now);}
-
- (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
+        (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }
 
     // Calculate the settlement price of an order

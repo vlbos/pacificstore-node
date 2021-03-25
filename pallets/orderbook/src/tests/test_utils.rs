@@ -30,7 +30,7 @@ pub fn get_test_order() -> Vec<OrderField> {
     vec![
 OrderField::new(b"created_date", b"2019-01-29T04:04:03.258323"),
 OrderField::new(b"order_hash", b"0x3f8d16507c4d9905815e860324d64b9c9f5933a70e59c2a07a63320459f67826"),
-OrderField::new(b"metadata.asset.token_id", b"505"),
+OrderField::new(b"metadata.asset.id", b"505"),
 OrderField::new(b"metadata.asset.address", b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf"),
 OrderField::new(b"metadata.schema", b"ERC721"),
 OrderField::new(b"exchange", b"0x5206e78b21ce315ce284fb24cf05e0585a93b1d9"),

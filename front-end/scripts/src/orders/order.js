@@ -1,6 +1,7 @@
 // import { readFile } from 'fs/promises'
 // const pkg = JSON.parse(await readFile(new URL('./orders.json', import.meta.url)))
 // const { name, version } = pkg;
+import { stringToHex, hexToString, stringToU8a, u8aToHex } from '@polkadot/util';
 
 import { createRequire } from 'module';
 // import { object } from 'prop-types';
@@ -72,7 +73,7 @@ const makeOrderArrayEx = () => {
     ordersJSON.map((orderJSON, index) => {
         let obj = flattenObject(orderJSON);
         let arr = [];
-        Object.keys(obj).reduce((a, o) => { a.push([o, obj[o]+""]); return a; }, arr);
+        Object.keys(obj).reduce((a, o) => { a.push([o, obj[o] + ""]); return a; }, arr);
         objs.push(arr);
 
     })
@@ -80,10 +81,61 @@ const makeOrderArrayEx = () => {
     return objs;
 }
 // makeOrderArrayEx();
+const makeOrderArrayHexEx = () => {
+    let objs = [];
+    ordersJSON.map((orderJSON, index) => {
+        let obj = flattenObject(orderJSON);
+        let arr = [];
+
+        Object.keys(obj).reduce((a, o) => {
+            let objstr = obj[o] + "";
+            // if (!objstr.startsWith("0x")) {
+            objstr = stringToHex(objstr);
+            // }
+            a.push([stringToHex(o), objstr]); return a;
+        }, arr);
+        objs.push(arr);
+
+    })
+    // console.log(objs)
+    return objs;
+}
+
+const hash_address = [
+    'exchange',
+    'maker.address',
+    'taker.address',
+    'fee_recipient.address',
+    'target',
+    'calldata',
+    'replacement_pattern',
+    'static_target',
+    'static_extradata',
+    'payment_token',
+    'order_hash',
+    'metadata.asset.address',
+];
+const makeOrderFromJSONHex = (orderjson) => {
+    // let objs = [];
+
+    let objs = orderjson.map((order, index) => {
+        let arr = [];
+
+        order.fields.reduce((a, o) => {
+            let value = o.value;
+            if (-1 == hash_address.indexOf(hexToString(o.name))) { value = hexToString(value); }
+            a.push(hexToString(o.name), value); return a;
+        }, arr);
+        // objs.push(arr);
+        return arr;
+    })
+    // console.log(objs)
+    return objs;
+}
 
 const accounts = ["Alice"];
 const proxy = "proxy";
-const makeOrder = (exchange, isMaker,side) => ({
+const makeOrder = (exchange, isMaker, side) => ({
     exchange: exchange,
     maker: accounts[0],
     taker: accounts[0],
@@ -142,23 +194,21 @@ function hashtosign() {
     // assert.equal(solHash, hash, 'Hashes were not equal')
 }
 
-async function calculateFinalPrice()
-{
+async function calculateFinalPrice() {
     let time = await promisify(getTime)
     exchangeInstance.calculateFinalPrice.call(1, 1, 100, 100, time, time + 100);
     //   assert.equal(price.toNumber(), 100, 'Incorrect price')
-     time = await promisify(getTime)
+    time = await promisify(getTime)
     exchangeInstance.calculateFinalPrice.call(1, 1, 100, 100, time - 100, time);
     // assert.equal(price.toNumber(), 0, 'Incorrect price')
-     time = await promisify(getTime)
+    time = await promisify(getTime)
     exchangeInstance.calculateFinalPrice.call(0, 1, 100, 100, time - 50, time + 50);
     //   assert.equal(price.toNumber(), 150, 'Incorrect price')
-     time = await promisify(getTime)
+    time = await promisify(getTime)
     exchangeInstance.calculateFinalPrice.call(0, 1, 100, 200, time - 50, time + 50);
     // assert.equal(price.toNumber(), 200, 'Incorrect price')
 }
-function calculateCurrentPrice_()
-{
+function calculateCurrentPrice_() {
     const order = makeOrder(exchangeInstance.address, true)
     order.saleKind = 0
     order.listingTime = 1
@@ -404,4 +454,4 @@ const orderFromJSON = (order) => {
     }
 }
 
-export { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON };
+export { makeOrderArrayEx, makeOrderArrayHexEx, makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON };

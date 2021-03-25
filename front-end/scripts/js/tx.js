@@ -2,8 +2,8 @@ const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const  { v4 : uuidv4 } =require( 'uuid');
 
 const  {submit} =require( './lib/submit-signed-tx.js');
-const  types =require( './types.json');
-const rpcs = require(`./rpcs.json`);
+const  types =require( './lib/types.json');
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 const  { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } =require( './order.js');
 

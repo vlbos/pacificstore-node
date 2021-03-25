@@ -82,17 +82,19 @@ pub fn convert_json_to_assetquery<AccountId>(
         };
 
         if let Some(token_ids) = json.token_ids{
-        asset_query.token_ids  = Some(token_ids.into_iter().map(|t|t.into_bytes()).collect());      
+        asset_query.token_ids  = Some(token_ids.into_iter().map(|t|from_hex(t)).collect());      
         }
-
+        if let Some(asset_contract_address) = json.asset_contract_address{
+        asset_query.asset_contract_address  =  Some(from_hex(asset_contract_address));
+        }
         if let Some(search) = json.search{
-        asset_query.search  =  Some(search.into_bytes());
+        asset_query.search  =  Some(from_hex(search));
         }
         if let Some(order_by) = json.order_by{
-        asset_query.order_by =Some(order_by.into_bytes()) ;
+        asset_query.order_by =Some(from_hex(order_by)) ;
         }
         if let Some(order_direction) = json.order_direction{
-        asset_query.order_direction =Some(order_direction.into_bytes()) ;
+        asset_query.order_direction =Some(from_hex(order_direction)) ;
         }
         return Some(asset_query);
          }               
@@ -112,16 +114,35 @@ pub fn convert_json_to_orderquery<AccountId>(
             params: None,
         };
         if let Some(token_ids) = json.token_ids{
-        order_query.token_ids = Some(token_ids.into_iter().map(|t|t.into_bytes()).collect());
+        order_query.token_ids = Some(token_ids.into_iter().map(|t|from_hex(t)).collect());
         }
         if let Some(params) = json.params{
-        order_query.params  =  Some(params.into_iter().map(|t|OrderField::new(&t.name.into_bytes(),&t.value.into_bytes())).collect());
+        order_query.params  =  Some(params.into_iter().map(|t|OrderField::new(&from_hex(t.name),&from_hex(t.value))).collect());
         }
         return Some(order_query);
    
         }
 
     None
+}
+
+pub fn from_hex(str: String) -> Vec<u8> {
+    if let Some(s)= str.strip_prefix("0x"){
+         return decode_hex(&s);
+    }
+    str.into_bytes()
+}
+pub fn decode_hex(s: &str) -> Vec<u8> {
+    let len = if s.len()%2!=0{s.len()-1}else{s.len()};
+
+    if 0==len{
+      return Vec::<u8>::new();
+    }
+
+    (0..s.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&s[i..i + 2], 16).unwrap())
+        .collect()
 }
 
 /// A struct that implements the `OrderbookApi`.
@@ -192,7 +213,7 @@ where
                 // If the block hash is not supplied assume the best block.
                 self.client.info().best_hash));
 
-            let runtime_api_result = api.get_asset(&at,Some(token_address.clone().into_bytes()),Some(token_id.clone().into_bytes()));
+            let runtime_api_result = api.get_asset(&at,Some(from_hex(token_address.clone())),Some(from_hex(token_id.clone())));
             runtime_api_result.map_err(|e| RpcError {
                 code: ErrorCode::ServerError(9876), // No real reason for this value
                 message: "Something wrong".into(),

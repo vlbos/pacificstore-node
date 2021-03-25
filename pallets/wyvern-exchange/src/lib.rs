@@ -29,7 +29,7 @@
 //!
 //! * `hash_order_ex` - Hash an order, returning the canonical order hash, without the message prefix
 //! * `hash_to_sign_ex` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig ECDSA signature.
+//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig  signature.
 //! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, and signature.
 //! * `validate_order_parameters_ex` - Validate order parameters (does _not_ check validity -signature)
 //! * `calculate_current_price_ex` - Calculate the current price of an order (fn -convenience)
@@ -168,10 +168,6 @@ decl_module! {
         sig_sell: Vec<u8>,
         rss_metadata: Vec<u8>,
     ) -> DispatchResult {
-    frame_support::debug::RuntimeLogger::init();
- frame_support::debug::native::debug!("==================atomic_match_ex==frame_support::debug::native::debug!=called by {:?}", sig_buy);
-      
-        // print("======================print============");
         let _user = ensure_signed(origin)?;
         let buy_sell_orders = <exchange_common::Module<T>>::build_buy_sell_order_type(
             addrs,
@@ -192,14 +188,10 @@ decl_module! {
             buy_sell_orders[1].clone(),
             sig_sell.clone(),
             &rss_metadata,
-        )
-{
-  frame_support::debug::error!("=====================atomic_match_ex==debug::error============################={:#?}{:#?}",err, err);
-        if_std! {
-                    println!("====================atomic_match_ex==if_std=========================== {:#?}{:#?}",err, err);
-                            }
-         return Err(err);
-}
+        ){
+            frame_support::debug::error!("==atomic_match_ex==debug::error============={:?}",err);
+            return Err(err);
+        }
         Ok(())
     }
 
@@ -277,10 +269,7 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
-  if_std! {
-                    println!("====================hash_to_sign_ex==if_std=======side==================== {:#?}{:#?}",calldata, side);
-                            }
-        <exchange_core::Module<T>>::hash_to_sign(&<exchange_common::Module<T>>::build_order_type_from_array_parameters(
+          <exchange_core::Module<T>>::hash_to_sign(&<exchange_common::Module<T>>::build_order_type_from_array_parameters(
             addrs,
             uints,
             fee_method,

@@ -174,12 +174,119 @@ cargo doc --open
 #### WyvernExchange Pallet
 ##### Functions
 
+- `approve_order_ex(origin,addrs: Vec<T::AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: Vec<u8>,replacement_pattern: Vec<u8>,static_extradata: Vec<u8>, orderbook_inclusion_desired: bool, ) -> DispatchResult ` : Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order.
+- `cancel_order_ex(origin,addrs: Vec<T::AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: Vec<u8>,replacement_pattern: Vec<u8>,static_extradata: Vec<u8>, sig:&[u8], ) -> DispatchResult ` : Cancel an order, preventing it from being matched. Must be called by the maker of the order.
+- `atomic_match_ex(origin,addrs: Vec<T::AccountId>,uints: Vec<u64>,fee_methods_sides_kinds_how_to_calls: Vec<u8>,calldata_buy: Vec<u8>,calldata_sell: Vec<u8>,replacement_pattern_buy: Vec<u8>,replacement_pattern_sell: Vec<u8>,static_extradata_buy: Vec<u8>,static_extradata_sell: Vec<u8>,sig_buy: Vec<u8>,sig_sell: Vec<u8>,rss_metadata: Vec<u8>, ) -> Result<(), Error<T>>`:Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. 
+##### RPC Functions
+- `hash_order_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,) -> Result<Vec<u8>>` : Hash an order, returning the canonical order hash, without the message prefix
+- ` hash_to_sign_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,    ) -> Result<Vec<u8>>` : Hash an order, returning the hash that a client must sign.
+- `require_valid_order_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,sig: String,    ) -> Result<Vec<u8>>`: Assert an order is valid and return its hash.- `validate_order_parameters_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,    ) -> Result<bool>` : Validate order parameters (does _not_ check validity:signature)
+- `validate_order_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,sig: String,    ) -> Result<bool> ` : Validate a provided previously approved / signed order, hash, and signature.
+- `calculate_current_price( order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>, ) -> Result<BalanceOf<T>, Error<T>>` : Calculate the current price of an order (fn:convenience).
+- `calculate_current_price_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_method: FeeMethod,side: Side,sale_kind: SaleKind,how_to_call: HowToCall,calldata: String,replacement_pattern: String,static_extradata: String,    ) -> Result<u64>` : Calculate the price two orders would match at, if in fact they would match (fail:otherwise).
+- `orders_can_match_ex(addrs: Vec<AccountId>,uints: Vec<u64>,fee_methods_sides_kinds_how_to_calls: String,calldata_buy: String,calldata_sell: String,replacement_pattern_buy: String,replacement_pattern_sell: String,static_extradata_buy: String,static_extradata_sell: String,    ) -> Result<bool>` :Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static).
+- `calculate_final_price_ex(side: Side,sale_kind: SaleKind,base_price: u64,extra: Moment,listing_time: Moment,expiration_time: Moment,    ) -> Result<u64>`:  Calculate the settlement price of an order;Precondition: parameters have passed validate_parameters.
+
+##### Usage
+###### approveOrderEx
+To approve a order, one must send a transaction with a `wyvernExchange.approveOrderEx` extrinsic with the following arguments:
+- `addrs` as the array of order's fields in **AccoundId** type .
+- `uints` as the array of order's fields in integer/Balance type
+- `fee_method` as Fee method: protocol fee or split fee.
+- `side` as Side: buy or sell.
+- `sale_kind` as Currently supported kinds of sale: fixed price, Dutch auction. 
+- `how_to_call` as  Call or DelegateCall.
+- `calldata` as  order calldata
+- `replacement_pattern` as replacement mask
+- `static_extradata`as order  extradata
+- `orderbook_inclusion_desired` Whether orderbook providers should include the order in their orderbooks.
+
+###### cancelOrderEx
+To cancel a order, one must send a transaction with a `wyvernExchange.cancelOrderEx` extrinsic with the following arguments:
+- `addrs` as the array of order's fields in **AccoundId** type .
+- `uints` as the array of order's fields in integer/Balance type
+- `fee_method` as Fee method: protocol fee or split fee.
+- `side` as Side: buy or sell.
+- `sale_kind` as Currently supported kinds of sale: fixed price, Dutch auction. 
+- `how_to_call` as  Call or DelegateCall.
+- `calldata` as  order calldata
+- `replacement_pattern` as replacement mask
+- `static_extradata`as order  extradata.
+- `sig` signature.
+
+###### atomicMatchEx
+To atomically match two orders, ensuring validity of the match, and execute all associated state transitions, one must send a transaction with a `wyvernExchange.atomicMatchEx` extrinsic with the following arguments:
+- `addrs` as the array of Buy-side and Sell-side order's fields in **AccoundId** type .
+- `uints` as the array of Buy-side and Sell-side order's fields in integer/Balance type
+- `fee_methods_sides_kinds_how_to_calls` as the array of the Buy-side and Sell-side order's fields in Enum type such as Fee method: protocol fee or split fee, Side: buy or sell,Currently supported kinds of sale: fixed price, Dutch auction, Call or DelegateCall.
+- `calldata_buy` as Buy-side order calldata
+- `calldata_sell` as Sell-side order calldata
+- `replacement_pattern_buy` Buy-side order calldata replacement mask
+- `replacement_pattern_sell` Sell-side order calldata replacement mask
+- `static_extradata_buy` as Buy-side order extradata
+- `static_extradata_sell` as Sell-side order extradata
+- `sig_buy` as the buy-side order signature.
+- `sig_sell` as the sell-side order signature.
+- `rss_metadata` as the metadata of the signature of order's hash 
+
+##### Dependencies
+
+###### Traits
+This pallet depends on on the [FRAME EnsureOrigin System trait]
+```
+frame_support::traits::EnsureOrigin;
+```
+
+###### Pallets
+This pallet depends on on the [FRAME Timestamp pallet](https://docs.rs/crate/pallet-timestamp).
+
+##### Testing
+Run the tests with:
+```
+cargo test
+```
+
+##### How to use in your runtime
+###### Runtime `Cargo.toml`
+
+To add this pallet to your runtime, simply include the following to your runtime's `Cargo.toml` file:
+
+```TOML
+[dependencies.wyvern-exchange]
+default_features = false
+package = 'pallet-wyvern-exchange'
+version = '2.0.0'
+```
+
+and update your runtime's `std` feature to include this pallet:
+
+```TOML
+std = [
+    # --snip--
+    'wyvern-exchange/std',
+]
+```
+
+###### Runtime `lib.rs`
+You should implement it's trait like so:
+```rust
+impl wyvern_exchange::Trait for Runtime {
+}
+```
+
+and include it in your `construct_runtime!` macro:
+
+```rust
+WyvernExchange: wyvern_exchange::{Module, Call, Storage},
+```
+
+#### WyvernExchangeCore Pallet
+##### Functions
+
 - `change_minimum_maker_protocol_fee( origin, new_minimum_maker_protocol_fee: BalanceOf<T>, ) -> DispatchResult`: Change the minimum maker fee paid to the protocol (only:owner).
 - `change_minimum_taker_protocol_fee( origin, new_minimum_taker_protocol_fee: BalanceOf<T>, ) -> DispatchResult`: Change the minimum taker fee paid to the protocol (only:owner).
 - `change_protocol_fee_recipient( origin, new_protocol_fee_recipient: T::AccountId, ) -> DispatchResult`: Change the protocol fee recipient (only:owner).
-- `approve_order( origin: T::Origin, order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>, orderbook_inclusion_desired: bool, ) -> DispatchResult ` : Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order.
-- `cancel_order( origin: T::Origin, order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>, sig:&[u8], ) -> DispatchResult ` : Cancel an order, preventing it from being matched. Must be called by the maker of the order.
-- `atomic_match( msg_sender: T::AccountId, msg_value: BalanceOf<T>, buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>>, buy_sig: Vec<u8>, sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>>, sell_sig: Vec<u8>, metadata: &[u8], ) -> Result<(), Error<T>>`:Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. 
+
 ##### RPC Functions
 - `hash_order( order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>, ) -> Result<Vec<u8>, Error<T>> ` : Hash an order, returning the canonical order hash, without the message prefix
 - ` hash_to_sign( order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>, ) -> Result<Vec<u8>, Error<T>>` : Hash an order, returning the hash that a client must sign.
@@ -192,16 +299,14 @@ cargo doc --open
 - `calculate_final_price( side: &Side, sale_kind: &SaleKind, base_price: BalanceOf<T>, extra: T::Moment, listing_time: T::Moment, expiration_time: T::Moment, ) -> Result<BalanceOf<T>, Error<T>> `:
   Calculate the settlement price of an order;Precondition: parameters have passed validate_parameters.
 
-
 ##### Storage Define
-```rust
-        NextOrderIndex: BalanceOf<T>;
+```rustNextOrderIndex: BalanceOf<T>;
         pub ContractSelf:T::AccountId;
         //The token used to pay exchange fees.
         pub ExchangeToken:T::AccountId;
         //Cancelled / finalized orders, by hash.
         pub CancelledOrFinalized get(fn cancelled_or_finalized): map hasher(blake2_128_concat) Vec<u8> => bool;
-        //Orders verified by on-chain approval (alternative to ECDSA signatures so that smart contracts can place orders directly).
+        //Orders verified by on-chain approval (alternative to  signatures so that smart contracts can place orders directly).
         pub ApprovedOrders get(fn approved_orders): map hasher(blake2_128_concat) Vec<u8> => bool;
         //For split fee orders, minimum required protocol maker fee, in basis points. Paid to owner (who can change it).
         pub MinimumMakerProtocolFee:BalanceOf<T>;
@@ -327,9 +432,9 @@ cargo test
 To add this pallet to your runtime, simply include the following to your runtime's `Cargo.toml` file:
 
 ```TOML
-[dependencies.wyvern-exchange]
+[dependencies.wyvern-exchange-core]
 default_features = false
-package = 'pallet-wyvern-exchange'
+package = 'pallet-wyvern-exchange-core '
 version = '2.0.0'
 ```
 
@@ -338,7 +443,7 @@ and update your runtime's `std` feature to include this pallet:
 ```TOML
 std = [
     # --snip--
-    'wyvern-exchange/std',
+    'wyvern-exchange-core/std',
 ]
 ```
 
@@ -346,16 +451,16 @@ std = [
 You should implement it's trait like so:
 ```rust
 
-impl wyvern_exchange::Trait for Runtime {
+impl wyvern_exchange_core::Trait for Runtime {
 }
 
-impl wyvern_exchange::exchange_common::Trait for Runtime {
+impl wyvern_exchange_core::exchange_common::Trait for Runtime {
 	type Currency = Balances;
 }
 
-impl wyvern_exchange::sale_kind_interface::Trait for Runtime {
+impl wyvern_exchange_core::sale_kind_interface::Trait for Runtime {
 }
-impl wyvern_exchange::exchange_core::Trait for Runtime {
+impl wyvern_exchange_core::Trait for Runtime {
     type Event = Event;
     type Public = MultiSigner;
     type Signature = Signature;
@@ -365,8 +470,10 @@ impl wyvern_exchange::exchange_core::Trait for Runtime {
 and include it in your `construct_runtime!` macro:
 
 ```rust
-WyvernExchange: wyvern_exchange::{Module, Call, Storage, Event<T>},
+WyvernExchangeCore: wyvern_exchange_core::{Module, Call, Storage, Event<T>},
 ```
+
+
 ## Test Guide
 
 ### Guntime Module Unit Test
@@ -411,7 +518,7 @@ cargo doc --open
 
 In order to help develop this pallet, it is being consumed by
 [a test project](https://github.com/vlbos/pacific-store-node/tree/dev/front-end) .
-
+[a test example document](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_js_example) .
 ### Build & Run
 
 First, build & run the node:

@@ -9,12 +9,12 @@ import { Bytes, Option, u32, Vec } from '@polkadot/types';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
 // import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './order.js'
-import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
+import { makeOrderArrayEx, makeOrderArrayHexEx,makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
 
 // Construct parameters for API instance
 const wsProvider = new WsProvider('ws://localhost:9944');
-const types = require('./types.json');
-const rpcs = require(`./rpcs.json`);
+const types = require('./lib/types.json');
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 import { TypeRegistry } from '@polkadot/types/create';
 const registry = new TypeRegistry();
@@ -50,32 +50,36 @@ async function main() {
         francis: { key: keyring.addFromUri('//Francis', { name: 'Francis' }), nonce: 0 },
     }
 
+    const orderArray = makeOrderArrayHexEx();
+    const orders = makeOrderEx();
 
-    let order = await api.rpc.orderbook.getOrder({
-        limit: 1,
-        offset: 1,
-        owner: stringToU8a(users.francis.key.publicKey),
-        token_ids: [stringToU8a('dddddddddddddddddddddddddd')],
-        params: [[[0x1], [0x1]]]
-    });
-    console.log(`The value from the getOrder is ${order}\n`);
+    // console.log("getOrder(", {
+    //     params: orderArray[0]
+    // });
+    // let order = await api.rpc.orderbook.getOrder({
+    //     params: orderArray[0]
+    // });
+    // console.log(`The value from the getOrder is ${order}\n`);
 
-    let orders = await api.rpc.orderbook.getOrders({
-        limit: 1,
-        offset: 1,
-        owner: stringToU8a(users.francis.key.publicKey),
-        token_ids: [stringToU8a('dddddddddddddddddddddddddd')],
-        params: [["[0x1]", "[0x1]"]]
+    // let orderjsons = await api.rpc.orderbook.getOrders({
+    //     params: orderArray[1]
+    // }, 1);
+    // console.log(`The value from the getOrders is ${orderjsons}\n`);
+
+    console.log("getAsset(", orders[2]["metadata.asset.address"], stringToHex(orders[2]["metadata.asset.id"] + ""));
+    let asset1 = await api.rpc.orderbook.getAsset(stringToHex(orders[2]["metadata.asset.address"]), stringToHex(orders[2]["metadata.asset.id"] + ""));
+    console.log(`The value from the getAsset is ${asset1}\n`);
+console.log("===================");
+console.log(makeOrderFromJSONHex([JSON.parse(`${asset1}`)]));
+console.log("===================");
+
+    console.log("=======getAssets(", {
+        token_ids: [stringToHex(orders[3]["metadata.asset.id"])],
+        asset_contract_address: stringToHex(orders[3]["metadata.asset.address"])
     }, 1);
-    console.log(`The value from the getOrders is ${orders}\n`);
-    let asset = await api.rpc.orderbook.getAsset("", stringToU8a('dddddddddddddddddddddddddd'));
-    console.log(`The value from the getAsset is ${asset}\n`);
     let assets = await api.rpc.orderbook.getAssets({
-        limit: 1,
-        offset: 1,
-        owner: stringToU8a(users.francis.key.publicKey),
-        token_ids: [stringToU8a('dddddddddddddddddddddddddd')],
-        params: [[[0x1], [0x1]]]
+        token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
+        asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
     }, 1);
     console.log(`The value from the getAssets is ${assets}\n`);
 

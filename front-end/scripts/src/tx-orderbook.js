@@ -12,8 +12,8 @@ import { createRequire } from 'module';
 // import { object } from 'prop-types';
 const require = createRequire(import.meta.url);
 
-const types = require('./types.json');
-const rpcs = require(`./rpcs.json`);
+const types = require('./lib/types.json');
+const rpcs = require(`./lib/rpcs.json`);
 const rpc = { ...rpcs };
 import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
 
@@ -64,25 +64,6 @@ async function main() {
             }
         }
 
-        const arg_offset = 2;
-        const user_arg_offset = 0;
-
-        var argumentss = process.argv.splice(arg_offset);
-        console.log('arguments：', argumentss);
-
-        // // //////////////////////////
-        // // // print process.argv
-        process.argv.forEach(function (val, index, array) {
-            console.log(index + ': ' + val);
-        });
-
-
-        // await new Promise(r => setTimeout(r, block));
-
-        let index = 0;
-        if (undefined != argumentss[0]) {
-            index = argumentss[0];
-        }
         let accounts = Object.values(users).map((u) => u.key.address);
         let accounts7 = accounts.splice(0, 7);
         let accounts77 = accounts.splice(2, 7);
@@ -93,14 +74,15 @@ async function main() {
         submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
         submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
 
+        await new Promise(r => setTimeout(r, block));
 
-        const order_id = uuidv4();
         const orderArray = makeOrderArrayEx();
         // let o = orderArray[0];
         console.log("======postOrder=========");
-
+        let order_id = "";
         for (let o of orderArray) {
             // console.log(o);
+            order_id = uuidv4();
             submit(api, api.tx.orderbook.postOrder(order_id, users.bob.key.address, o), users.betty);
         }
 
