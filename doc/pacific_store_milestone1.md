@@ -17,31 +17,6 @@ Orderbook pallet implements the backend of Opensea.js based on Substrate.It prov
 WyvernExchange pallet implements the Exchange and ExchangeCore part of Wyvern protocol .It provides functionalities for hashing order,validating order,approving order,cancelling order,etc.
 PacificStore-node based on Substrate-node-template,integrates Orderbook pallet , WynvernExchange pallet and both custom RPCs.
 Test Project based on Substate-front-end-template,In order to demonstrate the usage of the two pallets.It includes custom types and RPCs.
-## Quickstart
-
-```shell
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
-
-cargo run -- --dev --tmp
-```
-
-[Custom RPCs](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/development.json)
-[Custom Type](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/types.json)
-
-start front-end
-```bash
-cd front-end
-yarn install
-yarn start
-```
-
-Test example
-```bash
-cd front-end/scripts
-yarn install
-yarn example
-```
 
 
 ## Milestone 1
@@ -473,21 +448,8 @@ and include it in your `construct_runtime!` macro:
 WyvernExchangeCore: wyvern_exchange_core::{Module, Call, Storage, Event<T>},
 ```
 
+## Quickstart
 
-## Test Guide
-
-### Guntime Module Unit Test
-##### Testing
-Run the tests with:
-```
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
-cargo test
-```
-
-### RPC API Example
-##### Example
-Run the Node
 ```shell
 git clone https://github.com/vlbos/pacific-store-node.git
 cd pacific-store-node
@@ -495,11 +457,21 @@ cd pacific-store-node
 cargo run -- --dev --tmp
 ```
 
-Run the examples with:
+[Custom RPCs](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/development.json)
+[Custom Type](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/types.json)
+
+start front-end
+```bash
+cd front-end
+yarn install
+yarn start
 ```
+
+Test example
+```bash
 cd front-end/scripts
 yarn install
-yarn examples 
+yarn example
 ```
 
 ###### Genesis Configuration
@@ -518,7 +490,8 @@ cargo doc --open
 
 In order to help develop this pallet, it is being consumed by
 [a test project](https://github.com/vlbos/pacific-store-node/tree/dev/front-end) .
-[a test example document](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_js_example) .
+[testing guide](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_testing_guide.md) .
+[a test example document](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_js_example.md) .
 ### Build & Run
 
 First, build & run the node:
