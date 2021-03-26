@@ -3,7 +3,7 @@
 #![allow(clippy::unnecessary_mut_passed)]
 use codec::Codec;
 use sp_std::vec::Vec;
-use wyvern_exchange_core::{OrderType};
+use wyvern_exchange_core::OrderType;
 // Here we declare the runtime API. It is implemented it the `impl` block in
 // runtime amalgamator file (the `runtime/src/lib.rs`)
 sp_api::decl_runtime_apis! {

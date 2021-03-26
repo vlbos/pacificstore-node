@@ -110,9 +110,7 @@ impl wyvern_exchange_core::exchange_common::Trait for Test {
     type Currency = Balances;
 }
 
-impl wyvern_exchange_core::sale_kind_interface::Trait for Test {
-
-}
+impl wyvern_exchange_core::sale_kind_interface::Trait for Test {}
 // impl wyvern_exchange_core::Trait for Test {
 //     type Event = TestEvent;
 //     type Public = sr25519::Public;

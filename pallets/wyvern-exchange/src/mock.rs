@@ -1,8 +1,8 @@
 // Creating mock runtime here
 
 pub use crate as wyvern_exchange;
-pub use crate::exchange_core::*;
 pub use crate::exchange_common::*;
+pub use crate::exchange_core::*;
 pub use crate::{Module, Trait};
 use core::marker::PhantomData;
 use frame_support::{
@@ -100,16 +100,13 @@ impl timestamp::Trait for Test {
     type WeightInfo = ();
 }
 
-impl Trait for Test {
-}
+impl Trait for Test {}
 
 impl wyvern_exchange::exchange_common::Trait for Test {
     type Currency = Balances;
 }
 
-impl wyvern_exchange::sale_kind_interface::Trait for Test {
-
-}
+impl wyvern_exchange::sale_kind_interface::Trait for Test {}
 impl exchange_core::Trait for Test {
     type Event = TestEvent;
     type Public = sr25519::Public;

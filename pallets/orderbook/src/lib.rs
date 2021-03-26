@@ -31,8 +31,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{
-    decl_error, decl_event, decl_module, decl_storage, dispatch::DispatchResult, ensure,
-    sp_std::{collections::btree_set::BTreeSet,if_std}, sp_std::prelude::*,
+    decl_error, decl_event, decl_module, decl_storage,
+    dispatch::DispatchResult,
+    ensure,
+    sp_std::prelude::*,
+    sp_std::{collections::btree_set::BTreeSet, if_std},
 };
 
 use frame_system::{self as system, ensure_signed};
@@ -48,7 +51,6 @@ pub use crate::types::*;
 
 mod builders;
 use crate::builders::*;
-
 
 pub trait Trait: system::Trait + timestamp::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
@@ -303,17 +305,21 @@ impl<T: Trait> Module<T> {
                     if order_indices.is_empty() {
                         frame_support::debug::error!("order_indices is empty");
                         return None;
-                    } 
+                    }
                 } else {
-                        frame_support::debug::error!("OrdersByField doesn't contain {:?}{:?}",field.name(), field.value());
-                        return None;
+                    frame_support::debug::error!(
+                        "OrdersByField doesn't contain {:?}{:?}",
+                        field.name(),
+                        field.value()
+                    );
+                    return None;
                 }
             }
 
             if order_indices.is_empty() {
                 frame_support::debug::error!("order_indices is empty in get_order_by_params");
                 return None;
-            } 
+            }
         }
         Some(())
     }
@@ -368,7 +374,7 @@ impl<T: Trait> Module<T> {
         order_query: Option<OrderQuery<T::AccountId>>,
         page: Option<u64>,
     ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
-         let mut _page = 1;
+        let mut _page = 1;
         if let Some(page) = page {
             _page = page
         }
@@ -390,7 +396,9 @@ impl<T: Trait> Module<T> {
                     if let None =
                         Self::get_order_by_token_ids(Some(token_ids), &mut temp_order_indices)
                     {
-                        frame_support::debug::error!("get_order_by_token_ids return empty in get_orders");
+                        frame_support::debug::error!(
+                            "get_order_by_token_ids return empty in get_orders"
+                        );
                         return None;
                     }
                 }

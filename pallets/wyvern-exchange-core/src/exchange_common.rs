@@ -29,7 +29,6 @@ decl_module! {
     }
 }
 
-
 impl<T: Trait> Module<T> {
     //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
     //Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model (arrays under 32 Vec<u8> will be slower)
@@ -38,13 +37,9 @@ impl<T: Trait> Module<T> {
     // desired The target array
     // mask The mask specifying which bits can be changed
     // The updated byte array (the parameter will be modified inplace)
-    pub fn guarded_array_replace(
-        array: &mut Vec<u8>,
-        desired: &[u8],
-        mask: &[u8],
-    ) -> bool {
-        if    array.len() != desired.len()||array.len() != mask.len(){
-             return false;
+    pub fn guarded_array_replace(array: &mut Vec<u8>, desired: &[u8], mask: &[u8]) -> bool {
+        if array.len() != desired.len() || array.len() != mask.len() {
+            return false;
         }
 
         let arr = array.clone();
@@ -78,7 +73,6 @@ impl<T: Trait> Module<T> {
         replacement_pattern: &[u8],
         static_extradata: &[u8],
     ) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
-
         Self::build_order_type(
             addrs[0].clone(),
             addrs[1].clone(),
@@ -117,7 +111,6 @@ impl<T: Trait> Module<T> {
         static_extradata_buy: &[u8],
         static_extradata_sell: &[u8],
     ) -> Vec<OrderType<T::AccountId, T::Moment, BalanceOf<T>>> {
- 
         let buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = Self::build_order_type(
             addrs[0].clone(),
             addrs[1].clone(),
@@ -196,38 +189,37 @@ impl<T: Trait> Module<T> {
         expiration_time: T::Moment,
         salt: u64,
     ) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
-
         OrderType::<T::AccountId, T::Moment, BalanceOf<T>>::new(
             exchange,
-                maker,
-                taker,
-                maker_relayer_fee,
-                taker_relayer_fee,
-                maker_protocol_fee,
-                taker_protocol_fee,
-                fee_recipient,
-                fee_method,
-                side,
-                sale_kind,
-                target,
-                how_to_call,
-                calldata,
-                replacement_pattern,
-                static_target,
-                static_extradata,
-                payment_token,
-                base_price,
-                extra,
-                listing_time,
-                expiration_time,
-                salt,
+            maker,
+            taker,
+            maker_relayer_fee,
+            taker_relayer_fee,
+            maker_protocol_fee,
+            taker_protocol_fee,
+            fee_recipient,
+            fee_method,
+            side,
+            sale_kind,
+            target,
+            how_to_call,
+            calldata,
+            replacement_pattern,
+            static_target,
+            static_extradata,
+            payment_token,
+            base_price,
+            extra,
+            listing_time,
+            expiration_time,
+            salt,
         )
     }
 
     pub fn u64_to_balance_saturated(_input: u64) -> BalanceOf<T> {
         if let Some(_balance) = Self::u64_to_balance_option(_input) {
-           return _balance;
-        } 
+            return _balance;
+        }
         Zero::zero()
     }
 

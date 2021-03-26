@@ -56,7 +56,7 @@ fn get_orders_without_parameters() {
 #[test]
 fn get_order_with_valid_parameters() {
     new_test_ext().execute_with(|| {
- let sender = account_key(TEST_SENDER);
+        let sender = account_key(TEST_SENDER);
         let order_id = TEST_ORDER_ID.as_bytes().to_owned();
         let owner = sender;
         let now = 42;
@@ -74,15 +74,13 @@ fn get_order_with_valid_parameters() {
         assert_ok!(result);
 
         assert_eq!(
-            Orderbook::get_order(
-                Some(OrderQuery {
-                    limit: None,
-                    offset: None,
-                    owner: Some(owner),
-                    token_ids: None,
-                    params: Some(order_fields.clone())
-                })
-            ),
+            Orderbook::get_order(Some(OrderQuery {
+                limit: None,
+                offset: None,
+                owner: Some(owner),
+                token_ids: None,
+                params: Some(order_fields.clone())
+            })),
             Some(OrderJSONType {
                 index: index,
                 order_id: order_id.clone(),

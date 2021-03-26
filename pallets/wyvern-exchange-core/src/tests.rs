@@ -92,7 +92,8 @@ fn change_protocol_fee_recipient() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
-        let result = WyvernExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
+        let result =
+            WyvernExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
         assert_ok!(result);
         assert_eq!(<ProtocolFeeRecipient<Test>>::get(), sender1);
     });
@@ -107,9 +108,15 @@ fn hash_order() {
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
-        let hash =  WyvernExchangeCore::hash_order(&order).unwrap();
-       
-        assert_eq!(hash,vec![184, 203, 23, 235, 174, 183, 26, 41, 112, 218, 247, 173, 72, 27, 38, 62, 234, 163, 65, 237, 76, 63, 74, 53, 56, 89, 68, 126, 111, 179, 22, 53]);
+        let hash = WyvernExchangeCore::hash_order(&order).unwrap();
+
+        assert_eq!(
+            hash,
+            vec![
+                184, 203, 23, 235, 174, 183, 26, 41, 112, 218, 247, 173, 72, 27, 38, 62, 234, 163,
+                65, 237, 76, 63, 74, 53, 56, 89, 68, 126, 111, 179, 22, 53
+            ]
+        );
     });
 }
 
@@ -122,19 +129,20 @@ fn require_valid_order() {
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
-        let hash =  WyvernExchangeCore::hash_to_sign(
-            &order
-        ).unwrap();
+        let hash = WyvernExchangeCore::hash_to_sign(&order).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
-        let sig = alice_sig; 
-        let result =  WyvernExchangeCore::require_valid_order(
-            &order,&sig
-        ).unwrap();
-       
-        // assert_ok!(result.clone());
-        assert_eq!(result,vec![18, 231, 144, 31, 116, 56, 16, 202, 12, 253, 180, 169, 181, 224, 230, 51, 181, 200, 104, 251, 103, 137, 115, 3, 173, 51, 160, 222, 108, 37, 148, 52]);
+        let alice_sig = <[u8; 64]>::from(alice_pair.sign(&hash));
+        let sig = alice_sig;
+        let result = WyvernExchangeCore::require_valid_order(&order, &sig).unwrap();
 
+        // assert_ok!(result.clone());
+        assert_eq!(
+            result,
+            vec![
+                18, 231, 144, 31, 116, 56, 16, 202, 12, 253, 180, 169, 181, 224, 230, 51, 181, 200,
+                104, 251, 103, 137, 115, 3, 173, 51, 160, 222, 108, 37, 148, 52
+            ]
+        );
     });
 }
 
@@ -147,12 +155,11 @@ fn validate_order_parameters() {
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
-        let result =  WyvernExchangeCore::validate_order_parameters(&order);
-       
-        assert_eq!(result,true);
+        let result = WyvernExchangeCore::validate_order_parameters(&order);
+
+        assert_eq!(result, true);
     });
 }
-
 
 #[test]
 fn validate_order() {
@@ -162,13 +169,13 @@ fn validate_order() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-        let  order = make_order(sender, sender, sender, 0);
-        let hash =  WyvernExchangeCore::hash_to_sign(&order).unwrap();
+        let order = make_order(sender, sender, sender, 0);
+        let hash = WyvernExchangeCore::hash_to_sign(&order).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
-        let sig = alice_sig; 
-        let result =  WyvernExchangeCore::validate_order(&hash,&order,&sig).unwrap();
-        assert_eq!(result,true);
+        let alice_sig = <[u8; 64]>::from(alice_pair.sign(&hash));
+        let sig = alice_sig;
+        let result = WyvernExchangeCore::validate_order(&hash, &order, &sig).unwrap();
+        assert_eq!(result, true);
     });
 }
 
@@ -182,7 +189,9 @@ fn approve_order() {
         let order = make_order(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchangeCore::approve_order(
-            Origin::signed(sender),&order,orderbook_inclusion_desired,
+            Origin::signed(sender),
+            &order,
+            orderbook_inclusion_desired,
         );
         assert_ok!(result);
     });
@@ -198,18 +207,18 @@ fn cancel_order_ex_with_approved_order() {
         <ContractSelf<Test>>::put(sender);
         let alice_pair = account_pair("Alice");
         let calldatas = "calldata.to_vec()".encode();
-        let alice_sig = <[u8;64]>::from(alice_pair.sign(&calldatas));
-        let sig = alice_sig; 
+        let alice_sig = <[u8; 64]>::from(alice_pair.sign(&calldatas));
+        let sig = alice_sig;
         let order = make_order(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchangeCore::approve_order(
-            Origin::signed(sender),&order,orderbook_inclusion_desired,
+            Origin::signed(sender),
+            &order,
+            orderbook_inclusion_desired,
         );
         assert_ok!(result);
 
-        let result = WyvernExchangeCore::cancel_order(
-            Origin::signed(sender),&order,&sig,
-        );
+        let result = WyvernExchangeCore::cancel_order(Origin::signed(sender), &order, &sig);
         assert_ok!(result);
     });
 }
@@ -224,12 +233,10 @@ fn cancel_order_ex_with_signature() {
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
         let alice_pair = account_pair("Alice");
-        let hash =  WyvernExchangeCore::hash_to_sign(&order).unwrap();
-        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
-        let sig = alice_sig; 
-        let result = WyvernExchangeCore::cancel_order(
-            Origin::signed(sender),&order,&sig,
-        );
+        let hash = WyvernExchangeCore::hash_to_sign(&order).unwrap();
+        let alice_sig = <[u8; 64]>::from(alice_pair.sign(&hash));
+        let sig = alice_sig;
+        let result = WyvernExchangeCore::cancel_order(Origin::signed(sender), &order, &sig);
         assert_ok!(result);
     });
 }
@@ -249,14 +256,20 @@ fn atomic_match() {
         let bob_pair = account_pair("Bob");
         let buy = make_order(sender, sender, sender, 0);
         let sell = make_order(sender1, sender, sender1, 1);
-        let hash_buy =  WyvernExchangeCore::hash_to_sign(&buy).unwrap();
-        let hash_sell =  WyvernExchangeCore::hash_to_sign(&sell).unwrap();
-        let alice_sig_buy = <[u8;64]>::from(alice_pair.sign(&hash_buy));
-        let bob_sig_sell = <[u8;64]>::from(bob_pair.sign(&hash_sell));
+        let hash_buy = WyvernExchangeCore::hash_to_sign(&buy).unwrap();
+        let hash_sell = WyvernExchangeCore::hash_to_sign(&sell).unwrap();
+        let alice_sig_buy = <[u8; 64]>::from(alice_pair.sign(&hash_buy));
+        let bob_sig_sell = <[u8; 64]>::from(bob_pair.sign(&hash_sell));
         let rss_metadata = Vec::<u8>::new();
         let amount = 42;
         let result = WyvernExchangeCore::atomic_match(
-            sender,amount,buy,(&alice_sig_buy).to_vec(),sell,(&bob_sig_sell).to_vec(),&rss_metadata,
+            sender,
+            amount,
+            buy,
+            (&alice_sig_buy).to_vec(),
+            sell,
+            (&bob_sig_sell).to_vec(),
+            &rss_metadata,
         );
         assert_ok!(result);
     });
@@ -277,8 +290,10 @@ fn transfer_tokens() {
             99999999999999958
         );
         assert_eq!(
-            <Test as wyvern_exchange_core::exchange_common::Trait>::Currency::free_balance(&sender1),
+            <Test as wyvern_exchange_core::exchange_common::Trait>::Currency::free_balance(
+                &sender1
+            ),
             100000000000000042
         );
-     });
+    });
 }

@@ -14,7 +14,7 @@ const TEST_SENDER: &str = "Alice";
 #[test]
 fn get_asset_with_valid_parameters() {
     new_test_ext().execute_with(|| {
-    let sender = account_key(TEST_SENDER);
+        let sender = account_key(TEST_SENDER);
         let order_id = TEST_ORDER_ID.as_bytes().to_owned();
         let owner = sender;
         let now = 42;
@@ -33,7 +33,8 @@ fn get_asset_with_valid_parameters() {
 
         assert_eq!(
             Orderbook::get_asset(
-                Some(b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf".to_vec()),Some(b"505".to_vec()),
+                Some(b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf".to_vec()),
+                Some(b"505".to_vec()),
             ),
             Some(JSONType {
                 jsons: None,
@@ -77,7 +78,9 @@ fn get_assets_with_valid_parameters() {
                     offset: None,
                     owner: Some(owner),
                     token_ids: Some(vec![b"505".to_vec()]),
-                    asset_contract_address: Some(b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf".to_vec()),
+                    asset_contract_address: Some(
+                        b"0x16baf0de678e52367adc69fd067e5edd1d33e3bf".to_vec()
+                    ),
                     search: None,
                     order_by: None,
                     order_direction: None,

@@ -8,7 +8,7 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 // use sp_core::Bytes;
 use codec::Codec;
 use std::sync::Arc;
-use wyvern_exchange_core::{OrderType};
+use wyvern_exchange_core::OrderType;
 use wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi as WyvernExchangeCoreRuntimeApi;
 
 #[rpc]
@@ -37,7 +37,7 @@ pub trait WyvernExchangeCoreApi<BlockHash, AccountId, Balance, Moment, Signature
     #[rpc(name = "wyvernExchangeCore_validateOrder")]
     fn validate_order(
         &self,
-        hash:String,
+        hash: String,
         order: OrderType<AccountId, Moment, Balance>,
         sig: Vec<u8>,
         at: Option<BlockHash>,
@@ -107,7 +107,7 @@ where
     Moment: Codec,
     Signature: Codec,
 {
-      fn hash_order(
+    fn hash_order(
         &self,
         order: OrderType<AccountId, Moment, Balance>,
         at: Option<<Block as BlockT>::Hash>,
@@ -117,10 +117,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.hash_order(
-            &at,
-            order,
-        );
+        let runtime_api_result = api.hash_order(&at, order);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -138,10 +135,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.hash_to_sign(
-            &at,
-            order,
-        );
+        let runtime_api_result = api.hash_to_sign(&at, order);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -158,10 +152,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.validate_order_parameters(
-            &at,
-            order,
-        );
+        let runtime_api_result = api.validate_order_parameters(&at, order);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -170,7 +161,7 @@ where
     }
     fn validate_order(
         &self,
-        hash:String,
+        hash: String,
         order: OrderType<AccountId, Moment, Balance>,
         sig: Vec<u8>,
         at: Option<<Block as BlockT>::Hash>,
@@ -180,12 +171,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.validate_order(
-            &at,
-            hash.clone().into_bytes(),
-            order,
-            sig,
-        );
+        let runtime_api_result = api.validate_order(&at, hash.clone().into_bytes(), order, sig);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -204,11 +190,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.require_valid_order(
-            &at,
-            order,
-            sig,
-        );
+        let runtime_api_result = api.require_valid_order(&at, order, sig);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -226,10 +208,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.calculate_current_price(
-            &at,
-            order,
-        );
+        let runtime_api_result = api.calculate_current_price(&at, order);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -247,11 +226,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.orders_can_match(
-            &at,
-            buy,
-            sell,
-        );
+        let runtime_api_result = api.orders_can_match(&at, buy, sell);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),
@@ -269,11 +244,7 @@ where
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
-        let runtime_api_result = api.calculate_match_price(
-            &at,
-            buy,
-            sell,
-        );
+        let runtime_api_result = api.calculate_match_price(&at, buy, sell);
         runtime_api_result.map_err(|e| RpcError {
             code: ErrorCode::ServerError(9876), // No real reason for this value
             message: "Something wrong".into(),

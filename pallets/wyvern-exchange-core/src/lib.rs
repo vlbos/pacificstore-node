@@ -46,20 +46,20 @@ use codec::{Decode, Encode};
 use core::result::Result;
 
 use frame_support::{
-    debug,  decl_error,decl_event, decl_module, decl_storage,
-    dispatch::{DispatchError,DispatchResult},
+    debug, decl_error, decl_event, decl_module, decl_storage,
+    dispatch::{DispatchError, DispatchResult},
     ensure,
     sp_io::hashing::keccak_256,
-    sp_runtime::{print,
-        traits::{IdentifyAccount, Member, Verify, Zero,Printable},
+    sp_runtime::{
+        print,
+        traits::{IdentifyAccount, Member, Printable, Verify, Zero},
     },
-    sp_std::{if_std,prelude::*},
-    traits::{Currency},
+    sp_std::{if_std, prelude::*},
+    traits::Currency,
 };
 use sp_core::sr25519;
 
 use frame_system::{self as system, ensure_signed};
-
 
 #[cfg(test)]
 mod mock;
@@ -75,9 +75,7 @@ use crate::exchange_common::BalanceOf;
 
 pub mod sale_kind_interface;
 
-pub trait Trait:
-  sale_kind_interface::Trait + exchange_common::Trait
-{
+pub trait Trait: sale_kind_interface::Trait + exchange_common::Trait {
     type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
     type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
     type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
@@ -149,7 +147,6 @@ decl_event!(
         OwnerChanged(AccountId, AccountId),
     }
 );
-
 
 decl_error! {
     pub enum Error for Module<T: Trait> {
@@ -239,7 +236,7 @@ decl_module! {
         // onlyOwner
         let _user = ensure_signed(origin)?;
         frame_support::debug::RuntimeLogger::init();
-  
+
         ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(), Error::<T>::OnlyOwner);
         ContractSelf::<T>::put(new_owner.clone());
         Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
@@ -396,7 +393,6 @@ impl<T: Trait> Module<T> {
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sig: &[u8],
     ) -> Result<bool, Error<T>> {
-    
         // OrderType must have valid parameters.
         if !Self::validate_order_parameters(&order) {
             return Ok(false);
@@ -444,20 +440,19 @@ impl<T: Trait> Module<T> {
         _signer: &T::AccountId,
     ) -> Result<(), Error<T>> {
         // sr25519 always expects a 64 byte signature.
-		ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
-		let signature:Signature = sr25519::Signature::from_slice(_signature).into();
+        ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
+        let signature: Signature = sr25519::Signature::from_slice(_signature).into();
 
-		// In Polkadot, the AccountId is always the same as the 32 byte public key.
-		let account_bytes: [u8; 32] = account_to_bytes(_signer)?;
-		// let public_key = sr25519::Public::from_raw(account_bytes);
+        // In Polkadot, the AccountId is always the same as the 32 byte public key.
+        let account_bytes: [u8; 32] = account_to_bytes(_signer)?;
+        // let public_key = sr25519::Public::from_raw(account_bytes);
 
-		// Check if everything is good or not.
-		match signature.verify(_msg, &account_bytes.into()) {
-			true => Ok(()),
-			false => Err(Error::<T>::MsgVerifyFailed)?,
-		}
+        // Check if everything is good or not.
+        match signature.verify(_msg, &account_bytes.into()) {
+            true => Ok(()),
+            false => Err(Error::<T>::MsgVerifyFailed)?,
+        }
     }
-
 
     // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
     // order OrderType to approve
@@ -551,7 +546,7 @@ impl<T: Trait> Module<T> {
     pub fn calculate_current_price(
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> Result<BalanceOf<T>, Error<T>> {
-       Ok(<sale_kind_interface::Module<T>>::calculate_final_price(
+        Ok(<sale_kind_interface::Module<T>>::calculate_final_price(
             &order.side,
             &order.sale_kind,
             order.base_price,
@@ -841,7 +836,7 @@ impl<T: Trait> Module<T> {
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> bool {
         //  Must be opposite-side.
-            (buy.side == Side::Buy && sell.side == Side::Sell) &&
+        (buy.side == Side::Buy && sell.side == Side::Sell) &&
             // Must use same fee method.
             (buy.fee_method == sell.fee_method) &&
             // Must use same payment token. 
@@ -861,7 +856,7 @@ impl<T: Trait> Module<T> {
             <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)
     }
 
-    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. 
+    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions.
     // buy Buy-side order
     // buy_sig Buy-side order signature
     // sell Sell-side order
@@ -878,9 +873,9 @@ impl<T: Trait> Module<T> {
         // Ensure buy order validity and calculate hash if necessary.
         let mut buy_hash: Vec<u8> = vec![];
         if buy.maker == msg_sender {
-               if  !Self::validate_order_parameters(&buy){
-                  return Err(Error::<T>::InvalidBuyOrderParameters.into());
-                }   
+            if !Self::validate_order_parameters(&buy) {
+                return Err(Error::<T>::InvalidBuyOrderParameters.into());
+            }
         } else {
             buy_hash = Self::require_valid_order(&buy, &buy_sig)?;
         }
@@ -888,43 +883,43 @@ impl<T: Trait> Module<T> {
         // Ensure sell order validity and calculate hash if necessary.
         let mut sell_hash: Vec<u8> = vec![];
         if sell.maker == msg_sender {
-            if Self::validate_order_parameters(&sell){
-               return  Err(Error::<T>::InvalidSellOrderParameters.into());
+            if Self::validate_order_parameters(&sell) {
+                return Err(Error::<T>::InvalidSellOrderParameters.into());
             }
         } else {
             sell_hash = Self::require_valid_order(&sell, &sell_sig)?;
         }
 
         // Must be matchable.
-          if  !Self::orders_can_match(&buy, &sell){
-             return   Err(Error::<T>::OrdersCannotMatch.into());
-          }
+        if !Self::orders_can_match(&buy, &sell) {
+            return Err(Error::<T>::OrdersCannotMatch.into());
+        }
 
         // Must match calldata after replacement, if specified.
         let mut buycalldata = buy.calldata.clone();
         let mut sellcalldata = sell.calldata.clone();
         if buy.replacement_pattern.len() > 0 {
-            if ! <exchange_common::Module<T>>::guarded_array_replace(
+            if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut buycalldata,
                 &sell.calldata,
                 &buy.replacement_pattern,
-            ){
-           return  Err(Error::<T>::BuyArrayNotEqual.into());
+            ) {
+                return Err(Error::<T>::BuyArrayNotEqual.into());
             }
         }
 
         if sell.replacement_pattern.len() > 0 {
-             if !<exchange_common::Module<T>>::guarded_array_replace(
+            if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut sellcalldata,
                 &buy.calldata,
                 &sell.replacement_pattern,
-            ){
-           return  Err(Error::<T>::SellArrayNotEqual.into());
+            ) {
+                return Err(Error::<T>::SellArrayNotEqual.into());
             }
         }
 
-        if  !<exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata){
-           return  Err(Error::<T>::ArrayNotEqual.into());
+        if !<exchange_common::Module<T>>::array_eq(&buycalldata, &sellcalldata) {
+            return Err(Error::<T>::ArrayNotEqual.into());
         }
 
         // Mark previously signed or approved orders as finalized.
@@ -963,16 +958,15 @@ impl<T: Trait> Module<T> {
     }
 }
 
-
-
 // This function converts a 32 byte AccountId to its byte-array equivalent form.
-fn account_to_bytes<AccountId,T:Trait>(account: &AccountId) -> Result<[u8; 32], Error<T>>
-	where AccountId: Encode,
+fn account_to_bytes<AccountId, T: Trait>(account: &AccountId) -> Result<[u8; 32], Error<T>>
+where
+    AccountId: Encode,
 {
-	let account_vec = account.encode();
+    let account_vec = account.encode();
 
-	ensure!(account_vec.len() == 32, Error::<T>::InvalidSignature);
-	let mut bytes = [0u8; 32];
-	bytes.copy_from_slice(&account_vec);
-	Ok(bytes)
+    ensure!(account_vec.len() == 32, Error::<T>::InvalidSignature);
+    let mut bytes = [0u8; 32];
+    bytes.copy_from_slice(&account_vec);
+    Ok(bytes)
 }

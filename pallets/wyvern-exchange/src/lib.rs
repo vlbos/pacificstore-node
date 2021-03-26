@@ -1,4 +1,3 @@
-
 //! # WyvernExchange Pallet
 //!
 //!
@@ -46,11 +45,16 @@ use core::result::Result;
 use sp_std::if_std;
 
 use frame_support::{
-    decl_module, decl_storage, dispatch::DispatchResult, sp_runtime::{traits::{Zero,Printable},print},
-    sp_std::prelude::*, 
+    decl_module, decl_storage,
+    dispatch::DispatchResult,
+    sp_runtime::{
+        print,
+        traits::{Printable, Zero},
+    },
+    sp_std::prelude::*,
 };
 
-use frame_system::{self as system,ensure_signed};
+use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -66,24 +70,19 @@ pub use exchange_core::types::*;
 // pub mod exchange_common;
 pub use exchange_core::exchange_common;
 pub use exchange_core::exchange_common::BalanceOf;
-pub use exchange_core::Error;
 pub use exchange_core::sale_kind_interface;
+pub use exchange_core::Error;
 // pub mod sale_kind_interface;
 // pub mod exchange_core;
 // pub use crate::exchange_core::Event;
 
-pub trait Trait:
-     exchange_core::Trait
-{
-
-}
+pub trait Trait: exchange_core::Trait {}
 
 decl_storage! {
     trait Store for Module<T: Trait> as WyvernExchange {
 
  }
 }
-
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {
@@ -199,7 +198,6 @@ decl_module! {
  }
 }
 
-
 impl<T: Trait> Module<T> {
     //  Call calculate_final_price - library exposed for testing.
     pub fn calculate_final_price_ex(
@@ -243,17 +241,19 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
-        <exchange_core::Module<T>>::hash_order(&<exchange_common::Module<T>>::build_order_type_from_array_parameters(
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            &calldata,
-            &replacement_pattern,
-            &static_extradata,
-        ))
+        <exchange_core::Module<T>>::hash_order(
+            &<exchange_common::Module<T>>::build_order_type_from_array_parameters(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            ),
+        )
         .unwrap()
     }
 
@@ -269,17 +269,19 @@ impl<T: Trait> Module<T> {
         replacement_pattern: Vec<u8>,
         static_extradata: Vec<u8>,
     ) -> Vec<u8> {
-          <exchange_core::Module<T>>::hash_to_sign(&<exchange_common::Module<T>>::build_order_type_from_array_parameters(
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            &calldata,
-            &replacement_pattern,
-            &static_extradata,
-        ))
+        <exchange_core::Module<T>>::hash_to_sign(
+            &<exchange_common::Module<T>>::build_order_type_from_array_parameters(
+                addrs,
+                uints,
+                fee_method,
+                side,
+                sale_kind,
+                how_to_call,
+                &calldata,
+                &replacement_pattern,
+                &static_extradata,
+            ),
+        )
         .unwrap()
     }
 
@@ -343,7 +345,7 @@ impl<T: Trait> Module<T> {
         .unwrap()
     }
 
- // Call require valid order - .
+    // Call require valid order - .
     pub fn require_valid_order_ex(
         addrs: Vec<T::AccountId>,
         uints: Vec<u64>,
@@ -368,11 +370,7 @@ impl<T: Trait> Module<T> {
                 &replacement_pattern,
                 &static_extradata,
             );
-        <exchange_core::Module<T>>::require_valid_order(
-            &order,
-            &sig,
-        )
-        .unwrap()
+        <exchange_core::Module<T>>::require_valid_order(&order, &sig).unwrap()
     }
 
     // Call calculate_current_price - .
@@ -403,7 +401,7 @@ impl<T: Trait> Module<T> {
         .unwrap();
 
         if let Some(_balance) = <exchange_common::Module<T>>::balance_to_u64_option(_price) {
-           return  _balance ;
+            return _balance;
         }
 
         0
@@ -450,25 +448,28 @@ impl<T: Trait> Module<T> {
         let mut tmpbuy_calldata = buy_calldata.clone();
         let mut tmpsell_calldata = sell_calldata.clone();
         if buy_replacement_pattern.len() > 0 {
-              if !<exchange_common::Module<T>>::guarded_array_replace(
+            if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpbuy_calldata,
                 &sell_calldata,
                 &buy_replacement_pattern,
-            ){
+            ) {
                 return Ok(false);
-                }
+            }
         }
         if sell_replacement_pattern.len() > 0 {
-            if ! <exchange_common::Module<T>>::guarded_array_replace(
+            if !<exchange_common::Module<T>>::guarded_array_replace(
                 &mut tmpsell_calldata,
                 &buy_calldata,
                 &sell_replacement_pattern,
-            ){
+            ) {
                 return Ok(false);
             }
         }
 
-        Ok(<exchange_common::Module<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata))
+        Ok(<exchange_common::Module<T>>::array_eq(
+            &tmpbuy_calldata,
+            &tmpsell_calldata,
+        ))
     }
 
     // Call calculate_match_price - .
@@ -494,13 +495,16 @@ impl<T: Trait> Module<T> {
             &static_extradata_buy,
             &static_extradata_sell,
         );
-        let _price = <exchange_core::Module<T>>::calculate_match_price(&buy_sell_orders[0], &buy_sell_orders[1]).unwrap();
+        let _price = <exchange_core::Module<T>>::calculate_match_price(
+            &buy_sell_orders[0],
+            &buy_sell_orders[1],
+        )
+        .unwrap();
 
         if let Some(_balance) = <exchange_common::Module<T>>::balance_to_u64_option(_price) {
-           return  _balance ;
+            return _balance;
         }
 
         0
     }
-
 }

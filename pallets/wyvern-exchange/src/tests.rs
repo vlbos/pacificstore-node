@@ -53,63 +53,64 @@ fn make_order(
     }
 }
 
-fn make_order_ex(maker: AccountId,
+fn make_order_ex(
+    maker: AccountId,
     taker: AccountId,
     fee_recipient: AccountId,
-    side: u8,) ->(Vec<AccountId>,
-         Vec<u64>,
-         FeeMethod,
-         Side,
-         SaleKind,
-         HowToCall,
-         Vec<u8>,
-         Vec<u8>,
-         Vec<u8>,)
-{
-        let order = make_order(maker, taker, fee_recipient, side);
-        let addrs = vec![
-            order.exchange,
-            order.maker,
-            order.taker,
-            order.fee_recipient,
-            order.target,
-            order.static_target,
-            order.payment_token,
-        ]
-        .to_vec();
-        let uints = vec![
-            order.maker_relayer_fee,
-            order.taker_relayer_fee,
-            order.maker_protocol_fee,
-            order.taker_protocol_fee,
-            order.base_price,
-            order.extra,
-            order.listing_time,
-            order.expiration_time,
-            order.salt,
-        ]
-        .to_vec();
-        let fee_method = FeeMethod::from(0);
-        let side = order.side;
-        let sale_kind = SaleKind::from(0);
-        let how_to_call = HowToCall::from(0);
-        let calldata = Vec::<u8>::new();
-        let replacement_pattern = Vec::<u8>::new();
-        let static_extradata = Vec::<u8>::new();
-        (
-            addrs,
-            uints,
-            fee_method,
-            side,
-            sale_kind,
-            how_to_call,
-            calldata,
-            replacement_pattern,
-            static_extradata,
-        )
+    side: u8,
+) -> (
+    Vec<AccountId>,
+    Vec<u64>,
+    FeeMethod,
+    Side,
+    SaleKind,
+    HowToCall,
+    Vec<u8>,
+    Vec<u8>,
+    Vec<u8>,
+) {
+    let order = make_order(maker, taker, fee_recipient, side);
+    let addrs = vec![
+        order.exchange,
+        order.maker,
+        order.taker,
+        order.fee_recipient,
+        order.target,
+        order.static_target,
+        order.payment_token,
+    ]
+    .to_vec();
+    let uints = vec![
+        order.maker_relayer_fee,
+        order.taker_relayer_fee,
+        order.maker_protocol_fee,
+        order.taker_protocol_fee,
+        order.base_price,
+        order.extra,
+        order.listing_time,
+        order.expiration_time,
+        order.salt,
+    ]
+    .to_vec();
+    let fee_method = FeeMethod::from(0);
+    let side = order.side;
+    let sale_kind = SaleKind::from(0);
+    let how_to_call = HowToCall::from(0);
+    let calldata = Vec::<u8>::new();
+    let replacement_pattern = Vec::<u8>::new();
+    let static_extradata = Vec::<u8>::new();
+    (
+        addrs,
+        uints,
+        fee_method,
+        side,
+        sale_kind,
+        how_to_call,
+        calldata,
+        replacement_pattern,
+        static_extradata,
+    )
 }
-
-
 
 #[test]
 fn change_minimum_maker_protocol_fee() {
@@ -164,7 +165,8 @@ fn hash_order_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-           let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -172,8 +174,9 @@ fn hash_order_ex() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
-        let hash =  WyvernExchange::hash_order_ex(
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
+        let hash = WyvernExchange::hash_order_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -184,8 +187,14 @@ fn hash_order_ex() {
             replacement_pattern.clone(),
             static_extradata.clone(),
         );
-       
-        assert_eq!(hash,vec![123, 133, 145, 87, 234, 200, 253, 138, 44, 140, 16, 13, 202, 91, 13, 171, 241, 253, 240, 155, 153, 69, 181, 204, 128, 12, 220, 94, 16, 237, 78, 190]);
+
+        assert_eq!(
+            hash,
+            vec![
+                123, 133, 145, 87, 234, 200, 253, 138, 44, 140, 16, 13, 202, 91, 13, 171, 241, 253,
+                240, 155, 153, 69, 181, 204, 128, 12, 220, 94, 16, 237, 78, 190
+            ]
+        );
     });
 }
 
@@ -198,20 +207,15 @@ fn require_valid_order() {
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
         let order = make_order(sender, sender, sender, 0);
-        let hash =  ExchangeCore::hash_to_sign(
-            &order
-        ).unwrap();
+        let hash = ExchangeCore::hash_to_sign(&order).unwrap();
         let alice_pair = account_pair("Alice");
-        let alice_sig = <[u8;64]>::from(alice_pair.sign(&hash));
-        let sig = alice_sig; 
-        let result =  ExchangeCore::require_valid_order(
-            &order,&sig
-        );
-       
+        let alice_sig = <[u8; 64]>::from(alice_pair.sign(&hash));
+        let sig = alice_sig;
+        let result = ExchangeCore::require_valid_order(&order, &sig);
+
         assert_ok!(result);
     });
 }
-
 
 #[test]
 fn require_valid_order_ex() {
@@ -221,7 +225,8 @@ fn require_valid_order_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-          let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -229,8 +234,9 @@ fn require_valid_order_ex() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
-        let hash =  WyvernExchange::hash_to_sign_ex(
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
+        let hash = WyvernExchange::hash_to_sign_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -242,9 +248,9 @@ fn require_valid_order_ex() {
             static_extradata.clone(),
         );
         let alice_pair = account_pair("Alice");
-        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
-        let sig = alice_sig; 
-        let hash =  WyvernExchange::require_valid_order_ex(
+        let alice_sig = (<[u8; 64]>::from(alice_pair.sign(&hash))).to_vec();
+        let sig = alice_sig;
+        let hash = WyvernExchange::require_valid_order_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -256,12 +262,16 @@ fn require_valid_order_ex() {
             static_extradata.clone(),
             sig,
         );
-       
-        assert_eq!(hash,vec![37, 49, 117, 31, 84, 85, 213, 82, 131, 89, 165, 235, 73, 255, 49, 61, 233, 44, 133, 116, 14, 159, 125, 27, 157, 50, 252, 154, 134, 82, 90, 216]);
 
+        assert_eq!(
+            hash,
+            vec![
+                37, 49, 117, 31, 84, 85, 213, 82, 131, 89, 165, 235, 73, 255, 49, 61, 233, 44, 133,
+                116, 14, 159, 125, 27, 157, 50, 252, 154, 134, 82, 90, 216
+            ]
+        );
     });
 }
-
 
 #[test]
 fn validate_order_parameters_ex() {
@@ -271,7 +281,8 @@ fn validate_order_parameters_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-           let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -279,8 +290,9 @@ fn validate_order_parameters_ex() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
-        let result =  WyvernExchange::validate_order_parameters_ex(
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
+        let result = WyvernExchange::validate_order_parameters_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -291,11 +303,10 @@ fn validate_order_parameters_ex() {
             replacement_pattern.clone(),
             static_extradata.clone(),
         );
-       
-        assert_eq!(result,true);
+
+        assert_eq!(result, true);
     });
 }
-
 
 #[test]
 fn validate_order_ex() {
@@ -305,7 +316,8 @@ fn validate_order_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-           let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -313,8 +325,9 @@ fn validate_order_ex() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
-        let hash =  WyvernExchange::hash_to_sign_ex(
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
+        let hash = WyvernExchange::hash_to_sign_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -326,9 +339,9 @@ fn validate_order_ex() {
             static_extradata.clone(),
         );
         let alice_pair = account_pair("Alice");
-        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
-        let sig = alice_sig; 
-        let result =  WyvernExchange::validate_order_ex(
+        let alice_sig = (<[u8; 64]>::from(alice_pair.sign(&hash))).to_vec();
+        let sig = alice_sig;
+        let result = WyvernExchange::validate_order_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -340,11 +353,10 @@ fn validate_order_ex() {
             static_extradata.clone(),
             sig,
         );
-       
-        assert_eq!(result,true);
+
+        assert_eq!(result, true);
     });
 }
-
 
 #[test]
 fn approve_order_ex() {
@@ -353,7 +365,8 @@ fn approve_order_ex() {
         let sender1 = account_key(TEST_SENDER_1);
         create_account_test(sender);
         create_account_test(sender1);
-           let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -361,7 +374,8 @@ fn approve_order_ex() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchange::approve_order_ex(
             Origin::signed(sender),
@@ -390,9 +404,10 @@ fn cancel_order_ex_with_approved_order() {
         <ContractSelf<Test>>::put(sender);
         let alice_pair = account_pair("Alice");
         let calldatas = "calldata.to_vec()".encode();
-        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&calldatas))).to_vec();
-        let sig = alice_sig; 
-           let (addrs,
+        let alice_sig = (<[u8; 64]>::from(alice_pair.sign(&calldatas))).to_vec();
+        let sig = alice_sig;
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -400,7 +415,8 @@ fn cancel_order_ex_with_approved_order() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchange::approve_order_ex(
             Origin::signed(sender),
@@ -442,7 +458,8 @@ fn cancel_order_ex_with_signature() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-           let (addrs,
+        let (
+            addrs,
             uints,
             fee_method,
             side,
@@ -450,9 +467,10 @@ fn cancel_order_ex_with_signature() {
             how_to_call,
             calldata,
             replacement_pattern,
-            static_extradata,) = make_order_ex(sender, sender, sender, 0);
+            static_extradata,
+        ) = make_order_ex(sender, sender, sender, 0);
         let alice_pair = account_pair("Alice");
-        let hash =  WyvernExchange::hash_to_sign_ex(
+        let hash = WyvernExchange::hash_to_sign_ex(
             addrs.clone(),
             uints.clone(),
             fee_method.clone(),
@@ -463,8 +481,8 @@ fn cancel_order_ex_with_signature() {
             replacement_pattern.clone(),
             static_extradata.clone(),
         );
-        let alice_sig = (<[u8;64]>::from(alice_pair.sign(&hash))).to_vec();
-        let sig = alice_sig; 
+        let alice_sig = (<[u8; 64]>::from(alice_pair.sign(&hash))).to_vec();
+        let sig = alice_sig;
 
         let result = WyvernExchange::cancel_order_ex(
             Origin::signed(sender),
@@ -494,11 +512,12 @@ fn atomic_match_ex() {
         create_account_test(sender);
         create_account_test(sender1);
         <ContractSelf<Test>>::put(sender);
-       
+
         let alice_pair = account_pair("Alice");
         let bob_pair = account_pair("Bob");
-     
-        let (addrs_buy,
+
+        let (
+            addrs_buy,
             uints_buy,
             fee_method_buy,
             side_buy,
@@ -506,8 +525,10 @@ fn atomic_match_ex() {
             how_to_call_buy,
             calldata_buy,
             replacement_pattern_buy,
-            static_extradata_buy,) = make_order_ex(sender, sender, sender, 0);
-        let (addrs_sell,
+            static_extradata_buy,
+        ) = make_order_ex(sender, sender, sender, 0);
+        let (
+            addrs_sell,
             uints_sell,
             fee_method_sell,
             side_sell,
@@ -515,10 +536,10 @@ fn atomic_match_ex() {
             how_to_call_sell,
             calldata_sell,
             replacement_pattern_sell,
-            static_extradata_sell,) = make_order_ex(sender1, sender, sender1, 1);
+            static_extradata_sell,
+        ) = make_order_ex(sender1, sender, sender1, 1);
 
-
-         let hash_buy =  WyvernExchange::hash_to_sign_ex(
+        let hash_buy = WyvernExchange::hash_to_sign_ex(
             addrs_buy.clone(),
             uints_buy.clone(),
             fee_method_buy.clone(),
@@ -530,7 +551,7 @@ fn atomic_match_ex() {
             static_extradata_buy.clone(),
         );
 
-        let hash_sell =  WyvernExchange::hash_to_sign_ex(
+        let hash_sell = WyvernExchange::hash_to_sign_ex(
             addrs_sell.clone(),
             uints_sell.clone(),
             fee_method_sell.clone(),
@@ -542,17 +563,17 @@ fn atomic_match_ex() {
             static_extradata_sell.clone(),
         );
 
-        let alice_sig_buy = (<[u8;64]>::from(alice_pair.sign(&hash_buy))).to_vec();
-        let bob_sig_sell = (<[u8;64]>::from(bob_pair.sign(&hash_sell))).to_vec();
+        let alice_sig_buy = (<[u8; 64]>::from(alice_pair.sign(&hash_buy))).to_vec();
+        let bob_sig_sell = (<[u8; 64]>::from(bob_pair.sign(&hash_sell))).to_vec();
 
         // let sig = vec![alice_sig_buy, bob_sig_sell];
 
         let mut addrs = addrs_buy;
         let mut addrs_sell = addrs_sell;
-        addrs.append(& mut addrs_sell);
+        addrs.append(&mut addrs_sell);
         let mut uints = uints_buy;
         let mut uints_sell = uints_sell;
-        uints.append(& mut uints_sell);
+        uints.append(&mut uints_sell);
         let fee_methods_sides_kinds_how_to_calls_buy: Vec<u8> = vec![
             fee_method_buy.value(),
             side_buy.value(),
@@ -568,8 +589,8 @@ fn atomic_match_ex() {
         ]
         .to_vec();
 
-        let mut fee_methods_sides_kinds_how_to_calls =  fee_methods_sides_kinds_how_to_calls_buy;
-        fee_methods_sides_kinds_how_to_calls.append(& mut fee_methods_sides_kinds_how_to_calls_sell);
+        let mut fee_methods_sides_kinds_how_to_calls = fee_methods_sides_kinds_how_to_calls_buy;
+        fee_methods_sides_kinds_how_to_calls.append(&mut fee_methods_sides_kinds_how_to_calls_sell);
         let rss_metadata = Vec::<u8>::new();
         let result = WyvernExchange::atomic_match_ex(
             Origin::signed(sender),
@@ -608,5 +629,5 @@ fn transfer_tokens() {
             <Test as wyvern_exchange::exchange_common::Trait>::Currency::free_balance(&sender1),
             100000000000000042
         );
-     });
+    });
 }

@@ -5,7 +5,6 @@
 use core::result::Result;
 use sp_std::if_std;
 
-
 use frame_support::{decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
 
 use crate::types::*;
@@ -13,12 +12,11 @@ use crate::types::*;
 use crate::exchange_common;
 use crate::exchange_common::BalanceOf;
 use crate::Error;
-pub trait Trait: exchange_common::Trait  {}
+pub trait Trait: exchange_common::Trait {}
 
 decl_module! {
     pub struct Module<T: Trait> for enum Call where origin: T::Origin {}
 }
-
 
 impl<T: Trait> Module<T> {
     // sale Kind interface
@@ -26,10 +24,7 @@ impl<T: Trait> Module<T> {
     // sale_kind Kind of sale
     // expiration_time OrderType expiration time
     //Whether the parameters were valid
-    pub fn validate_parameters(
-        sale_kind: &SaleKind,
-        expiration_time: T::Moment,
-    ) -> bool {
+    pub fn validate_parameters(sale_kind: &SaleKind, expiration_time: T::Moment) -> bool {
         // Auctions must have a set expiration date.
         *sale_kind == SaleKind::FixedPrice || expiration_time > Zero::zero()
     }
@@ -38,11 +33,7 @@ impl<T: Trait> Module<T> {
     // Precondition: parameters have passed validate_parameters
     // listing_time OrderType listing time
     // expiration_time OrderType expiration time
-    pub fn can_settle_order(
-        listing_time: T::Moment,
-        expiration_time: T::Moment,
-    ) -> bool {
-
+    pub fn can_settle_order(listing_time: T::Moment, expiration_time: T::Moment) -> bool {
         let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
         (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }

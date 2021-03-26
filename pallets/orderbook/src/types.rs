@@ -121,7 +121,10 @@ pub fn convert_assetquery_to_orderquery<AccountId>(
             offset: asset_query.offset,
             owner: asset_query.owner,
             token_ids: asset_query.token_ids,
-            params: Some(vec![OrderField::new(b"metadata.asset.address", &token_address)]),
+            params: Some(vec![OrderField::new(
+                b"metadata.asset.address",
+                &token_address,
+            )]),
         });
     }
     None
@@ -135,7 +138,3 @@ pub fn convert_orderjsontype_to_jsontype<AccountId, Moment>(
         jsons: None,
     }
 }
-
-
-
-
