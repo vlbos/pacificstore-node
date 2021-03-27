@@ -81,6 +81,19 @@ const makeOrderArrayEx = () => {
     return objs;
 }
 // makeOrderArrayEx();
+const makeOrderArrayExForRust = () => {
+    let objs = [];
+    ordersJSON.map((orderJSON, index) => {
+        let obj = flattenObject(orderJSON);
+        let arr = [];
+        Object.keys(obj).reduce((a, o) => { a.push(["b\""+o+"\"", "b\""+obj[o] + "\""]); return a; }, arr);
+        objs.push(arr);
+
+    })
+    console.log(objs)
+    return objs;
+}
+makeOrderArrayExForRust();
 const makeOrderArrayHexEx = () => {
     let objs = [];
     ordersJSON.map((orderJSON, index) => {

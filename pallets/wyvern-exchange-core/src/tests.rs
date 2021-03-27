@@ -67,6 +67,13 @@ fn change_minimum_maker_protocol_fee() {
             <MinimumMakerProtocolFee<Test>>::get(),
             new_minimum_maker_protocol_fee
         );
+
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::wyvern_exchange_core(RawEvent::MinimumMakerProtocolFeeChanged(
+                new_minimum_maker_protocol_fee,
+        ))));
+
     });
 }
 
@@ -84,6 +91,12 @@ fn change_minimum_taker_protocol_fee() {
             <MinimumTakerProtocolFee<Test>>::get(),
             min_taker_protocol_fee
         );
+
+       // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::wyvern_exchange_core(RawEvent::MinimumTakerProtocolFeeChanged(
+                min_taker_protocol_fee,
+        ))));
     });
 }
 
@@ -96,8 +109,33 @@ fn change_protocol_fee_recipient() {
             WyvernExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
         assert_ok!(result);
         assert_eq!(<ProtocolFeeRecipient<Test>>::get(), sender1);
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::wyvern_exchange_core(RawEvent::ProtocolFeeRecipientChanged(
+                sender,
+                sender1,
+        ))));
     });
 }
+
+#[test]
+fn change_owner() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        let result =
+            WyvernExchangeCore::change_owner(Origin::signed(sender), sender1);
+        assert_ok!(result);
+        assert_eq!(<ContractSelf<Test>>::get(), sender1);
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::wyvern_exchange_core(RawEvent::OwnerChanged(
+                sender,
+                sender1,
+        ))));
+    });
+}
+
 
 #[test]
 fn hash_order() {
@@ -198,7 +236,7 @@ fn approve_order() {
 }
 
 #[test]
-fn cancel_order_ex_with_approved_order() {
+fn cancel_order_with_approved_order() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
@@ -224,7 +262,7 @@ fn cancel_order_ex_with_approved_order() {
 }
 
 #[test]
-fn cancel_order_ex_with_signature() {
+fn cancel_order_with_signature() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);

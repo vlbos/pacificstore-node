@@ -510,7 +510,7 @@ impl<T: Trait> Module<T> {
         ApprovedOrders::insert(hash.clone(), true);
 
         // Log approval event. Must be split in two due to Solidity stack size limitations.
-        Self::deposit_event(RawEvent::OrderApprovedPartOne(
+         Self::deposit_event(RawEvent::OrderApprovedPartOne(
             hash.clone(),
             order.exchange.clone(),
             order.maker.clone(),
@@ -525,6 +525,7 @@ impl<T: Trait> Module<T> {
             order.sale_kind.clone(),
             order.target.clone(),
         ));
+
         Self::deposit_event(RawEvent::OrderApprovedPartTwo(
             hash.clone(),
             order.how_to_call.clone(),
@@ -894,13 +895,13 @@ impl<T: Trait> Module<T> {
             (buy.how_to_call == sell.how_to_call) &&
             // Buy-side order must be settleable. 
             <sale_kind_interface::Module<T>>::can_settle_order(
-                                                                buy.listing_time, 
-                                                                buy.expiration_time,
+                buy.listing_time, 
+                buy.expiration_time,
             ) &&
             // Sell-side order must be settleable. 
             <sale_kind_interface::Module<T>>::can_settle_order(
-                                                                sell.listing_time, 
-                                                                sell.expiration_time,
+                sell.listing_time, 
+                sell.expiration_time,
             )
     }
 

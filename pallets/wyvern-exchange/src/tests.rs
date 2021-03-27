@@ -19,7 +19,7 @@ fn make_order(
 ) -> OrderType<AccountId, Moment, Balance> {
     let sender = account_key(TEST_SENDER);
     let fee: u64 = 0;
-    let bytes = vec![0x0];
+    let bytes = vec![];
     let time = Moment::default();
     OrderType::<AccountId, Moment, Balance> {
         index: 0,
@@ -107,51 +107,6 @@ fn make_order_ex(
         replacement_pattern,
         static_extradata,
     )
-}
-
-#[test]
-fn change_minimum_maker_protocol_fee() {
-    new_test_ext().execute_with(|| {
-        let sender = account_key(TEST_SENDER);
-        let new_minimum_maker_protocol_fee = 42;
-        let result = ExchangeCore::change_minimum_maker_protocol_fee(
-            Origin::signed(sender),
-            new_minimum_maker_protocol_fee,
-        );
-        assert_ok!(result);
-        assert_eq!(
-            <MinimumMakerProtocolFee<Test>>::get(),
-            new_minimum_maker_protocol_fee
-        );
-    });
-}
-
-#[test]
-fn change_minimum_taker_protocol_fee() {
-    new_test_ext().execute_with(|| {
-        let sender = account_key(TEST_SENDER);
-        let min_taker_protocol_fee = 42;
-        let result = ExchangeCore::change_minimum_taker_protocol_fee(
-            Origin::signed(sender),
-            min_taker_protocol_fee,
-        );
-        assert_ok!(result);
-        assert_eq!(
-            <MinimumTakerProtocolFee<Test>>::get(),
-            min_taker_protocol_fee
-        );
-    });
-}
-
-#[test]
-fn change_protocol_fee_recipient() {
-    new_test_ext().execute_with(|| {
-        let sender = account_key(TEST_SENDER);
-        let sender1 = account_key(TEST_SENDER_1);
-        let result = ExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
-        assert_ok!(result);
-        assert_eq!(<ProtocolFeeRecipient<Test>>::get(), sender1);
-    });
 }
 
 #[test]
@@ -373,6 +328,18 @@ fn approve_order_ex() {
             replacement_pattern,
             static_extradata,
         ) = make_order_ex(sender, sender, sender, 0);
+        let order = make_order(sender, sender, sender, 0);
+        let hash = WyvernExchange::hash_to_sign_ex(
+                    addrs.clone(),
+                    uints.clone(),
+                    fee_method.clone(),
+                    side.clone(),
+                    sale_kind.clone(),
+                    how_to_call.clone(),
+                    calldata.clone(),
+                    replacement_pattern.clone(),
+                    static_extradata.clone(),
+                );
         let orderbook_inclusion_desired: bool = false;
         let result = WyvernExchange::approve_order_ex(
             Origin::signed(sender),
@@ -388,6 +355,41 @@ fn approve_order_ex() {
             orderbook_inclusion_desired,
         );
         assert_ok!(result);
+
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::exchange_core(RawEvent::OrderApprovedPartOne(
+                hash.clone(),
+                order.exchange.clone(),
+                order.maker.clone(),
+                order.taker.clone(),
+                order.maker_relayer_fee,
+                order.taker_relayer_fee,
+                order.maker_protocol_fee,
+                order.taker_protocol_fee,
+                order.fee_recipient.clone(),
+                order.fee_method.clone(),
+                order.side.clone(),
+                order.sale_kind.clone(),
+                order.target.clone(),
+        ))));
+    
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::exchange_core(RawEvent::OrderApprovedPartTwo(
+                hash.clone(),
+                order.how_to_call.clone(),
+                order.calldata.clone(),
+                order.replacement_pattern.clone(),
+                order.static_target.clone(),
+                order.static_extradata.clone(),
+                order.payment_token.clone(),
+                order.base_price,
+                order.extra,
+                order.listing_time,
+                order.expiration_time,
+                order.salt,
+                orderbook_inclusion_desired,
+        ))));
     });
 }
 
@@ -444,7 +446,7 @@ fn cancel_order_ex_with_approved_order() {
             sig,
         );
         assert_ok!(result);
-    });
+     });
 }
 
 #[test]
@@ -495,6 +497,10 @@ fn cancel_order_ex_with_signature() {
             sig,
         );
         assert_ok!(result);
+
+       // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::exchange_core(RawEvent::OrderCancelled(hash.clone()))));
     });
 }
 
@@ -512,7 +518,8 @@ fn atomic_match_ex() {
 
         let alice_pair = account_pair("Alice");
         let bob_pair = account_pair("Bob");
-
+        let buy = make_order(sender, sender, sender, 0);
+        let sell = make_order(sender1, sender, sender1, 1);
         let (
             addrs_buy,
             uints_buy,
@@ -536,7 +543,7 @@ fn atomic_match_ex() {
             static_extradata_sell,
         ) = make_order_ex(sender1, sender, sender1, 1);
 
-        let hash_buy = WyvernExchange::hash_to_sign_ex(
+        let buy_hash = WyvernExchange::hash_to_sign_ex(
             addrs_buy.clone(),
             uints_buy.clone(),
             fee_method_buy.clone(),
@@ -548,7 +555,7 @@ fn atomic_match_ex() {
             static_extradata_buy.clone(),
         );
 
-        let hash_sell = WyvernExchange::hash_to_sign_ex(
+        let sell_hash = WyvernExchange::hash_to_sign_ex(
             addrs_sell.clone(),
             uints_sell.clone(),
             fee_method_sell.clone(),
@@ -560,10 +567,8 @@ fn atomic_match_ex() {
             static_extradata_sell.clone(),
         );
 
-        let alice_sig_buy = (<[u8; 64]>::from(alice_pair.sign(&hash_buy))).to_vec();
-        let bob_sig_sell = (<[u8; 64]>::from(bob_pair.sign(&hash_sell))).to_vec();
-
-        // let sig = vec![alice_sig_buy, bob_sig_sell];
+        let alice_sig_buy = (<[u8; 64]>::from(alice_pair.sign(&buy_hash))).to_vec();
+        let bob_sig_sell = (<[u8; 64]>::from(bob_pair.sign(&sell_hash))).to_vec();
 
         let mut addrs = addrs_buy;
         let mut addrs_sell = addrs_sell;
@@ -588,23 +593,54 @@ fn atomic_match_ex() {
 
         let mut fee_methods_sides_kinds_how_to_calls = fee_methods_sides_kinds_how_to_calls_buy;
         fee_methods_sides_kinds_how_to_calls.append(&mut fee_methods_sides_kinds_how_to_calls_sell);
-        let rss_metadata = Vec::<u8>::new();
+        let rss_metadata = vec![];
+        let price = WyvernExchange::calculate_match_price_ex(
+            addrs.clone(),
+            uints.clone(),
+            fee_methods_sides_kinds_how_to_calls.clone(),
+            calldata_buy.clone(),
+            calldata_sell.clone(),
+            replacement_pattern_buy.clone(),
+            replacement_pattern_sell.clone(),
+            static_extradata_buy.clone(),
+            static_extradata_sell.clone(),
+        );
+
         let result = WyvernExchange::atomic_match_ex(
             Origin::signed(sender),
-            addrs,
-            uints,
-            fee_methods_sides_kinds_how_to_calls,
-            calldata_buy,
-            calldata_sell,
-            replacement_pattern_buy,
-            replacement_pattern_sell,
-            static_extradata_buy,
-            static_extradata_sell,
-            alice_sig_buy,
-            bob_sig_sell,
-            rss_metadata,
+            addrs.clone(),
+            uints.clone(),
+            fee_methods_sides_kinds_how_to_calls.clone(),
+            calldata_buy.clone(),
+            calldata_sell.clone(),
+            replacement_pattern_buy.clone(),
+            replacement_pattern_sell.clone(),
+            static_extradata_buy.clone(),
+            static_extradata_sell.clone(),
+            alice_sig_buy.clone(),
+            bob_sig_sell.clone(),
+            rss_metadata.clone(),
         );
         assert_ok!(result);
+        
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::exchange_core(RawEvent::OrdersMatched(
+                vec![],//buy_hash.clone(),
+                sell_hash.clone(),
+                if sell.fee_recipient != ContractSelf::<Test>::get() {
+                    sell.maker.clone()
+                } else {
+                    buy.maker.clone()
+                },
+                if sell.fee_recipient != ContractSelf::<Test>::get() {
+                    buy.maker.clone()
+                } else {
+                    sell.maker.clone()
+                },
+                price,
+                rss_metadata.clone(),
+        ))));
     });
 }
 
