@@ -7,9 +7,6 @@ use frame_support::{assert_noop, assert_ok, dispatch};
 use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
-// mod changes;
-// mod orders;
-// mod transfer;
 
 type AccountId = <Test as system::Trait>::AccountId;
 type Moment = <Test as timestamp::Trait>::Moment;

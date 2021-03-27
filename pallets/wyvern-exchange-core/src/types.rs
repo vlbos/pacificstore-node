@@ -222,11 +222,12 @@ pub struct OrderType<AccountId, Moment, Balance> {
     pub static_target: AccountId,
     // Static call extra data.
     pub static_extradata: Bytes,
-    // Token used to pay for the order, or the zero-AccountId as a sentinel value for Ether.
+    // Token used to pay for the order, or the zero-AccountId as a sentinel value for Dot.
     pub payment_token: AccountId,
     // Base price of the order (in paymentTokens).
     pub base_price: Balance,
-    // Auction extra parameter - minimum bid increment for English auctions, starting/ending price difference.
+    // Auction extra parameter - minimum bid increment for English auctions, 
+    // starting/ending price difference.
     pub extra: Moment,
     // Listing timestamp.
     pub listing_time: Moment,

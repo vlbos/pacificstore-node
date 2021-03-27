@@ -34,7 +34,7 @@ impl<T: Trait> Module<T> {
     // listing_time OrderType listing time
     // expiration_time OrderType expiration time
     pub fn can_settle_order(listing_time: T::Moment, expiration_time: T::Moment) -> bool {
-        let now: T::Moment = <timestamp::Module<T>>::now(); //Self::u64_to_moment_saturated(100); //<timestamp::Module<T>>::now();//<system::Module<T>>::block_number() ;////<timestamp::Module<T>>::now();
+        let now: T::Moment = <timestamp::Module<T>>::now(); 
         (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }
 
@@ -57,7 +57,7 @@ impl<T: Trait> Module<T> {
         if *sale_kind == SaleKind::FixedPrice {
             base_price
         } else if *sale_kind == SaleKind::DutchAuction {
-            let now: T::Moment = Zero::zero(); // <system::Module<T>>::block_number();//<timestamp::Module<T>>::now() ;
+            let now: T::Moment = Zero::zero(); 
             let diff: T::Moment = extra * (now - listing_time) / (expiration_time - listing_time);
             if *side == Side::Sell {
                 // Sell-side - start price: base_price. End price: base_price - extra.

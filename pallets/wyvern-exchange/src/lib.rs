@@ -19,22 +19,32 @@
 //!
 //! ### Dispatchable Functions
 //!
-//! * `approve_order_ex ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-//! * `cancel_order_ex` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
-//! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
+//! * `approve_order_ex` - Approve an order and optionally mark it for orderbook inclusion.
+//!                        Must be called by the maker of the order
+//! * `cancel_order_ex` - Cancel an order, preventing it from being matched. 
+//!                       Must be called by the maker of the order
+//! * `atomic_match_ex` -Atomically match two orders, ensuring validity of the match, 
+//!                      and execute all associated state transitions. Protected against reentrancy 
+//!                      by a contract-global lock.
 //!
-
 //! ### Public Functions
 //!
-//! * `hash_order_ex` - Hash an order, returning the canonical order hash, without the message prefix
+//! * `hash_order_ex` - Hash an order, returning the canonical order hash, 
+//!                     without the message prefix
 //! * `hash_to_sign_ex` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType to validate sig  signature.
-//! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, and signature.
-//! * `validate_order_parameters_ex` - Validate order parameters (does _not_ check validity -signature)
+//! * `require_valid_order_ex` - Assert an order is valid and return its hash order OrderType 
+//!                             to validate sig  signature.
+//! * `validate_order_ex` - Validate a provided previously approved / signed order, hash, 
+//!                         and signature.
+//! * `validate_order_parameters_ex` - Validate order parameters (doesnot check validity-signature)
 //! * `calculate_current_price_ex` - Calculate the current price of an order (fn -convenience)
-//! * `calculate_match_price_ex` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
-//! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
-//! * `calculate_final_price_ex` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//! * `calculate_match_price_ex` - Calculate the price two orders would match at, 
+//!                                if in fact they would match (fail -otherwise).
+//! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other 
+//!                           by basic parameters (does not check order signatures / calldata 
+//!                           or perform calls -static).
+//! * `calculate_final_price_ex` - Calculate the settlement price of an order;  
+//!                                Precondition: parameters have passed validate_parameters.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -103,7 +113,8 @@ decl_module! {
         orderbook_inclusion_desired: bool,
     ) -> DispatchResult {
         let _user = ensure_signed(origin.clone())?;
-        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = <exchange_common::Module<T>>::build_order_type_from_array_parameters(
+        let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> 
+        = <exchange_common::Module<T>>::build_order_type_from_array_parameters(
             addrs,
             uints,
             fee_method,

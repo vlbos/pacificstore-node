@@ -19,25 +19,38 @@
 //!
 //! ### Dispatchable Functions
 //!
-//! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol (only -owner)
-//! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol (only -owner)
+//! * `change_minimum_maker_protocol_fee` - Change the minimum maker fee paid to the protocol
+//!                                         (only -owner)
+//! * `change_minimum_taker_protocol_fee` - Change the minimum taker fee paid to the protocol
+//!                                         (only -owner)
 //! * `change_protocol_fee_recipient` - Change the protocol fee recipient (only -owner)
-//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
-//! * `cancel_order` - Cancel an order, preventing it from being matched. Must be called by the maker of the order
-//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, and execute all associated state transitions. Protected against reentrancy by a contract-global lock.
-//!//!
+//! * `approve_order ` - Approve an order and optionally mark it for orderbook inclusion. 
+//!                      Must be called by the maker of the order
+//! * `cancel_order` - Cancel an order, preventing it from being matched. 
+//!                    Must be called by the maker of the order
+//! * `atomic_match` -Atomically match two orders, ensuring validity of the match, 
+//!                   and execute all associated state transitions. Protected against 
+//!                   reentrancy by a contract-global lock.
+//!
+//!
 
 //! ### Public  Functions
 //!
 //! * `hash_order` - Hash an order, returning the canonical order hash, without the message prefix
 //! * `hash_to_sign` - Hash an order, returning the hash that a client must sign.
-//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType to validate sig  signature.
-//! * `validate_order ` - Validate a provided previously approved / signed order, hash, and signature.
-//! * `validate_order_parameters` - Validate order parameters (does _not_ check validity -signature)
+//! * `require_valid_order ` - Assert an order is valid and return its hash order OrderType 
+//!                            to validate sig  signature.
+//! * `validate_order ` - Validate a provided previously approved / signed order, hash, 
+//!                       and signature.
+//! * `validate_order_parameters` - Validate order parameters (doesnot check validity-signature)
 //! * `calculate_current_price` - Calculate the current price of an order (fn -convenience)
-//! * `calculate_match_price` - Calculate the price two orders would match at, if in fact they would match (fail -otherwise).
-//! * `orders_can_match` - Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls -static).
-//! * `calculate_final_price ` - Calculate the settlement price of an order;  Precondition: parameters have passed validate_parameters.
+//! * `calculate_match_price` - Calculate the price two orders would match at, 
+//!                             if in fact they would match (fail -otherwise).
+//! * `orders_can_match` - Return whether or not two orders can be matched with each other 
+//!                        by basic parameters (does not check order signatures / calldata 
+//!                        or perform calls -static).
+//! * `calculate_final_price ` - Calculate the settlement price of an order;  
+//!                              Precondition: parameters have passed validate_parameters.
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -88,17 +101,20 @@ decl_storage! {
         //The token used to pay exchange fees.
         pub ExchangeToken:T::AccountId;
         //Cancelled / finalized orders, by hash.
-        pub CancelledOrFinalized get(fn cancelled_or_finalized): map hasher(blake2_128_concat) Vec<u8> => bool;
-        //Orders verified by on-chain approval (alternative to  signatures so that smart contracts can place orders directly).
-        pub ApprovedOrders get(fn approved_orders): map hasher(blake2_128_concat) Vec<u8> => bool;
-        //For split fee orders, minimum required protocol maker fee, in basis points. Paid to owner (who can change it).
+        pub CancelledOrFinalized get(fn cancelled_or_finalized): 
+            map hasher(blake2_128_concat) Vec<u8> => bool;
+        //Orders verified by on-chain approval (alternative to  signatures 
+        // so that smart contracts can place orders directly).
+        pub ApprovedOrders get(fn approved_orders): 
+            map hasher(blake2_128_concat) Vec<u8> => bool;
+        //For split fee orders, minimum required protocol maker fee, in basis points.
+        //Paid to owner (who can change it).
         pub MinimumMakerProtocolFee:BalanceOf<T>;
-        //For split fee orders, minimum required protocol taker fee, in basis points. Paid to owner (who can change it).
+        //For split fee orders, minimum required protocol taker fee, in basis points.
+        //Paid to owner (who can change it).
         pub MinimumTakerProtocolFee:BalanceOf<T>;
         //Recipient of protocol fees.
         pub ProtocolFeeRecipient:T::AccountId;
-
-
  }
 }
 
@@ -193,7 +209,10 @@ decl_module! {
 
         let _user = ensure_signed(origin)?;
         MinimumMakerProtocolFee::<T>::put(new_minimum_maker_protocol_fee);
-        Self::deposit_event(RawEvent::MinimumMakerProtocolFeeChanged(new_minimum_maker_protocol_fee));
+        Self::deposit_event(
+                            RawEvent::MinimumMakerProtocolFeeChanged(
+                            new_minimum_maker_protocol_fee,
+        ));
 
         Ok(())
     }
@@ -209,7 +228,10 @@ decl_module! {
         let _user = ensure_signed(origin)?;
 
         MinimumTakerProtocolFee::<T>::put(new_minimum_taker_protocol_fee);
-        Self::deposit_event(RawEvent::MinimumTakerProtocolFeeChanged(new_minimum_taker_protocol_fee));
+        Self::deposit_event(
+            RawEvent::MinimumTakerProtocolFeeChanged(
+                new_minimum_taker_protocol_fee,
+        ));
 
         Ok(())
     }
@@ -224,7 +246,10 @@ decl_module! {
         // onlyOwner
         let _user = ensure_signed(origin)?;
         ProtocolFeeRecipient::<T>::put(new_protocol_fee_recipient.clone());
-        Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(_user,new_protocol_fee_recipient.clone()));
+        Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(
+                        _user,
+                        new_protocol_fee_recipient.clone(),
+        ));
         Ok(())
     }
 
@@ -237,7 +262,8 @@ decl_module! {
         let _user = ensure_signed(origin)?;
         frame_support::debug::RuntimeLogger::init();
 
-        ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(), Error::<T>::OnlyOwner);
+        ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(),
+                Error::<T>::OnlyOwner);
         ContractSelf::<T>::put(new_owner.clone());
         Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
         Ok(())
@@ -331,7 +357,8 @@ impl<T: Trait> Module<T> {
         Ok(keccak_256(&order.encode()).into())
     }
 
-    // Hash an order, returning the hash that a client must sign, including the standard message prefix
+    // Hash an order, returning the hash that a client must sign, 
+    // including the standard message prefix
     // order OrderType to hash
     // Hash of  order hash per Polkadot format
     pub fn hash_to_sign(
@@ -454,9 +481,11 @@ impl<T: Trait> Module<T> {
         }
     }
 
-    // Approve an order and optionally mark it for orderbook inclusion. Must be called by the maker of the order
+    // Approve an order and optionally mark it for orderbook inclusion. 
+    // Must be called by the maker of the order
     // order OrderType to approve
-    // orderbook_inclusion_desired Whether orderbook providers should include the order in their orderbooks
+    // orderbook_inclusion_desired Whether orderbook providers should include the order 
+    // in their orderbooks
     pub fn approve_order(
         origin: T::Origin,
         order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
@@ -600,7 +629,8 @@ impl<T: Trait> Module<T> {
         Ok(price)
     }
 
-    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all  token / DOT transfers associated with an order match 
+    // (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
     pub fn execute_funds_transfer(
@@ -617,7 +647,8 @@ impl<T: Trait> Module<T> {
         // Calculate match price.
         let price: BalanceOf<T> = Self::calculate_match_price(&buy, &sell)?;
 
-        // If paying using a token (DOT:not), transfer tokens. This is done prior to fee payments to that a seller will have tokens before being charged fees.
+        // If paying using a token (DOT:not), transfer tokens. This is done prior to 
+        // fee payments to that a seller will have tokens before being charged fees.
         if price > Zero::zero() && sell.payment_token != ContractSelf::<T>::get() {
             Self::transfer_tokens(sell.payment_token(), &buy.maker(), sell.maker(), price)?;
         }
@@ -669,11 +700,13 @@ impl<T: Trait> Module<T> {
             }
         }
 
-        // This contract should never hold DOT, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
+        // This contract should never hold DOT, however, we cannot assert this, 
+        // since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(price)
     }
 
-    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all  token / DOT transfers associated with an order match 
+    // (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
     pub fn execute_funds_transfer_sell_side(
@@ -700,7 +733,8 @@ impl<T: Trait> Module<T> {
                 Error::<T>::SellTakerProtocolFeeGreaterThanBuyTakerProtocolFee
             );
 
-            // Maker fees are deducted from the token amount that the maker receives. Taker fees are extra tokens that must be paid by the taker.
+            // Maker fees are deducted from the token amount that the maker receives. 
+            // Taker fees are extra tokens that must be paid by the taker.
             Self::transfer_tokens_fee_sell(
                 sell.payment_token(),
                 sell.maker(),
@@ -748,11 +782,13 @@ impl<T: Trait> Module<T> {
             Self::charge_protocol_fee(&buy.maker, &sell.fee_recipient, sell.taker_relayer_fee)?;
         }
 
-        // This contract should never hold token, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
+        // This contract should never hold token, however, we cannot assert this, 
+        // since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(*price)
     }
 
-    // Execute all ERC20 token / DOT transfers associated with an order match (fees and buyer => transfer:seller)
+    // Execute all ERC20 token / DOT transfers associated with an order match 
+    // (fees and buyer => transfer:seller)
     // buy Buy-side order
     // sell Sell-side order
     pub fn execute_funds_transfer_buy_side(
@@ -772,7 +808,8 @@ impl<T: Trait> Module<T> {
         );
 
         if sell.fee_method == FeeMethod::SplitFee {
-            // The Exchange does not escrow DOT, so direct DOT can only be used to with sell-side maker / buy-side taker orders.
+            // The Exchange does not escrow DOT, so direct DOT can only be used to with 
+            // sell-side maker / buy-side taker orders.
             ensure!(
                 sell.payment_token != ContractSelf::<T>::get(),
                 Error::<T>::SellPaymentTokenEqualPaymentToken
@@ -823,11 +860,13 @@ impl<T: Trait> Module<T> {
             Self::charge_protocol_fee(&sell.maker, &buy.fee_recipient, buy.taker_relayer_fee)?;
         }
 
-        // This contract should never hold DOT, however, we cannot assert this, since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
+        // This contract should never hold DOT, however, we cannot assert this, 
+        // since it is impossible to prevent anyone from sending DOT e.g. with selfdestruct.
         Ok(*price)
     }
 
-    // Return whether or not two orders can be matched with each other by basic parameters (does not check order signatures / calldata or perform calls:static)
+    // Return whether or not two orders can be matched with each other by basic parameters 
+    // (does not check order signatures / calldata or perform calls:static)
     // buy Buy-side order
     // sell Sell-side order
     // Whether or not the two orders can be matched
@@ -845,18 +884,28 @@ impl<T: Trait> Module<T> {
             (sell.taker == ContractSelf::<T>::get() || sell.taker == buy.maker) &&
             (buy.taker == ContractSelf::<T>::get() || buy.taker == sell.maker) &&
             // One must be maker and the other must be taker (no bool XOR Solidity:in). 
-            ((sell.fee_recipient == ContractSelf::<T>::get() && buy.fee_recipient != ContractSelf::<T>::get()) || (sell.fee_recipient != ContractSelf::<T>::get() && buy.fee_recipient == ContractSelf::<T>::get())) &&
+            ((sell.fee_recipient == ContractSelf::<T>::get() && 
+            buy.fee_recipient != ContractSelf::<T>::get()) || 
+            (sell.fee_recipient != ContractSelf::<T>::get() && 
+            buy.fee_recipient == ContractSelf::<T>::get())) &&
             // Must match target. 
             (buy.target == sell.target) &&
             // Must match how_to_call. 
             (buy.how_to_call == sell.how_to_call) &&
             // Buy-side order must be settleable. 
-            <sale_kind_interface::Module<T>>::can_settle_order(buy.listing_time, buy.expiration_time) &&
+            <sale_kind_interface::Module<T>>::can_settle_order(
+                                                                buy.listing_time, 
+                                                                buy.expiration_time,
+            ) &&
             // Sell-side order must be settleable. 
-            <sale_kind_interface::Module<T>>::can_settle_order(sell.listing_time, sell.expiration_time)
+            <sale_kind_interface::Module<T>>::can_settle_order(
+                                                                sell.listing_time, 
+                                                                sell.expiration_time,
+            )
     }
 
-    // Atomically match two orders, ensuring validity of the match, and execute all associated state transitions.
+    // Atomically match two orders, ensuring validity of the match, 
+    // and execute all associated state transitions.
     // buy Buy-side order
     // buy_sig Buy-side order signature
     // sell Sell-side order

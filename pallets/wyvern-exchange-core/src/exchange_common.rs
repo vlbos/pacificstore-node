@@ -30,8 +30,9 @@ decl_module! {
 }
 
 impl<T: Trait> Module<T> {
-    //Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
-    //Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model (arrays under 32 Vec<u8> will be slower)
+    // Replace Vec<u8> in an array with Vec<u8> in another array, guarded by a bitmask
+    // Efficiency of this fn is a bit unpredictable because of the EVM's word-specific model 
+    // (arrays under 32 Vec<u8> will be slower)
     // Mask must be the size of the byte array. A nonzero byte means the byte array can be changed.
     // array The original array
     // desired The target array
@@ -44,7 +45,8 @@ impl<T: Trait> Module<T> {
 
         let arr = array.clone();
         for (i, &_item) in arr.iter().enumerate() {
-            // Conceptually: array[i] = (!mask[i] && array[i]) || (mask[i] && desired[i]), bitwise in word chunks.
+            // Conceptually: array[i] = (!mask[i] && array[i]) || (mask[i] && desired[i]),
+            //  bitwise in word chunks.
             array[i] = (!mask[i] & _item) | (mask[i] & desired[i]);
         }
         true

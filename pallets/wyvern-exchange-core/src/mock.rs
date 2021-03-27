@@ -164,7 +164,8 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 }
 
 pub fn account_pair(s: &str) -> sr25519::Pair {
-    sr25519::Pair::from_string(&format!("//{}", s), None).expect("static values are valid; qed")
+    sr25519::Pair::from_string(&format!("//{}", s), None)
+    .expect("static values are valid; qed")
 }
 
 pub fn account_key(s: &str) -> sr25519::Public {

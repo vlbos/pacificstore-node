@@ -18,14 +18,17 @@
 //! ### Dispatchable Functions
 //!
 //! * `post_order` - Send an order to the orderbook.
-//! * `post_asset_white_list`  -  Create a whitelist entry for an asset to prevent others from buying.Buyers will have to have verified at least one of the emails on an asset in order to buy.
+//! * `post_asset_white_list`  -  Create a whitelist entry for an asset to prevent others from 
+//!                               buying.Buyers will have to have verified at least one of 
+//!                               the emails on an asset in order to buy.
 
 //! ### Public Functions
 //!
 //! * `get_orders` - Get a list of orders from the orderbook, returning the page of orders
 //!   and the count of total orders found.
 //! * `get_asset` - Fetch an asset from the API, throwing if none is found
-//! * `get_assets` - Fetch list of assets from the API, returning the page of assets and the count of total assets
+//! * `get_assets` - Fetch list of assets from the API, returning the page of assets and 
+//!                  the count of total asset
 //!
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -59,11 +62,16 @@ pub trait Trait: system::Trait + timestamp::Trait {
 decl_storage! {
     trait Store for Module<T: Trait> as Orderbook {
         NextOrderIndex: u64;
-        pub Orders get(fn order_by_index): map hasher(blake2_128_concat) u64 => Option<OrderJSONType<T::AccountId, T::Moment>>;
+        pub Orders get(fn order_by_index): map hasher(blake2_128_concat) u64 
+            => Option<OrderJSONType<T::AccountId, T::Moment>>;
         pub OrderIndices get(fn order_index_by_id): map hasher(blake2_128_concat) OrderId => u64;
-        pub OrdersByField get(fn order_index_by_field): double_map hasher(blake2_128_concat) Vec<u8>, hasher(blake2_128_concat) Vec<u8>  => Vec<u64>;
-        pub OwnerOf get(fn owner_of): map hasher(blake2_128_concat) OrderId => Option<T::AccountId>;
-        pub AssetWhitelist get(fn asset_white_list): double_map hasher(blake2_128_concat) Vec<u8>, hasher(blake2_128_concat) Vec<u8>  => Vec<u8>;
+        pub OrdersByField get(fn order_index_by_field): 
+            double_map hasher(blake2_128_concat) Vec<u8>,hasher(blake2_128_concat) Vec<u8>  
+            => Vec<u64>;
+        pub OwnerOf get(fn owner_of): map hasher(blake2_128_concat) OrderId 
+            => Option<T::AccountId>;
+        pub AssetWhitelist get(fn asset_white_list): double_map hasher(blake2_128_concat) Vec<u8>,
+            hasher(blake2_128_concat) Vec<u8>  => Vec<u8>;
     }
 }
 
@@ -128,7 +136,11 @@ decl_module! {
                         index_arr = <OrdersByField>::get(field.name(), field.value());
                         if !index_arr.contains(&next_index) {
                             index_arr.push(next_index);
-                            <OrdersByField>::mutate(field.name(), field.value(), |arr| *arr = index_arr);
+                            <OrdersByField>::mutate(
+                                                    field.name(),
+                                                    field.value(), 
+                                                    |arr| *arr = index_arr,
+                            );
                         }
                     } else {
                         index_arr.push(next_index);
@@ -164,7 +176,8 @@ decl_module! {
         /// Create a whitelist entry for an asset to prevent others from buying.
         /// Buyers will have to have verified at least one of the emails
         /// on an asset in order to buy.
-        /// This will return error code if the given API key isn't allowed to create whitelist entries for this contract or asset.
+        /// This will return error code if the given API key isn't allowed to 
+        /// create whitelist entries for this contract or asset.
         /// tokenAddress Address of the asset's contract
         /// tokenId The asset's token ID
         /// email The email allowed to buy.
@@ -176,7 +189,11 @@ decl_module! {
             email: Vec<u8>,
         ) -> DispatchResult {
             if <AssetWhitelist>::contains_key(token_address.clone(), token_id.clone()) {
-                <AssetWhitelist>::mutate(token_address.clone(), token_id.clone(), |_email| *_email = email.clone());
+                <AssetWhitelist>::mutate(
+                    token_address.clone(), 
+                    token_id.clone(), 
+                    |_email| *_email = email.clone(),
+                );
             } else {
                 <AssetWhitelist>::insert(token_address.clone(), token_id.clone(), email.clone());
             }
@@ -266,7 +283,7 @@ impl<T: Trait> Module<T> {
         let mut order_indices_by_token_ids = Vec::<u64>::new();
         if let Some(token_ids) = &token_ids {
             if token_ids.len() > MAX_TOKEN_IDS {
-                frame_support::debug::error!("token_ids' length is greater than ORDER_MAX_FIELDS ");
+                frame_support::debug::error!("token_ids' length is greater than ORDER_MAX_FIELDS");
                 return None;
             }
             for token_id in token_ids {
@@ -293,7 +310,7 @@ impl<T: Trait> Module<T> {
     ) -> Option<()> {
         if let Some(params) = &params {
             if params.len() > ORDER_MAX_PARAMS {
-                frame_support::debug::error!("params' length is greater than ORDER_MAX_FIELDS ");
+                frame_support::debug::error!("params' length is greater than ORDER_MAX_FIELDS");
                 return None;
             }
             for field in params {
@@ -336,7 +353,7 @@ impl<T: Trait> Module<T> {
         offset: usize,
     ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
         if temp_order_indices.is_empty() {
-            frame_support::debug::error!("temp_order_indices is empty in get_orders_by_indices ");
+            frame_support::debug::error!("temp_order_indices is empty in get_orders_by_indices");
             return None;
         }
         let mut result_orders: Vec<OrderJSONType<T::AccountId, T::Moment>> = Vec::new();
@@ -449,8 +466,10 @@ impl<T: Trait> Module<T> {
         None
     }
 
-    /// Fetch list of assets from the API, returning the page of assets and the count of total assets
-    /// query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` type is supported
+    /// Fetch list of assets from the API, returning the page of assets and the count of 
+    /// total assets
+    /// query Query to use for getting orders. A subset of parameters on the `OpenSeaAssetJSON` 
+    /// type is supported
     /// page Page number, defaults to 1. Can be overridden by
     /// `limit` and `offset` attributes from OpenSeaAssetQuery
     pub fn get_assets(

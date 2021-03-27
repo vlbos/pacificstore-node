@@ -286,12 +286,14 @@ fn transfer_tokens() {
         let result = WyvernExchangeCore::transfer_tokens(&sender, &sender, &sender1, amount);
         assert_ok!(result);
         assert_eq!(
-            <Test as wyvern_exchange_core::exchange_common::Trait>::Currency::free_balance(&sender),
+            <Test as wyvern_exchange_core::exchange_common::Trait>::Currency::free_balance(
+            &sender
+            ),
             99999999999999958
         );
         assert_eq!(
             <Test as wyvern_exchange_core::exchange_common::Trait>::Currency::free_balance(
-                &sender1
+                &sender1,
             ),
             100000000000000042
         );
