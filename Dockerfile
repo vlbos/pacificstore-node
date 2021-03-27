@@ -17,12 +17,14 @@ WORKDIR /pacific_store_node
 COPY . .
 
 # RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+# China Mainland config begin
 RUN  curl https://sh.rustup.rs -sSf | sed "s/https:\/\/static.rust-lang.org\/rustup\/dist/https:\/\/mirrors.ustc.edu.cn\/rust-static\/rustup\/dist/g" | sh -s -- -y && \
 echo "[source.crates-io]" >> $HOME/.cargo/config  && \
 echo "registry = \"https://github.com/rust-lang/crates.io-index\" " >> $HOME/.cargo/config  && \
 echo "replace-with = 'ustc' " >> $HOME/.cargo/config  && \
 echo "[source.ustc] " >> $HOME/.cargo/config  && \
 echo "registry = \"git://mirrors.ustc.edu.cn/crates.io-index\" " >> $HOME/.cargo/config  && \
+# China Mainland config end
 export PATH="$PATH:$HOME/.cargo/bin" && \
 	# rustup toolchain uninstall $(rustup toolchain list) && \
     rustup toolchain install nightly && \
