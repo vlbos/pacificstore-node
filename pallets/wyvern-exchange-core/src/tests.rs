@@ -37,13 +37,13 @@ fn make_order(
         fee_method: FeeMethod::from(0),
         side: Side::from(side),
         sale_kind: SaleKind::from(0),
-        target: sender,
+        target: AccountId::default(),
         how_to_call: HowToCall::from(0),
         calldata: bytes.clone(),
         replacement_pattern: bytes.clone(),
-        static_target: sender,
+        static_target: AccountId::default(),
         static_extradata: bytes.clone(),
-        payment_token: sender,
+        payment_token: AccountId::default(),
         base_price: fee,
         extra: time,
         listing_time: Zero::zero(),
@@ -58,6 +58,9 @@ fn change_minimum_maker_protocol_fee() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let new_minimum_maker_protocol_fee = 42;
+        let result =
+            WyvernExchangeCore::change_owner(Origin::signed(sender), sender);
+        assert_ok!(result);
         let result = WyvernExchangeCore::change_minimum_maker_protocol_fee(
             Origin::signed(sender),
             new_minimum_maker_protocol_fee,
@@ -82,6 +85,9 @@ fn change_minimum_taker_protocol_fee() {
     new_test_ext().execute_with(|| {
         let sender = account_key(TEST_SENDER);
         let min_taker_protocol_fee = 42;
+        let result =
+            WyvernExchangeCore::change_owner(Origin::signed(sender), sender);
+        assert_ok!(result);
         let result = WyvernExchangeCore::change_minimum_taker_protocol_fee(
             Origin::signed(sender),
             min_taker_protocol_fee,
@@ -106,6 +112,9 @@ fn change_protocol_fee_recipient() {
         let sender = account_key(TEST_SENDER);
         let sender1 = account_key(TEST_SENDER_1);
         let result =
+            WyvernExchangeCore::change_owner(Origin::signed(sender), sender);
+        assert_ok!(result);
+        let result =
             WyvernExchangeCore::change_protocol_fee_recipient(Origin::signed(sender), sender1);
         assert_ok!(result);
         assert_eq!(<ProtocolFeeRecipient<Test>>::get(), sender1);
@@ -118,6 +127,20 @@ fn change_protocol_fee_recipient() {
     });
 }
 
+
+#[test]
+fn change_protocol_fee_recipient_with_no_owner() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        assert_noop!(
+            WyvernExchangeCore::change_protocol_fee_recipient(Origin::signed(sender1), sender),
+            Error::<Test>::OnlyOwner,
+        );
+    });
+}
+
+
 #[test]
 fn change_owner() {
     new_test_ext().execute_with(|| {
@@ -126,7 +149,7 @@ fn change_owner() {
         let result =
             WyvernExchangeCore::change_owner(Origin::signed(sender), sender1);
         assert_ok!(result);
-        assert_eq!(<ContractSelf<Test>>::get(), sender1);
+        assert_eq!(<Owner<Test>>::get(), sender1);
         // Event is raised
         assert!(System::events().iter().any(|er| er.event
             == TestEvent::wyvern_exchange_core(RawEvent::OwnerChanged(
@@ -136,6 +159,24 @@ fn change_owner() {
     });
 }
 
+
+#[test]
+fn set_contract_self() {
+    new_test_ext().execute_with(|| {
+        let sender = account_key(TEST_SENDER);
+        let sender1 = account_key(TEST_SENDER_1);
+        let result =
+            WyvernExchangeCore::set_contract_self(Origin::signed(sender), sender1);
+        assert_ok!(result);
+        assert_eq!(<ContractSelf<Test>>::get(), sender1);
+        // Event is raised
+        assert!(System::events().iter().any(|er| er.event
+            == TestEvent::wyvern_exchange_core(RawEvent::ContractSelfChanged(
+                sender,
+                sender1,
+        ))));
+    });
+}
 
 #[test]
 fn hash_order() {
@@ -151,8 +192,8 @@ fn hash_order() {
         assert_eq!(
             hash,
             vec![
-                184, 203, 23, 235, 174, 183, 26, 41, 112, 218, 247, 173, 72, 27, 38, 62, 234, 163,
-                65, 237, 76, 63, 74, 53, 56, 89, 68, 126, 111, 179, 22, 53
+                107, 177, 222, 136, 236, 39, 224, 125, 86, 231, 153, 29, 58, 206, 67, 184,
+                37, 27, 93, 126, 117, 244, 8, 182, 157, 180, 136, 15, 64, 140, 90, 33
             ]
         );
     });
@@ -177,8 +218,8 @@ fn require_valid_order() {
         assert_eq!(
             result,
             vec![
-                18, 231, 144, 31, 116, 56, 16, 202, 12, 253, 180, 169, 181, 224, 230, 51, 181, 200,
-                104, 251, 103, 137, 115, 3, 173, 51, 160, 222, 108, 37, 148, 52
+                36, 44, 71, 101, 200, 18, 243, 245, 214, 239, 142, 44, 51, 131, 143, 154, 248,
+                13, 117, 34, 151, 20, 255, 242, 47, 171, 182, 241, 209, 227, 159, 112
             ]
         );
     });
@@ -292,8 +333,8 @@ fn atomic_match() {
         <ContractSelf<Test>>::put(sender);
         let alice_pair = account_pair("Alice");
         let bob_pair = account_pair("Bob");
-        let buy = make_order(sender, sender, sender, 0);
-        let sell = make_order(sender1, sender, sender1, 1);
+        let buy = make_order(sender, sender1, sender, 0);
+        let sell = make_order(sender1, sender, AccountId::default(), 1);
         let hash_buy = WyvernExchangeCore::hash_to_sign(&buy).unwrap();
         let hash_sell = WyvernExchangeCore::hash_to_sign(&sell).unwrap();
         let alice_sig_buy = <[u8; 64]>::from(alice_pair.sign(&hash_buy));

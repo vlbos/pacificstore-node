@@ -76,8 +76,11 @@ async function main() {
         const sell = makeOrder(users.bob.key.address, false, 1);
         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken] = accounts77;
         [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken] = accounts7;
-        buy.taker = users.bob.key.address;
+        buy.taker = users.betty.key.address;
         sell.taker = users.bob.key.address;
+        buy.maker = users.bob.key.address;
+        sell.maker = users.betty.key.address;
+        buy.feeRecipient = "0x0000000000000000000000000000000000000000000000000000000000000000";
         sell.feeRecipient = users.bob.key.address;
         buy.exchange = users.bob.key.address;
         sell.exchange = users.bob.key.address;
@@ -93,8 +96,9 @@ async function main() {
         submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
 
         await new Promise(r => setTimeout(r, block));
-        break;
-
+        console.log("setContractSelf(",users.bob.key.address);
+        submit(api, api.tx.wyvernExchangeCore.setContractSelf(
+            users.bob.key.address), users.betty);
         console.log("========approveOrderEx=====buy==", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
             [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
             buy.feeMethod,
@@ -105,7 +109,6 @@ async function main() {
             buy.replacementPattern,
             buy.staticExtradata,
             true);
-        buy.maker = users.bob.key.address;
         submit(api, api.tx.wyvernExchange.approveOrderEx(
             [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
             [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
@@ -128,7 +131,6 @@ async function main() {
             sell.replacementPattern,
             sell.staticExtradata,
             true);
-        sell.maker = users.betty.key.address;
         submit(api, api.tx.wyvernExchange.approveOrderEx(
             [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken],
             [sell.makerRelayerFee, sell.takerRelayerFee, sell.makerProtocolFee, sell.takerProtocolFee, sell.basePrice, sell.extra, sell.listingTime, sell.expirationTime, sell.salt],

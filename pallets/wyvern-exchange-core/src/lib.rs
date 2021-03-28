@@ -97,6 +97,7 @@ pub trait Trait: sale_kind_interface::Trait + exchange_common::Trait {
 decl_storage! {
     trait Store for Module<T: Trait> as ExchangeCore {
         NextOrderIndex: BalanceOf<T>;
+        pub Owner:T::AccountId;
         pub ContractSelf:T::AccountId;
         //The token used to pay exchange fees.
         pub ExchangeToken:T::AccountId;
@@ -161,6 +162,7 @@ decl_event!(
         MinimumTakerProtocolFeeChanged(Balance),
         ProtocolFeeRecipientChanged(AccountId, AccountId),
         OwnerChanged(AccountId, AccountId),
+        ContractSelfChanged(AccountId, AccountId),
     }
 );
 
@@ -187,6 +189,8 @@ decl_error! {
         InvalidOrderHash,
         InvalidSignature,
         OnlyOwner,
+        OnlyContractSelf,
+
     }
 }
 
@@ -203,11 +207,8 @@ decl_module! {
         new_minimum_maker_protocol_fee: BalanceOf<T>,
     ) -> DispatchResult
     {
-        // onlyOwner
-        frame_support::debug::RuntimeLogger::init();
-        debug::error!("exchange is contract self.");
-
         let _user = ensure_signed(origin)?;
+        Self::only_owner(&_user)?;
         MinimumMakerProtocolFee::<T>::put(new_minimum_maker_protocol_fee);
         Self::deposit_event(
                             RawEvent::MinimumMakerProtocolFeeChanged(
@@ -226,7 +227,7 @@ decl_module! {
     ) -> DispatchResult {
         // onlyOwner
         let _user = ensure_signed(origin)?;
-
+        Self::only_owner(&_user)?;
         MinimumTakerProtocolFee::<T>::put(new_minimum_taker_protocol_fee);
         Self::deposit_event(
             RawEvent::MinimumTakerProtocolFeeChanged(
@@ -243,8 +244,8 @@ decl_module! {
         origin,
         new_protocol_fee_recipient: T::AccountId,
     ) -> DispatchResult {
-        // onlyOwner
         let _user = ensure_signed(origin)?;
+        Self::only_owner(&_user)?;
         ProtocolFeeRecipient::<T>::put(new_protocol_fee_recipient.clone());
         Self::deposit_event(RawEvent::ProtocolFeeRecipientChanged(
                         _user,
@@ -258,21 +259,43 @@ decl_module! {
         origin,
         new_owner: T::AccountId,
     ) -> DispatchResult {
-        // onlyOwner
         let _user = ensure_signed(origin)?;
         frame_support::debug::RuntimeLogger::init();
 
-        ensure!(T::AccountId::default()==ContractSelf::<T>::get()||_user==ContractSelf::<T>::get(),
-                Error::<T>::OnlyOwner);
-        ContractSelf::<T>::put(new_owner.clone());
+        ensure!(T::AccountId::default() == Owner::<T>::get() 
+            || _user == Owner::<T>::get(),
+            Error::<T>::OnlyOwner,
+        );
+        Owner::<T>::put(new_owner.clone());
         Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
         Ok(())
     }
 
+    #[weight = 10_000]
+    pub fn set_contract_self(
+        origin,
+        contract: T::AccountId,
+    ) -> DispatchResult {
+        let _user = ensure_signed(origin)?;
+        ensure!(T::AccountId::default() == ContractSelf::<T>::get() 
+            || _user == ContractSelf::<T>::get(),
+            Error::<T>::OnlyContractSelf,
+        );
+        ContractSelf::<T>::put(contract.clone());
+        Self::deposit_event(RawEvent::ContractSelfChanged(_user,contract.clone()));
+        Ok(())
+    }
     }
 }
 
 impl<T: Trait> Module<T> {
+    pub fn only_owner(owner: &T::AccountId) -> DispatchResult {
+        ensure!(
+            Owner::<T>::get() == *owner,
+            Error::<T>::OnlyOwner
+        );
+        Ok(())
+    }
     // Transfer tokens
     // token Token to transfer
     // from AccountId to charge fees
@@ -321,7 +344,7 @@ impl<T: Trait> Module<T> {
         if _amount > Zero::zero() {
             let _fee = _amount * *_price / INVERSE_BASIS_POINT.into();
             let mut _from_ = (*_from).clone();
-            if *_token == ContractSelf::<T>::get() {
+            if *_token == T::AccountId::default() {
                 if is_maker {
                     *receive_or_required_amount -= _fee;
                 } else {
@@ -331,7 +354,7 @@ impl<T: Trait> Module<T> {
                 _from_ = ContractSelf::<T>::get();
             }
 
-            Self::transfer_tokens(_token, _from, _to, _amount)?;
+            Self::transfer_tokens(_token, &_from_, _to, _amount)?;
         }
         Ok(())
     }
@@ -621,7 +644,7 @@ impl<T: Trait> Module<T> {
         );
 
         // Maker/taker priority.
-        let price: BalanceOf<T> = if sell.fee_recipient != ContractSelf::<T>::get() {
+        let price: BalanceOf<T> = if sell.fee_recipient != T::AccountId::default() {
             sell_price
         } else {
             buy_price
@@ -641,7 +664,7 @@ impl<T: Trait> Module<T> {
     ) -> Result<BalanceOf<T>, Error<T>> {
         // let originprotocol_fee_recipient = ProtocolFeeRecipient::<T>::get();
         // Only payable in the special case of unwrapped DOT.
-        if sell.payment_token != ContractSelf::<T>::get() {
+        if sell.payment_token != T::AccountId::default() {
             ensure!(msg_value == Zero::zero(), Error::<T>::ValueNotZero);
         }
 
@@ -650,7 +673,7 @@ impl<T: Trait> Module<T> {
 
         // If paying using a token (DOT:not), transfer tokens. This is done prior to 
         // fee payments to that a seller will have tokens before being charged fees.
-        if price > Zero::zero() && sell.payment_token != ContractSelf::<T>::get() {
+        if price > Zero::zero() && sell.payment_token != T::AccountId::default() {
             Self::transfer_tokens(sell.payment_token(), &buy.maker(), sell.maker(), price)?;
         }
 
@@ -661,7 +684,7 @@ impl<T: Trait> Module<T> {
         let mut required_amount: BalanceOf<T> = price;
 
         // Determine maker/taker and charge fees accordingly.
-        if sell.fee_recipient != ContractSelf::<T>::get() {
+        if sell.fee_recipient != T::AccountId::default() {
             // Sell-side order is maker.
             Self::execute_funds_transfer_sell_side(
                 buy,
@@ -675,7 +698,7 @@ impl<T: Trait> Module<T> {
             Self::execute_funds_transfer_buy_side(buy, sell, &price)?;
         }
 
-        if sell.payment_token == ContractSelf::<T>::get() {
+        if sell.payment_token == T::AccountId::default() {
             // Special-case DOT, order must be matched by buyer.
             ensure!(
                 msg_value >= required_amount,
@@ -812,7 +835,7 @@ impl<T: Trait> Module<T> {
             // The Exchange does not escrow DOT, so direct DOT can only be used to with 
             // sell-side maker / buy-side taker orders.
             ensure!(
-                sell.payment_token != ContractSelf::<T>::get(),
+                sell.payment_token != T::AccountId::default(),
                 Error::<T>::SellPaymentTokenEqualPaymentToken
             );
 
@@ -875,20 +898,20 @@ impl<T: Trait> Module<T> {
         buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
         sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
     ) -> bool {
-        //  Must be opposite-side.
-        (buy.side == Side::Buy && sell.side == Side::Sell) &&
+            //  Must be opposite-side.
+            (buy.side == Side::Buy && sell.side == Side::Sell) &&
             // Must use same fee method.
             (buy.fee_method == sell.fee_method) &&
             // Must use same payment token. 
             (buy.payment_token == sell.payment_token) &&
             // Must match maker/taker addresses. 
-            (sell.taker == ContractSelf::<T>::get() || sell.taker == buy.maker) &&
-            (buy.taker == ContractSelf::<T>::get() || buy.taker == sell.maker) &&
+            (sell.taker == T::AccountId::default() || sell.taker == buy.maker) &&
+            (buy.taker == T::AccountId::default() || buy.taker == sell.maker) &&
             // One must be maker and the other must be taker (no bool XOR Solidity:in). 
-            ((sell.fee_recipient == ContractSelf::<T>::get() && 
-            buy.fee_recipient != ContractSelf::<T>::get()) || 
-            (sell.fee_recipient != ContractSelf::<T>::get() && 
-            buy.fee_recipient == ContractSelf::<T>::get())) &&
+            ((sell.fee_recipient == T::AccountId::default() && 
+            buy.fee_recipient != T::AccountId::default()) || 
+            (sell.fee_recipient != T::AccountId::default() && 
+            buy.fee_recipient == T::AccountId::default())) &&
             // Must match target. 
             (buy.target == sell.target) &&
             // Must match how_to_call. 
@@ -990,12 +1013,12 @@ impl<T: Trait> Module<T> {
         Self::deposit_event(RawEvent::OrdersMatched(
             buy_hash.clone(),
             sell_hash.clone(),
-            if sell.fee_recipient != ContractSelf::<T>::get() {
+            if sell.fee_recipient != T::AccountId::default() {
                 sell.maker.clone()
             } else {
                 buy.maker.clone()
             },
-            if sell.fee_recipient != ContractSelf::<T>::get() {
+            if sell.fee_recipient != T::AccountId::default() {
                 buy.maker.clone()
             } else {
                 sell.maker.clone()

@@ -83,16 +83,41 @@ async function main() {
         let sell_hash = "";
         let buy_sig = "";
         let sell_sig = "";
-
+        let result = "";
         console.log("======transfer====");
 
         submit(api, api.tx.balances.transfer(users.betty.key.address, salary), users.bobBank);
         submit(api, api.tx.balances.transfer(users.bob.key.address, salary), users.bobBank);
 
         await new Promise(r => setTimeout(r, block));
-        break;
 
         buy.maker = users.bob.key.address;
+        console.log("setContractSelf(",users.bob.key.address);
+        submit(api, api.tx.wyvernExchangeCore.setContractSelf(
+            users.bob.key.address), users.betty);
+        console.log("validateOrderParametersEx(",
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+            [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+            buy.feeMethod,
+            buy.side,
+            buy.saleKind,
+            buy.howToCall,
+            buy.calldata,
+            buy.replacementPattern,
+            buy.staticExtradata
+        );
+        result = await api.rpc.wyvernExchange.validateOrderParametersEx(
+            [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
+            [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
+            buy.feeMethod,
+            buy.side,
+            buy.saleKind,
+            buy.howToCall,
+            buy.calldata,
+            buy.replacementPattern,
+            buy.staticExtradata
+        );
+        console.log(`The value from  validateOrderParametersEx is ${result}\n`);
 
         console.log("========approveOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
             [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
@@ -115,7 +140,7 @@ async function main() {
             buy.replacementPattern,
             buy.staticExtradata,
             true
-        ), users.betty);
+        ), users.bob);
         console.log("========hashToSignEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
             [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
             buy.feeMethod,
@@ -147,10 +172,10 @@ async function main() {
             buy.calldata,
             buy.replacementPattern,
             buy.staticExtradata,
-            order_sig
+            buy_sig
         );
 
-        let result = await api.rpc.wyvernExchange.validateOrderEx(
+        result = await api.rpc.wyvernExchange.validateOrderEx(
             [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
             [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
             buy.feeMethod,
@@ -160,7 +185,7 @@ async function main() {
             buy.calldata,
             buy.replacementPattern,
             buy.staticExtradata,
-            order_sig
+            buy_sig
         );
         console.log(`The value from  validateOrderEx is ${result}\n`);
 

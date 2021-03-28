@@ -34,13 +34,13 @@ fn make_order(
         fee_method: FeeMethod::from(0),
         side: Side::from(side),
         sale_kind: SaleKind::from(0),
-        target: sender,
+        target: AccountId::default(),
         how_to_call: HowToCall::from(0),
         calldata: bytes.clone(),
         replacement_pattern: bytes.clone(),
-        static_target: sender,
+        static_target: AccountId::default(),
         static_extradata: bytes.clone(),
-        payment_token: sender,
+        payment_token: AccountId::default(),
         base_price: fee,
         extra: time,
         listing_time: Zero::zero(),
@@ -143,8 +143,8 @@ fn hash_order_ex() {
         assert_eq!(
             hash,
             vec![
-                123, 133, 145, 87, 234, 200, 253, 138, 44, 140, 16, 13, 202, 91, 13, 171, 241, 253,
-                240, 155, 153, 69, 181, 204, 128, 12, 220, 94, 16, 237, 78, 190
+                147, 233, 158, 149, 155, 212, 67, 206, 192, 117, 59, 117, 31, 121, 168, 212, 124,
+                91, 122, 155, 102, 96, 113, 59, 169, 68, 43, 127, 136, 240, 214, 169
             ]
         );
     });
@@ -218,8 +218,8 @@ fn require_valid_order_ex() {
         assert_eq!(
             hash,
             vec![
-                37, 49, 117, 31, 84, 85, 213, 82, 131, 89, 165, 235, 73, 255, 49, 61, 233, 44, 133,
-                116, 14, 159, 125, 27, 157, 50, 252, 154, 134, 82, 90, 216
+                144, 223, 135, 224, 228, 211, 197, 17, 23, 67, 219, 239, 162, 220, 227, 194, 8,
+                77, 64, 59, 252, 167, 84, 189, 45, 125, 52, 218, 160, 131, 2, 14
             ]
         );
     });
@@ -518,8 +518,8 @@ fn atomic_match_ex() {
 
         let alice_pair = account_pair("Alice");
         let bob_pair = account_pair("Bob");
-        let buy = make_order(sender, sender, sender, 0);
-        let sell = make_order(sender1, sender, sender1, 1);
+        let buy = make_order(sender, sender1, sender, 0);
+        let sell = make_order(sender1, sender, AccountId::default(), 1);
         let (
             addrs_buy,
             uints_buy,
@@ -530,7 +530,7 @@ fn atomic_match_ex() {
             calldata_buy,
             replacement_pattern_buy,
             static_extradata_buy,
-        ) = make_order_ex(sender, sender, sender, 0);
+        ) = make_order_ex(sender, sender1, sender, 0);
         let (
             addrs_sell,
             uints_sell,
@@ -541,7 +541,7 @@ fn atomic_match_ex() {
             calldata_sell,
             replacement_pattern_sell,
             static_extradata_sell,
-        ) = make_order_ex(sender1, sender, sender1, 1);
+        ) = make_order_ex(sender1, sender, AccountId::default(), 1);
 
         let buy_hash = WyvernExchange::hash_to_sign_ex(
             addrs_buy.clone(),
@@ -628,12 +628,12 @@ fn atomic_match_ex() {
             == TestEvent::exchange_core(RawEvent::OrdersMatched(
                 vec![],//buy_hash.clone(),
                 sell_hash.clone(),
-                if sell.fee_recipient != ContractSelf::<Test>::get() {
+                if sell.fee_recipient != AccountId::default() {
                     sell.maker.clone()
                 } else {
                     buy.maker.clone()
                 },
-                if sell.fee_recipient != ContractSelf::<Test>::get() {
+                if sell.fee_recipient != AccountId::default() {
                     buy.maker.clone()
                 } else {
                     sell.maker.clone()

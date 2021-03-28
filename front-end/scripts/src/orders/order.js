@@ -93,7 +93,7 @@ const makeOrderArrayExForRust = () => {
     console.log(objs)
     return objs;
 }
-makeOrderArrayExForRust();
+// makeOrderArrayExForRust();
 const makeOrderArrayHexEx = () => {
     let objs = [];
     ordersJSON.map((orderJSON, index) => {

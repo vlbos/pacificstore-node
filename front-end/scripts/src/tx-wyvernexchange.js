@@ -116,7 +116,23 @@ async function main() {
             buy.staticExtradata,
             true
         ), users.betty);
+        console.log("========changeMinimumMakerProtocolFee=======");
+        submit(api, api.tx.wyvernExchangeCore.changeMinimumMakerProtocolFee(
+            1), users.betty);
 
+        console.log("========changeMinimumTakerProtocolFee=======");
+        submit(api, api.tx.wyvernExchangeCore.changeMinimumTakerProtocolFee(
+            1), users.betty);
+
+        console.log("========changeProtocolFeeRecipient=======");
+        submit(api, api.tx.wyvernExchangeCore.changeProtocolFeeRecipient(
+            users.bob.key.address), users.betty);
+        break;
+
+        submit(api, api.tx.wyvernExchangeCore.changeOwner(
+            users.bob.key.address), users.betty);
+        submit(api, api.tx.wyvernExchangeCore.setContractSelf(
+            users.bob.key.address), users.betty);
         await new Promise(r => setTimeout(r, block));
     } catch (e) {
         console.log("============", e);

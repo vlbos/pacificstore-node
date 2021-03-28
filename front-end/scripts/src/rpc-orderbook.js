@@ -9,7 +9,7 @@ import { Bytes, Option, u32, Vec } from '@polkadot/types';
 import { v4 as uuidv4 } from 'uuid';
 import { readFileSync } from 'fs';
 // import { makeOrderArrayEx, makeOrderEx, makeOrder, orderFromJSON } from './order.js'
-import { makeOrderArrayEx, makeOrderArrayHexEx,makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
+import { makeOrderArrayEx, makeOrderArrayHexEx, makeOrderFromJSONHex, makeOrderEx, makeOrder, orderFromJSON } from './orders/order.js'
 
 // Construct parameters for API instance
 const wsProvider = new WsProvider('ws://localhost:9944');
@@ -69,9 +69,9 @@ async function main() {
     console.log("getAsset(", orders[2]["metadata.asset.address"], stringToHex(orders[2]["metadata.asset.id"] + ""));
     let asset1 = await api.rpc.orderbook.getAsset(stringToHex(orders[2]["metadata.asset.address"]), stringToHex(orders[2]["metadata.asset.id"] + ""));
     console.log(`The value from the getAsset is ${asset1}\n`);
-console.log("===================");
-console.log(makeOrderFromJSONHex([JSON.parse(`${asset1}`)]));
-console.log("===================");
+    console.log("===================");
+    console.log(makeOrderFromJSONHex([JSON.parse(`${asset1}`)]));
+    console.log("===================");
 
     console.log("=======getAssets(", {
         token_ids: [stringToHex(orders[3]["metadata.asset.id"])],
