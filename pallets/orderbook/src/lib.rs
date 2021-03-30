@@ -38,7 +38,7 @@ use frame_support::{
     dispatch::DispatchResult,
     ensure,
     sp_std::prelude::*,
-    sp_std::{collections::btree_set::BTreeSet, if_std},
+    sp_std::{collections::btree_set::BTreeSet},
 };
 
 use frame_system::{self as system, ensure_signed};
@@ -61,7 +61,13 @@ pub trait Trait: system::Trait + timestamp::Trait {
 
 decl_storage! {
     trait Store for Module<T: Trait> as Orderbook {
+        OrderLimits: u64 = 3; 
+        AssetWhiteListLimits: u64 = 3;
+        RemovedOrderCount: u64;
+        RemovedAssetWhiteListCount: u64;
+        NextAssetWhiteListIndex: u64;
         NextOrderIndex: u64;
+        pub Owner:T::AccountId;
         pub Orders get(fn order_by_index): map hasher(blake2_128_concat) u64 
             => Option<OrderJSONType<T::AccountId, T::Moment>>;
         pub OrderIndices get(fn order_index_by_id): map hasher(blake2_128_concat) OrderId => u64;
@@ -82,6 +88,9 @@ decl_event!(
     {
         OrderPosted(AccountId, OrderId, AccountId),
         AssetWhiteListPosted(Vec<u8>, Vec<u8>, Vec<u8>),
+        OwnerChanged(AccountId, AccountId),
+        OrderLimitsChanged(u64),
+        AssetWhiteListLimitsChanged(u64),
     }
 );
 
@@ -92,7 +101,15 @@ decl_error! {
         OrderIdExists,
         OrderTooManyFields,
         OrderInvalidFieldName,
-        OrderInvalidFieldValue
+        OrderInvalidFieldValue,
+        OrderLimitsExceed,
+        AssetWhiteListLimitsExceed,
+        OrderIndexNotExist,
+        OrderIdNotExistInOrderIndices,
+        OrderIdNotExistInOwnerOf,
+        OrderFieldNotExist,
+        AssetWhiteListNotExist,
+        OnlyOwner,
     }
 }
 
@@ -101,6 +118,47 @@ decl_module! {
         type Error = Error<T>;
         fn deposit_event() = default;
 
+
+        #[weight = 10_000]
+        pub fn change_owner(
+            origin,
+            new_owner: T::AccountId,
+        ) -> DispatchResult {
+            let _user = ensure_signed(origin)?;
+            frame_support::debug::RuntimeLogger::init();
+
+            ensure!(T::AccountId::default() == Owner::<T>::get() 
+                || _user == Owner::<T>::get(),
+                Error::<T>::OnlyOwner,
+            );
+            Owner::<T>::put(new_owner.clone());
+            Self::deposit_event(RawEvent::OwnerChanged(_user,new_owner.clone()));
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn set_order_limits(
+            origin,
+            limits: u64,
+        ) -> DispatchResult {
+            let _user = ensure_signed(origin)?;
+            Self::only_owner(&_user)?;
+            OrderLimits::put(limits);
+            Self::deposit_event(RawEvent::OrderLimitsChanged(limits));
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn set_asset_white_list_limits(
+            origin,
+            limits: u64,
+        ) -> DispatchResult {
+            let _user = ensure_signed(origin)?;
+            Self::only_owner(&_user)?;
+            AssetWhiteListLimits::put(limits);
+            Self::deposit_event(RawEvent::AssetWhiteListLimitsChanged(limits));
+            Ok(())
+        }
         /// Send an order to the orderbook.
         /// param order Order JSON to post to the orderbook
         #[weight = 10_000]
@@ -110,8 +168,10 @@ decl_module! {
             owner: T::AccountId,
             fields: Option<Vec<OrderField>>,
         ) -> DispatchResult {
-            // T::CreateRoleOrigin::ensure_origin(origin.clone())?;
-             let who = ensure_signed(origin)?;
+            let who = ensure_signed(origin)?;
+            
+            // Validate order posted limits on chain 
+            Self::validate_order_limits()?;
             // Validate order ID
             Self::validate_order_id(&order_id)?;
 
@@ -121,10 +181,10 @@ decl_module! {
             // Check order doesn't exist yet
             Self::validate_new_order(&order_id)?;
 
-            // Generate next order ID
+            // Generate next order Index
             let next_index = NextOrderIndex::get()
                 .checked_add(1)
-                .expect("order id error");
+                .expect("order index error");
 
             NextOrderIndex::put(next_index);
 
@@ -137,9 +197,9 @@ decl_module! {
                         if !index_arr.contains(&next_index) {
                             index_arr.push(next_index);
                             <OrdersByField>::mutate(
-                                                    field.name(),
-                                                    field.value(), 
-                                                    |arr| *arr = index_arr,
+                                field.name(),
+                                field.value(), 
+                                |arr| *arr = index_arr,
                             );
                         }
                     } else {
@@ -188,6 +248,17 @@ decl_module! {
             token_id: Vec<u8>,
             email: Vec<u8>,
         ) -> DispatchResult {
+            let _ = ensure_signed(origin)?;
+            // Validate order posted limits on chain 
+            Self::validate_asset_white_list_limits()?;
+
+            // Generate next whitelist Index
+            let next_index = NextOrderIndex::get()
+                .checked_add(1)
+                .expect("whitelist index error");
+
+            NextAssetWhiteListIndex::put(next_index);
+
             if <AssetWhitelist>::contains_key(token_address.clone(), token_id.clone()) {
                 <AssetWhitelist>::mutate(
                     token_address.clone(), 
@@ -201,10 +272,85 @@ decl_module! {
             Ok(())
         }
 
+        /// remove an order on chain.
+        /// orderIndx the index of the order
+        #[weight = 10_000]
+        pub fn remove_order(
+            origin,
+            order_index: u64,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            Self::only_owner(&who)?;
+            ensure!(
+                <Orders<T>>::contains_key(order_index), 
+                Error::<T>::OrderIndexNotExist,
+            );
+            // Generate removed order count
+            let next_count = RemovedOrderCount::get()
+                .checked_add(1)
+                .expect("removed order count error");
+
+            RemovedOrderCount::put(next_count);
+
+            if let Some(order_json) = <Orders<T>>::take(order_index){
+                ensure!(
+                    <OrderIndices>::contains_key(order_json.order_id.clone()),
+                    Error::<T>::OrderIdNotExistInOrderIndices,
+                );
+                OrderIndices::take(order_json.order_id.clone());
+                ensure!(
+                    OwnerOf::<T>::contains_key(order_json.order_id.clone()),
+                    Error::<T>::OrderIdNotExistInOwnerOf,
+                );
+                OwnerOf::<T>::take(order_json.order_id);
+                if let Some(fields) = order_json.fields {
+                    for field in fields {
+                        ensure!(
+                            <OrdersByField>::contains_key(field.name(), field.value()),
+                            Error::<T>::OrderFieldNotExist,
+                        );
+                        <OrdersByField>::take(field.name(), field.value());
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        /// remove an asset whitelist on chain.
+        /// tokenAddress Address of the asset's contract
+        /// tokenId The asset's token ID        
+        #[weight = 10_000]
+        pub fn remove_asset_white_list(
+            origin,
+            token_address: Vec<u8>,
+            token_id: Vec<u8>,
+        ) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+            Self::only_owner(&who)?;
+            ensure!(
+                <AssetWhitelist>::contains_key(token_address.clone(), token_id.clone()), 
+                Error::<T>::AssetWhiteListNotExist,
+            );
+            // Generate removed whitelist count
+            let next_count = RemovedAssetWhiteListCount::get()
+                .checked_add(1)
+                .expect("removed whitelist count error");
+
+            RemovedAssetWhiteListCount::put(next_count);
+            <AssetWhitelist>::take(token_address.clone(), token_id.clone());
+            Ok(())
+        }
     }
 }
 
 impl<T: Trait> Module<T> {
+    pub fn only_owner(owner: &T::AccountId) -> DispatchResult {
+        ensure!(
+            Owner::<T>::get() == *owner,
+            Error::<T>::OnlyOwner
+        );
+        Ok(())
+    }
     /// Helper methods
     fn new_order() -> OrderBuilder<T::AccountId, T::Moment> {
         OrderBuilder::<T::AccountId, T::Moment>::default()
@@ -215,7 +361,26 @@ impl<T: Trait> Module<T> {
         ensure!(!order_id.is_empty(), Error::<T>::OrderIdMissing);
         ensure!(
             order_id.len() <= ORDER_ID_MAX_LENGTH,
-            Error::<T>::OrderIdTooLong
+            Error::<T>::OrderIdTooLong,
+        );
+        Ok(())
+    }
+
+    pub fn validate_order_limits() -> DispatchResult {
+        // post order limits on chain check
+        ensure!(
+            NextOrderIndex::get()-RemovedOrderCount::get()<= OrderLimits::get(),
+            Error::<T>::OrderLimitsExceed,
+        );
+        Ok(())
+    }
+
+    pub fn validate_asset_white_list_limits() -> DispatchResult {
+        // post asset whitelist limits on chain check
+        ensure!(
+            NextAssetWhiteListIndex::get()-RemovedAssetWhiteListCount::get()
+            <= AssetWhiteListLimits::get(),
+            Error::<T>::AssetWhiteListLimitsExceed,
         );
         Ok(())
     }

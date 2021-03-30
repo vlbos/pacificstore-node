@@ -12,7 +12,7 @@ use frame_support::{
     traits::{OnFinalize, OnInitialize},
     weights::Weight,
 };
-use frame_system as system;
+pub use frame_system as system;
 use frame_system::RawOrigin;
 use sp_core::{sr25519, Pair, H256};
 use sp_runtime::{

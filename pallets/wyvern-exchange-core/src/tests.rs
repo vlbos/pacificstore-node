@@ -3,7 +3,7 @@
 use super::*;
 use crate::{mock::*, Error};
 use codec::Encode;
-use frame_support::{assert_noop, assert_ok, dispatch};
+use frame_support::{assert_noop, assert_ok};
 use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";

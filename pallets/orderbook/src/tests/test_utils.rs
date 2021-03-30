@@ -1,26 +1,6 @@
 // Tests to be written here
 
 use super::*;
-pub fn store_test_order<T: Trait>(
-    index: u64,
-    order_id: OrderId,
-    owner: T::AccountId,
-    created_date: T::Moment,
-) {
-    let order_fields = get_test_order();
-    Orders::<T>::insert(
-        index,
-        OrderJSONType {
-            index,
-            order_id: order_id.clone(),
-            owner,
-            created_date,
-            fields: Some(order_fields),
-        },
-    );
-
-    store_test_order_index::<Test>(index, order_id);
-}
 
 pub fn store_test_order_index<T: Trait>(index: u64, order_id: OrderId) {
     OrderIndices::insert(order_id, index);

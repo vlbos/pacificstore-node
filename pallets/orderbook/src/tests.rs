@@ -6,7 +6,7 @@ use frame_support::{assert_noop, assert_ok, dispatch};
 mod test_utils;
 use self::test_utils::*;
 mod asset_white_list;
-mod create_order;
+mod post_order;
 mod get_orders;
 
 const TEST_ORDER_ID: &str = "00012345600012";
@@ -18,7 +18,6 @@ fn get_asset_with_valid_parameters() {
         let order_id = TEST_ORDER_ID.as_bytes().to_owned();
         let owner = sender;
         let now = 42;
-        let index = 1;
         Timestamp::set_timestamp(now);
         let order_fields = get_test_order();
 
@@ -58,7 +57,6 @@ fn get_assets_with_valid_parameters() {
         let order_id = TEST_ORDER_ID.as_bytes().to_owned();
         let owner = sender;
         let now = 42;
-        let index = 1;
         Timestamp::set_timestamp(now);
         let order_fields = get_test_order();
 

@@ -3,12 +3,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use core::convert::TryInto;
-use core::result::Result;
-
-use sp_std::if_std;
 
 use frame_support::{
-    decl_module, ensure,
+    decl_module, 
     sp_runtime::traits::Zero,
     sp_std::prelude::*,
     traits::{Currency, LockableCurrency, ReservableCurrency},
@@ -239,9 +236,10 @@ impl<T: Trait> Module<T> {
     pub fn u64_to_balance_option(_input: u64) -> Option<BalanceOf<T>> {
         _input.try_into().ok()
     }
-    pub fn balance_to_u128(input: BalanceOf<T>) -> Option<u128> {
-        TryInto::<u128>::try_into(input).ok()
-    }
+    ////commented
+    // pub fn balance_to_u128(input: BalanceOf<T>) -> Option<u128> {
+    //     TryInto::<u128>::try_into(input).ok()
+    // }
     pub fn balance_to_u64_option(input: BalanceOf<T>) -> Option<u64> {
         TryInto::<u64>::try_into(input).ok()
     }

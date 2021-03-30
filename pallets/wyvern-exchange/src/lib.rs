@@ -52,19 +52,16 @@
 
 use core::result::Result;
 
-use sp_std::if_std;
-
 use frame_support::{
     decl_module, decl_storage,
     dispatch::DispatchResult,
     sp_runtime::{
-        print,
-        traits::{Printable, Zero},
+        traits::{Zero},
     },
     sp_std::prelude::*,
 };
 
-use frame_system::{self as system, ensure_signed};
+use frame_system::{ ensure_signed};
 
 #[cfg(test)]
 mod mock;

@@ -2,16 +2,12 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use core::result::Result;
-use sp_std::if_std;
-
-use frame_support::{decl_module, ensure, sp_runtime::traits::Zero, sp_std::prelude::*};
+use frame_support::{decl_module, sp_runtime::traits::Zero, sp_std::prelude::*};
 
 use crate::types::*;
 
 use crate::exchange_common;
 use crate::exchange_common::BalanceOf;
-use crate::Error;
 pub trait Trait: exchange_common::Trait {}
 
 decl_module! {

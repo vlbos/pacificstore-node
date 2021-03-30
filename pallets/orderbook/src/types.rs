@@ -15,6 +15,7 @@ pub const ORDER_FIELD_VALUE_MAX_LENGTH: usize = 400;
 pub const ORDER_MAX_FIELDS: usize = 54;
 pub const ORDER_MAX_PARAMS: usize = 54;
 pub const MAX_TOKEN_IDS: usize = 54;
+
 // Custom types
 pub type OrderId = Vec<u8>;
 pub type TokenId = Vec<u8>;

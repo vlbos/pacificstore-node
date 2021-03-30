@@ -59,15 +59,14 @@ use codec::{Decode, Encode};
 use core::result::Result;
 
 use frame_support::{
-    debug, decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{DispatchError, DispatchResult},
+    decl_error, decl_event, decl_module, decl_storage,
+    dispatch::{DispatchResult},
     ensure,
     sp_io::hashing::keccak_256,
     sp_runtime::{
-        print,
-        traits::{IdentifyAccount, Member, Printable, Verify, Zero},
+        traits::{IdentifyAccount, Member, Verify, Zero},
     },
-    sp_std::{if_std, prelude::*},
+    sp_std::{prelude::*},
     traits::Currency,
 };
 use sp_core::sr25519;
@@ -459,9 +458,6 @@ impl<T: Trait> Module<T> {
             return Ok(true);
         }
 
-        // if Self::check_signature(&sig, &hash, order.maker()).is_ok() {
-        //     return Ok(true);
-        // }
         if Self::check_signature_bytes(&sig, &hash, order.maker()).is_ok() {
             return Ok(true);
         }
@@ -470,20 +466,7 @@ impl<T: Trait> Module<T> {
     }
 
     // An alterantive way to validate a signature is:
-    // Import the codec and traits:
-    // Example function to verify the signature.
-    pub fn check_signature(
-        _signature: &T::Signature,
-        _msg: &[u8],
-        _signer: &T::AccountId,
-    ) -> Result<(), Error<T>> {
-        if _signature.verify(_msg, _signer) {
-            Ok(())
-        } else {
-            Err(Error::<T>::MsgVerifyFailed.into())
-        }
-    }
-
+    // function to verify the signature.
     pub fn check_signature_bytes(
         _signature: &[u8],
         _msg: &[u8],
