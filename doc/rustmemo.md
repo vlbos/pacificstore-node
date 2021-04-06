@@ -1,5 +1,4 @@
 ```
-cd substrate-enterprise-sample/chain/pallets/wyvern-exchange
 
 SKIP_WASM_BUILD=1 cargo check
 ```

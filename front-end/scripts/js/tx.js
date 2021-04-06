@@ -25,7 +25,7 @@ async function main() {
         daveBank: { key: keyring.addFromUri('//Dave//stash', { name: 'Dave-BANK' }), nonce: 0 },
         daisy: { key: keyring.addFromUri('//Daisy', { name: 'Daisy' }), nonce: 0 },
         eve: { key: keyring.addFromUri('//Eve', { name: 'Eve' }), nonce: 0 },
-        eveBank: { key: keyring.addFromUri('//Eve//stash', { name: 'Eve-BANL' }), nonce: 0 },
+        eveBank: { key: keyring.addFromUri('//Eve//stash', { name: 'Eve-BANK' }), nonce: 0 },
         erowid: { key: keyring.addFromUri('//Erowid', { name: 'Erowid' }), nonce: 0 },
         ferdie: { key: keyring.addFromUri('//Ferdie', { name: 'Ferdie' }), nonce: 0 },
         ferdieBank: { key: keyring.addFromUri('//Ferdie//stash', { name: 'Ferdie-BANK' }), nonce: 0 },
