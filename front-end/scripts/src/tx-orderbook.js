@@ -76,6 +76,13 @@ async function main() {
 
         await new Promise(r => setTimeout(r, block));
 
+        submit(api, api.tx.orderbook.changeOwner(
+            users.betty.key.address), users.betty);
+        submit(api, api.tx.orderbook.setOrderLimits(
+            1000), users.betty);
+        submit(api, api.tx.orderbook.setAssetWhiteListLimits(
+            1000), users.betty);
+
         const orderArray = makeOrderArrayEx();
         // let o = orderArray[0];
         console.log("======postOrder=========");

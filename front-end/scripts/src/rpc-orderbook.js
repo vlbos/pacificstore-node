@@ -73,15 +73,15 @@ async function main() {
     console.log(makeOrderFromJSONHex([JSON.parse(`${asset1}`)]));
     console.log("===================");
 
-    console.log("=======getAssets(", {
-        token_ids: [stringToHex(orders[3]["metadata.asset.id"])],
-        asset_contract_address: stringToHex(orders[3]["metadata.asset.address"])
-    }, 1);
-    let assets = await api.rpc.orderbook.getAssets({
-        token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
-        asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
-    }, 1);
-    console.log(`The value from the getAssets is ${assets}\n`);
+    // console.log("=======getAssets(", {
+    //     token_ids: [stringToHex(orders[3]["metadata.asset.id"])],
+    //     asset_contract_address: stringToHex(orders[3]["metadata.asset.address"])
+    // }, 1);
+    // let assets = await api.rpc.orderbook.getAssets({
+    //     token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
+    //     asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
+    // }, 1);
+    // console.log(`The value from the getAssets is ${assets}\n`);
 
 }
 
