@@ -451,14 +451,14 @@ WyvernExchangeCore: wyvern_exchange_core::{Module, Call, Storage, Event<T>},
 ## Quickstart
 
 ```shell
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
+git clone https://github.com/vlbos/pacificstore-node.git
+cd pacificstore-node
 
 cargo run -- --dev --tmp
 ```
 
-[Custom RPCs](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/development.json)
-[Custom Type](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/types.json)
+[Custom RPCs](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/development.json)
+[Custom Type](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/types.json)
 
 start front-end
 ```bash
@@ -489,9 +489,9 @@ cargo doc --open
 ### Test Project
 
 In order to help develop this pallet, it is being consumed by
-[a test project](https://github.com/vlbos/pacific-store-node/tree/dev/front-end) .
-[testing guide](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_testing_guide.md) .
-[a test example document](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_js_example.md) .
+[a test project](https://github.com/vlbos/pacificstore-node/tree/dev/front-end) .
+[testing guide](https://github.com/vlbos/pacificstore-node/tree/dev/doc/pacific_store_milestone1_testing_guide.md) .
+[a test example document](https://github.com/vlbos/pacificstore-node/tree/dev/doc/pacific_store_milestone1_js_example.md) .
 ### Build & Run
 
 First, build & run the node:

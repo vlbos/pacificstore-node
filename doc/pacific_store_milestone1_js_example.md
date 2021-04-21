@@ -103,9 +103,9 @@ Test Project based on Substate-front-end-template,In order to demonstrate the us
   
 ```
 
-[Custom Type](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/types.json)
+[Custom Type](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/types.json)
 
-[Custom RPCs](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/development.json)
+[Custom RPCs](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/development.json)
 
 
 

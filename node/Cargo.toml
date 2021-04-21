@@ -6,7 +6,7 @@ edition = '2018'
 homepage = 'https://substrate.dev'
 license = 'Unlicense'
 name = 'pacific-store'
-repository = 'https://github.com/vlbos/pacific-store-node/'
+repository = 'https://github.com/vlbos/pacificstore-node/'
 version = '2.0.1'
 
 [[bin]]

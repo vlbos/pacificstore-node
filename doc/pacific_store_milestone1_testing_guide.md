@@ -200,14 +200,14 @@ WyvernExchangeCore: wyvern_exchange_core::{Module, Call, Storage, Event<T>},
 ## Testing Guide
 
 ```shell
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
+git clone https://github.com/vlbos/pacificstore-node.git
+cd pacificstore-node
 
 cargo run -- --dev --tmp
 ```
 
-[Custom RPCs](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/development.json)
-[Custom Type](https://github.com/vlbos/pacific-store-node/blob/dev/front-end/src/config/types.json)
+[Custom RPCs](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/development.json)
+[Custom Type](https://github.com/vlbos/pacificstore-node/blob/dev/front-end/src/config/types.json)
 
 start front-end
 ```bash
@@ -227,8 +227,8 @@ yarn example
 ##### Testing
 Run the tests with:
 ```
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
+git clone https://github.com/vlbos/pacificstore-node.git
+cd pacificstore-node
 cargo test
 ```
 
@@ -236,8 +236,8 @@ cargo test
 ##### Example
 Run the Node
 ```shell
-git clone https://github.com/vlbos/pacific-store-node.git
-cd pacific-store-node
+git clone https://github.com/vlbos/pacificstore-node.git
+cd pacificstore-node
 
 cargo run -- --dev --tmp
 ```
@@ -261,8 +261,8 @@ cargo doc --open
 
 ### Test Project
 In order to help develop this pallet, it is being consumed by
-[a test project](https://github.com/vlbos/pacific-store-node/tree/dev/front-end) .
-[a test example document](https://github.com/vlbos/pacific-store-node/tree/dev/doc/pacific_store_milestone1_js_example) .
+[a test project](https://github.com/vlbos/pacificstore-node/tree/dev/front-end) .
+[a test example document](https://github.com/vlbos/pacificstore-node/tree/dev/doc/pacific_store_milestone1_js_example) .
 ### Build & Run
 
 First, build & run the node:

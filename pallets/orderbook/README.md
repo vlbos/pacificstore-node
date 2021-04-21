@@ -4,7 +4,7 @@ The Orderbook pallet provides functionality for posting and managing master data
 
 When this pallet is added to a Subtrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Orderbook pallet as a reference for known NFTs .
 
-This pallet is part of the [Pacific-store-node](https://github.com/vlbos/pacific-store-node) .
+This pallet is part of the [pacificstore-node](https://github.com/vlbos/pacificstore-node) .
 
 It is inspired by existing projects & standards:
 - [Opensea js](https://github.com/ProjectOpenSea/opensea-js)

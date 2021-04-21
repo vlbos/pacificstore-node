@@ -11,7 +11,7 @@ RUN apt-get update && \
 	apt-get install -y cmake pkg-config libssl-dev git clang build-essential clang libclang-dev curl
 
 # Get project and run it
-#RUN git clone https://github.com/vlbos/pacific-store-node /pacific_store_node
+#RUN git clone https://github.com/vlbos/pacificstore-node /pacific_store_node
 RUN mkdir pacific_store_node
 WORKDIR /pacific_store_node
 COPY . .
