@@ -53,35 +53,29 @@ async function main() {
     const orderArray = makeOrderArrayHexEx();
     const orders = makeOrderEx();
 
-    // console.log("getOrder(", {
-    //     params: orderArray[0]
-    // });
-    // let order = await api.rpc.orderbook.getOrder({
-    //     params: orderArray[0]
-    // });
-    // console.log(`The value from the getOrder is ${order}\n`);
+    console.log("getOrder(");
+    let order = await api.rpc.orderbook.getOrder({
+        params: orderArray[0]
+    });
+    console.log(`The value from the getOrder is`, JSON.parse(`${order}`),`\n`);
 
-    // let orderjsons = await api.rpc.orderbook.getOrders({
-    //     params: orderArray[1]
-    // }, 1);
-    // console.log(`The value from the getOrders is ${orderjsons}\n`);
+    console.log("getOrder(");
+    let orderjsons = await api.rpc.orderbook.getOrders({
+        params: orderArray[1]
+    }, 1);
+    console.log(`The value from the getOrders is `, JSON.parse(`${orderjsons}`),`\n`);
 
-    console.log("getAsset(", orders[2]["metadata.asset.address"], stringToHex(orders[2]["metadata.asset.id"] + ""));
+    console.log("getAsset(");
     let asset1 = await api.rpc.orderbook.getAsset(stringToHex(orders[2]["metadata.asset.address"]), stringToHex(orders[2]["metadata.asset.id"] + ""));
-    console.log(`The value from the getAsset is ${asset1}\n`);
-    console.log("===================");
+    console.log(`The value from the getAsset is `, JSON.parse(`${order}`),`\n`);
     console.log(makeOrderFromJSONHex([JSON.parse(`${asset1}`)]));
-    console.log("===================");
 
-    // console.log("=======getAssets(", {
-    //     token_ids: [stringToHex(orders[3]["metadata.asset.id"])],
-    //     asset_contract_address: stringToHex(orders[3]["metadata.asset.address"])
-    // }, 1);
-    // let assets = await api.rpc.orderbook.getAssets({
-    //     token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
-    //     asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
-    // }, 1);
-    // console.log(`The value from the getAssets is ${assets}\n`);
+    console.log("=======getAssets(");
+    let assets = await api.rpc.orderbook.getAssets({
+        token_ids: [stringToHex(orders[2]["metadata.asset.id"])],
+        asset_contract_address: stringToHex(orders[2]["metadata.asset.address"])
+    }, 1);
+    console.log(`The value from the getAssets is `, JSON.parse(`${assets}`),`\n`);
 
 }
 

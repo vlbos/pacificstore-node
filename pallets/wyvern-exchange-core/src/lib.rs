@@ -183,7 +183,7 @@ decl_error! {
         ValueLessThanRequiredAmount,
         ValueNotZero,
         BuyPriceLessThanSellPrice,
-        OrderHashMissing,
+        OrderHashExists,
         OnlyMaker,
         InvalidOrderHash,
         InvalidSignature,
@@ -509,7 +509,7 @@ impl<T: Trait> Module<T> {
         // Assert order has not already been approved.
         ensure!(
             !ApprovedOrders::get(hash.clone()),
-            Error::<T>::OrderHashMissing
+            Error::<T>::OrderHashExists
         );
 
         // EFFECTS

@@ -55,11 +55,9 @@ async function main() {
         let senders = [users.bobBank, users.bob, users.betty];
         for (let sender of senders) {
             if (0 == sender.nonce) {
-                console.log("sender.nonce==7==", sender.nonce);
                 let nonce = await api.rpc.system.accountNextIndex(sender.key.address);
                 if (0 != nonce.words[0]) {
                     sender.nonce = nonce.words[0];
-                    console.log("sender.nonce==77==", sender.nonce);
                 }
             }
         }
@@ -67,7 +65,7 @@ async function main() {
         let accounts = Object.values(users).map((u) => u.key.address);
         let accounts7 = accounts.splice(0, 7);
         let accounts77 = accounts.splice(2, 7);
-        console.log(accounts, "=======account=====", accounts77);
+        // console.log(accounts, "=======account=====", accounts77);
 
         console.log("======transfer====");
 

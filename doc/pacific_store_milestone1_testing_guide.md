@@ -220,7 +220,7 @@ Test example
 ```bash
 cd front-end/scripts
 yarn install
-yarn example
+yarn examples
 ```
 
 ### Runtime Module Unit Test

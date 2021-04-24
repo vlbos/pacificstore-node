@@ -346,7 +346,7 @@ WyvernExchange: wyvern_exchange::{Module, Call, Storage},
         ValueLessThanRequiredAmount,
         ValueNotZero,
         BuyPriceLessThanSellPrice,
-        OrderHashMissing,
+        OrderHashExists,
         OnlyMaker,
         InvalidOrderHash,
     }
@@ -471,7 +471,7 @@ Test example
 ```bash
 cd front-end/scripts
 yarn install
-yarn example
+yarn examples
 ```
 
 ###### Genesis Configuration

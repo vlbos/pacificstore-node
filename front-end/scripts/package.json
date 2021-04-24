@@ -6,7 +6,7 @@
     "start": "node ./src/init.js",
     "examples": "yarn example:orderbook && yarn example:wyvernexchange",
     "example:orderbook": "yarn example:orderbook:tx && yarn example:orderbook:rpc",
-    "example:wyvernexchange": "yarn example:wyvernexchange:tx && yarn example:wyvernexchange:tx:cancel && yarn example:wyvernexchange:tx:match && yarn example:wyvernexchange:rpc",
+    "example:wyvernexchange": "yarn example:wyvernexchange:tx && yarn example:wyvernexchange:tx:cancel && yarn example:wyvernexchange:tx:match   && yarn example:wyvernexchange:rpc",
     "example:orderbook:rpc": "node  ./src/rpc-orderbook.js",
     "example:wyvernexchange:rpc": "node  ./src/rpc-wyvernexchange.js",
     "example:orderbook:tx": "node  ./src/tx-orderbook.js",

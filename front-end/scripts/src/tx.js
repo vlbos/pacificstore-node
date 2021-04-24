@@ -55,11 +55,9 @@ async function main() {
         let senders = [users.bobBank, users.bob, users.betty];
         for (let sender of senders) {
             if (0 == sender.nonce) {
-                console.log("sender.nonce==7==", sender.nonce);
                 let nonce = await api.rpc.system.accountNextIndex(sender.key.address);
                 if (0 != nonce.words[0]) {
                     sender.nonce = nonce.words[0];
-                    console.log("sender.nonce==77==", sender.nonce);
                 }
             }
         }
@@ -86,7 +84,7 @@ async function main() {
         let accounts = Object.values(users).map((u) => u.key.address);
         let accounts7 = accounts.splice(0, 7);
         let accounts77 = accounts.splice(2, 7);
-        console.log(accounts, "=======account=====", accounts77);
+        // console.log(accounts, "=======account=====", accounts77);
         const buy = makeOrder(users.bob.key.address, true, 0);
         const sell = makeOrder(users.bob.key.address, false, 1);
         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken] = accounts77;
@@ -103,9 +101,9 @@ async function main() {
         let buy_sig = "";
         let sell_sig = "";
         // const cmds = ["transfer", "changeOwner", "atomicMatchEx"];
-        // const cmds = ["transfer", "changeOwner", "cancelOrderEx"];
+        const cmds = ["transfer","changeOwner", "cancelOrderEx"];
         // const cmds = [ "transfer","changeOwner","approveOrderEx", "cancelOrderEx", "atomicMatchEx"];
-        const cmds = ["transfer", "postOrder", "postAssetWhiteList", "changeMinimumMakerProtocolFee", "changeMinimumTakerProtocolFee", "changeProtocolFeeRecipient"];//
+        // const cmds = ["transfer", "postOrder", "postAssetWhiteList", "changeMinimumMakerProtocolFee", "changeMinimumTakerProtocolFee", "changeProtocolFeeRecipient"];//
         // const cmd = cmds[index];
         for (let cmd of cmds) {
             switch (cmd) {
@@ -161,7 +159,7 @@ async function main() {
 
                     break;
                 case "cancelOrderEx":
-                    buy.maker = users.bob.key.address;
+                    buy.maker = users.betty.key.address;
 
                     console.log("========approveOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
                         [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
@@ -226,7 +224,7 @@ async function main() {
                         buy.calldata,
                         buy.replacementPattern,
                         buy.staticExtradata,
-                        u8aToHex(buy_sig)), users.bob);
+                        u8aToHex(buy_sig)), users.betty);
 
                     break;
                 case "atomicMatchEx":

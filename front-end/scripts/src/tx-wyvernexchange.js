@@ -55,11 +55,9 @@ async function main() {
         let senders = [users.bobBank, users.bob, users.betty];
         for (let sender of senders) {
             if (0 == sender.nonce) {
-                console.log("sender.nonce==7==", sender.nonce);
                 let nonce = await api.rpc.system.accountNextIndex(sender.key.address);
                 if (0 != nonce.words[0]) {
                     sender.nonce = nonce.words[0];
-                    console.log("sender.nonce==77==", sender.nonce);
                 }
             }
         }
@@ -68,7 +66,7 @@ async function main() {
         let accounts = Object.values(users).map((u) => u.key.address);
         let accounts7 = accounts.splice(0, 7);
         let accounts77 = accounts.splice(2, 7);
-        console.log(accounts, "=======account=====", accounts77);
+        // console.log(accounts, "=======account=====", accounts77);
         const buy = makeOrder(users.bob.key.address, true, 0);
         const sell = makeOrder(users.bob.key.address, false, 1);
         [sell.exchange, sell.maker, sell.taker, sell.feeRecipient, sell.target, sell.staticTarget, sell.paymentToken] = accounts77;
@@ -80,11 +78,6 @@ async function main() {
         sell.exchange = users.bob.key.address;
         buy.target = sell.target;
         buy.paymentToken = sell.paymentToken;
-        let buy_hash = "";
-        let sell_hash = "";
-        let buy_sig = "";
-        let sell_sig = "";
-
 
         console.log("======transfer====");
 
@@ -93,16 +86,7 @@ async function main() {
 
         await new Promise(r => setTimeout(r, block));
 
-        console.log("========approveOrderEx=======", [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
-            [buy.makerRelayerFee, buy.takerRelayerFee, buy.makerProtocolFee, buy.takerProtocolFee, buy.basePrice, buy.extra, buy.listingTime, buy.expirationTime, buy.salt],
-            buy.feeMethod,
-            buy.side,
-            buy.saleKind,
-            buy.howToCall,
-            buy.calldata,
-            buy.replacementPattern,
-            buy.staticExtradata,
-            true);
+        console.log("========approveOrderEx=======");
         buy.maker = users.betty.key.address;
         submit(api, api.tx.wyvernExchange.approveOrderEx(
             [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target, buy.staticTarget, buy.paymentToken],
@@ -116,24 +100,22 @@ async function main() {
             buy.staticExtradata,
             true
         ), users.betty);
-        console.log("========changeMinimumMakerProtocolFee=======");
-        submit(api, api.tx.wyvernExchangeCore.changeMinimumMakerProtocolFee(
-            1), users.betty);
-
-        console.log("========changeMinimumTakerProtocolFee=======");
-        submit(api, api.tx.wyvernExchangeCore.changeMinimumTakerProtocolFee(
-            1), users.betty);
-
-        console.log("========changeProtocolFeeRecipient=======");
-        submit(api, api.tx.wyvernExchangeCore.changeProtocolFeeRecipient(
-            users.bob.key.address), users.betty);
-        break;
 
         submit(api, api.tx.wyvernExchangeCore.changeOwner(
             users.bob.key.address), users.betty);
-        submit(api, api.tx.wyvernExchangeCore.setContractSelf(
-            users.bob.key.address), users.betty);
         await new Promise(r => setTimeout(r, block));
+
+        console.log("========changeMinimumMakerProtocolFee=======");
+        submit(api, api.tx.wyvernExchangeCore.changeMinimumMakerProtocolFee(
+            1), users.betty);
+        console.log("========changeMinimumTakerProtocolFee=======");
+        submit(api, api.tx.wyvernExchangeCore.changeMinimumTakerProtocolFee(
+            1), users.betty);
+        console.log("========changeProtocolFeeRecipient=======");
+        submit(api, api.tx.wyvernExchangeCore.changeProtocolFeeRecipient(
+            users.bob.key.address), users.betty);
+        submit(api, api.tx.wyvernExchangeCore.setContractSelf(
+            users.bob.key.address), users.bob);
     } catch (e) {
         console.log("============", e);
         throw e;
