@@ -1,8 +1,6 @@
 # Pacific Store Wyvern Exchange  pallet
-
-The Product Registry pallet provides functionality for registering and managing master data (aka class-level) about products / trade items exchanged in a supply chain between various stakeholders. This data is typically created_date once by the product's manufacturer / supplier to be shared with other network participants.
-
-When this pallet is added to a Subtrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Product Registry pallet as a reference for known products and their owning organizations.
+ The WyvernExchange pallet provides functionality for WyvernExchanges management.
+ The goal:Autonomously governed decentralized digital asset exchange.
 
 This pallet is part of the [pacificstore-node](https://github.com/vlbos/pacificstore-node).
 

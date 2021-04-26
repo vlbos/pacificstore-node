@@ -2,7 +2,7 @@
 
 The Orderbook pallet provides functionality for posting and managing master data  about NFT orders exchanged in a marketplace between various users. This data is typically posted once by the NFT's buyer / seller to be shared with other network participants.
 
-When this pallet is added to a Subtrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Orderbook pallet as a reference for known NFTs .
+When this pallet is added to a Substrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Orderbook pallet as a reference for known NFTs .
 
 This pallet is part of the [pacificstore-node](https://github.com/vlbos/pacificstore-node) .
 

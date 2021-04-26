@@ -1,9 +1,20 @@
-//! # WyvernExchange Pallet
+//! # WyvernExchangeCore Pallet
 //!
 //!
 //! ## Overview
 //!
-//! The WyvernExchange pallet provides functionality for WyvernExchanges management.
+//!
+//!  Decentralized digital asset exchange. Supports any digital asset that can be represented 
+//!  on the Ethereum blockchain (i.e. - transferred in an Polkadot extrinsic or sequence of transactions).
+//!
+//!  Let us suppose two agents interacting with a distributed ledger have utility functions preferencing 
+//!  certain states of that ledger over others.
+//!  Aiming to maximize their utility, these agents may construct with their utility functions 
+//!  along with the present ledger state a mapping of state transitions (transactions) to marginal utilities.
+//!  Any composite state transition with positive marginal utility for and enactable 
+//!  by the combined permissions of both agents thus is a mutually desirable trade, and the trustless 
+//!  code execution provided by a distributed ledger renders the requisite atomicity trivial.
+//!  The WyvernExchangeCore pallet provides functionality for WyvernExchanges management.
 //!
 //! * Approve Order
 //! * Cancel Order

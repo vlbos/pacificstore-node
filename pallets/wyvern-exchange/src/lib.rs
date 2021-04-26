@@ -3,6 +3,7 @@
 //!
 //! ## Overview
 //!
+//! This is an outer pallet with public or convenience functions and includes no state-modifying functions.
 //! The WyvernExchange pallet provides functionality for WyvernExchanges management.
 //!
 //! * Approve Order

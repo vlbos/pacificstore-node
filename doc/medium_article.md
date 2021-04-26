@@ -22,7 +22,47 @@ WyvernExchange pallet implements the Exchange and ExchangeCore part of Wyvern pr
 PacificStore-node based on Substrate-node-template,integrates Orderbook pallet , WyvernExchange pallet and both custom RPCs.
 Test Project based on Substate-front-end-template,In order to demonstrate the usage of the two pallets.It includes custom types and RPCs.
 
+## Orderbook
 
+The Orderbook pallet provides functionality for posting and managing master data  about NFT orders exchanged in a marketplace between various users. This data is typically posted once by the NFT's buyer / seller to be shared with other network participants.
+
+When this pallet is added to a Substrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Orderbook pallet as a reference for known NFTs .
+
+### Extrinsic
+#### postOrder
+To post a order, one must send a transaction with a `orderbook.postOrder` extrinsic with the following arguments:
+
+#### postAssetWhiteList
+Create a whitelist entry for an asset to prevent others from buying.Buyers will have to have verified at least one of the emails on an asset in order to buy. This will return error code if the given API key isn't allowed to create whitelist entries for this contract or asset.one must send a transaction with a `orderbook.postAssetWhiteList` extrinsic with the following arguments:
+
+## WyvernExchange
+
+The Wyvern Exchange pallet provides functionality for registering and managing master data (aka class-level) about orders exchanged in a  marketplace between various users. This data is typically created_date once by the order's buyer / seller to be shared with other network participants.
+
+When this pallet is added to a Substrate runtime, other custom Substrate pallets can then implement additional business logic leveraging this Wyvern Exchange pallet as a reference for known orders.
+
+### Extrinsic
+#### approveOrder
+To approve a order, one must send a transaction with a `wyvernExchange.approveOrder` extrinsic with the following arguments:
+
+#### cancelOrder
+To cancel a order, one must send a transaction with a `wyvernExchange.cancelOrder` extrinsic with the following arguments:
+
+#### atomicMatch
+To atomically match two orders, ensuring validity of the match, and execute all associated state transitions, one must send a transaction with a `wyvernExchange.atomicMatch` extrinsic with the following arguments:
+
+#### changeMinimumMakerProtocolFee
+To change the minimum maker fee paid to the protocol, one must send a transaction with a `wyvernExchange.changeMinimumMakerProtocolFee` extrinsic with the following arguments:
+
+#### changeMinimumTakerProtocolFee
+To change the minimum taker fee paid to the protocol, one must send a transaction with a `wyvernExchange.changeMinimumTakerProtocolFee` extrinsic with the following arguments:
+
+#### changeProtocolFeeRecipient
+To change the protocol fee recipient, one must send a transaction with a `wyvernExchange.changeProtocolFeeRecipient` extrinsic with the following arguments:
+
+
+
+## Test Project
 
 start front-end
 ```bash
