@@ -26,7 +26,7 @@ pub type FieldValue = Vec<u8>;
 // This data is typically created_date once by the order's manufacturer / supplier,
 // to be shared with other network participants, and remains largely static.
 // It can also be used for instance-level (lot) master data.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderJSONType<AccountId, Moment> {
     pub index: u64,
@@ -42,7 +42,7 @@ pub struct OrderJSONType<AccountId, Moment> {
     pub created_date: Moment,
 }
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderQuery<AccountId> {
     pub limit: Option<u64>,
@@ -53,7 +53,7 @@ pub struct OrderQuery<AccountId> {
 }
 
 // Contains a name-value pair for a order fielderty e.g. description: Ingredient ABC
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderField {
     // Name of the order fielderty e.g. desc or description
@@ -79,7 +79,7 @@ impl OrderField {
     }
 }
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct JSONField {
     // Name of the order field e.g. desc or description
@@ -88,7 +88,7 @@ pub struct JSONField {
     pub json: Option<Vec<OrderField>>,
 }
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct AssetQuery<AccountId> {
     pub owner: Option<AccountId>,
@@ -101,7 +101,7 @@ pub struct AssetQuery<AccountId> {
     pub offset: Option<u64>,
 }
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct JSONType {
     pub fields: Option<Vec<OrderField>>,

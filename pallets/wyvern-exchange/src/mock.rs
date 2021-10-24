@@ -65,7 +65,7 @@ pub const ExistentialDeposit: u64 = 500;
     pub const AvailableBlockRatio: Perbill = Perbill::from_percent(75);
 }
 
-impl system::Trait for Test {
+impl system::Config for Test {
     type BaseCallFilter = ();
     type Origin = Origin;
     type Call = ();
@@ -93,7 +93,7 @@ impl system::Trait for Test {
     type SystemWeightInfo = ();
 }
 
-impl timestamp::Trait for Test {
+impl timestamp::Config for Test {
     type Moment = u64;
     type OnTimestampSet = ();
     type MinimumPeriod = ();
@@ -116,7 +116,7 @@ impl exchange_core::Trait for Test {
 pub type WyvernExchange = Module<Test>;
 pub type ExchangeCore = exchange_core::Module<Test>;
 pub type System = system::Module<Test>;
-pub type Timestamp = timestamp::Module<Test>;
+pub type Timestamp = timestamp::Pallet<Test>;
 pub type Balances = balances::Module<Test>;
 
 /// Run until a particular block.

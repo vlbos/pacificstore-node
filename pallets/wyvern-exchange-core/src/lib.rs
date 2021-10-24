@@ -99,7 +99,7 @@ use crate::exchange_common::BalanceOf;
 pub mod sale_kind_interface;
 
 pub trait Trait: sale_kind_interface::Trait + exchange_common::Trait {
-    type Event: From<Event<Self>> + Into<<Self as system::Trait>::Event>;
+    type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
     type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
     type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
 }
@@ -132,9 +132,9 @@ decl_storage! {
 decl_event!(
     pub enum Event<T>
     where
-        AccountId = <T as system::Trait>::AccountId,
+        AccountId = <T as system::Config>::AccountId,
         Balance = BalanceOf<T>,
-        Moment = <T as timestamp::Trait>::Moment,
+        Moment = <T as timestamp::Config>::Moment,
     {
         OrderApprovedPartOne(
             Vec<u8>,
@@ -271,7 +271,7 @@ decl_module! {
         new_owner: T::AccountId,
     ) -> DispatchResult {
         let _user = ensure_signed(origin)?;
-        frame_support::debug::RuntimeLogger::init();
+        sp_runtime::runtime_logger::RuntimeLogger::init();
 
         ensure!(T::AccountId::default() == Owner::<T>::get() 
             || _user == Owner::<T>::get(),

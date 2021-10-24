@@ -8,8 +8,8 @@ use sp_core::Pair;
 const TEST_SENDER: &str = "Alice";
 const TEST_SENDER_1: &str = "Bob";
 
-type AccountId = <Test as system::Trait>::AccountId;
-type Moment = <Test as timestamp::Trait>::Moment;
+type AccountId = <Test as system::Config>::AccountId;
+type Moment = <Test as timestamp::Config>::Moment;
 type Balance = <Test as balances::Trait>::Balance;
 fn make_order(
     maker: AccountId,

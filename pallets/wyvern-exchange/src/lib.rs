@@ -197,7 +197,7 @@ decl_module! {
             sig_sell.clone(),
             &rss_metadata,
         ){
-            frame_support::debug::error!("==atomic_match_ex==debug::error============={:?}",err);
+            frame_support::log::error!("==atomic_match_ex==debug::error============={:?}",err);
             return Err(err);
         }
         Ok(())

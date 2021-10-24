@@ -54,14 +54,14 @@ impl Into<u128> for Balancex {
 }
 
 //sale kind interface
-#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum Side {
     Buy,
     Sell,
 }
 
-#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum SaleKind {
     FixedPrice,
@@ -70,14 +70,14 @@ pub enum SaleKind {
 
 // // Fee method: protocol fee or split fee.
 // enum FeeMethod { ProtocolFee, SplitFee }
-#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum FeeMethod {
     ProtocolFee,
     SplitFee,
 }
 
-#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq)]
+#[derive(Encode, Decode, Debug, Clone, Eq, PartialEq,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum HowToCall {
     Call,
@@ -183,7 +183,7 @@ impl From<u8> for Side {
 // This data is typically created_date once by the order's manufacturer / supplier,
 // to be shared with other network participants, and remains largely static.
 // It can also be used for instance-level (lot) master data.
-#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, RuntimeDebug,scale_info::TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub struct OrderType<AccountId, Moment, Balance> {
     // // An order on the exchange.

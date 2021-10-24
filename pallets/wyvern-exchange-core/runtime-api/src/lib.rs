@@ -12,6 +12,7 @@ sp_api::decl_runtime_apis! {
         Balance: Codec,
         Moment: Codec,
         Signature:Codec,
+wyvern_exchange_core::OrderType<AccountId, Moment, Balance>: sp_api::Encode
         {
             fn hash_order(
              order: OrderType<AccountId, Moment, Balance>,

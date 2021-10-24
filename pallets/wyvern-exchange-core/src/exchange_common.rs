@@ -12,11 +12,11 @@ use frame_support::{
 };
 use frame_system::{self as system};
 pub type BalanceOf<T> =
-    <<T as Trait>::Currency as Currency<<T as system::Trait>::AccountId>>::Balance;
+    <<T as Trait>::Currency as Currency<<T as system::Config>::AccountId>>::Balance;
 
 use crate::types::*;
 
-pub trait Trait: system::Trait + timestamp::Trait {
+pub trait Trait: system::Config + timestamp::Config {
     type Currency: ReservableCurrency<Self::AccountId>
         + LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 }

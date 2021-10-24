@@ -8,47 +8,28 @@ homepage = ''
 repository = 'https://github.com/vlbos/orderbook/'
 license = 'Unlicense'
 
-# [dependencies.serde]
-# features = ['derive']
-# optional = true
-# version = '1.0.101'
+[dependencies]
+frame-support = { git = "https://github.com/paritytech/substrate", package = "frame-support", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", package = "frame-system", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", package = "sp-std", default-features = false }
+timestamp = { git = "https://github.com/paritytech/substrate", package = "pallet-timestamp", default-features = false }
+serde = { features = ['derive'], optional = true, version = '1.0.119' }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/substrate", package = "sp-runtime", default-features = false }
 
 [dependencies.codec]
 default-features = false
 features = ['derive']
 package = 'parity-scale-codec'
-version = '1.3.4'
-
-[dependencies.timestamp]
-default_features = false
-package = 'pallet-timestamp'
 version = '2.0.0'
 
-[dependencies]
-frame-support = { default-features = false, version = '2.0.0' }
-frame-system = { default-features = false, version = '2.0.0' }
-# serde = { version = "1.0.123", default-features = false }
-# serde_derive = { version = "1.0.123", optional = true }
-# serde = { features = ['derive'], optional = true, version = '1.0.116' }
-# serde = { version = "1.0.114", optional = true }
-# serde = { features = ['derive'], optional = true, version = '1.0.106' }
-# serde = "1"
-# serde = { version = "1.0", default-features = false, features = ['derive'],optional = true }
-serde = { features = ['derive'], optional = true, version = '1.0.119' }
-
-[dev-dependencies]
-sp-core = { default-features = false, version = '2.0.0' }
-sp-io = { default-features = false, version = '2.0.0' }
-sp-runtime = { default-features = false, version = '2.0.0' }
-sp-std = {  default-features = false,version = '2.0.0' }
 
 [features]
 default = ['std']
 std = [
-# "serde_derive",
-# "serde/std",
 "serde",
     'codec/std',
+'scale-info/std',
     'frame-support/std',
     'frame-system/std',
     'timestamp/std',

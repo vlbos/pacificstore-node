@@ -7,12 +7,13 @@
 
 use std::sync::Arc;
 
-use pacific_store_runtime::{opaque::Block, AccountId, Balance, Index, Moment, Signature};
+use pacific_store_runtime::{opaque::Block, AccountId, Balance, Index, Moment, Signature, BlockNumber, Hash};
+use pallet_contracts_rpc::{Contracts, ContractsApi};
 pub use sc_rpc_api::DenyUnsafe;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use sp_transaction_pool::TransactionPool;
+use sc_transaction_pool_api::TransactionPool;
 
 use orderbook_rpc;
 use orderbook_runtime_api;
@@ -38,6 +39,7 @@ where
     C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
     C: Send + Sync + 'static,
     C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
+	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
     C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
     C::Api: BlockBuilder<Block>,
     C::Api: orderbook_runtime_api::OrderbookApi<Block, AccountId, Moment>,
@@ -82,6 +84,8 @@ where
     // to call into the runtime.
     // `io.extend_with(YourRpcTrait::to_delegate(YourRpcStruct::new(ReferenceToClient, ...)));`
 
+	// Contracts RPC API extension
+	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
     io.extend_with(orderbook_rpc::OrderbookApi::to_delegate(
         orderbook_rpc::Orderbook::new(client.clone()),
     ));

@@ -33,7 +33,7 @@ impl<T: Trait> Module<T> {
     // listing_time OrderType listing time
     // expiration_time OrderType expiration time
     pub fn can_settle_order(listing_time: T::Moment, expiration_time: T::Moment) -> bool {
-        let now: T::Moment = <timestamp::Module<T>>::now(); 
+        let now: T::Moment = <timestamp::Pallet<T>>::now(); 
         (listing_time < now) && (expiration_time == Zero::zero() || now < expiration_time)
     }
 
