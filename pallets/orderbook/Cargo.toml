@@ -1,0 +1,37 @@
+[package]
+name = 'pallet-orderbook'
+version = '2.0.0'
+description = 'NFT Dex order book'
+edition = '2018'
+authors = ['vlbos <https://github.com/vlbos>']
+homepage = ''
+repository = 'https://github.com/vlbos/orderbook/'
+license = 'Unlicense'
+
+[dependencies]
+frame-support = { git = "https://github.com/paritytech/substrate", package = "frame-support", default-features = false }
+frame-system = { git = "https://github.com/paritytech/substrate", package = "frame-system", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", package = "sp-std", default-features = false }
+timestamp = { git = "https://github.com/paritytech/substrate", package = "pallet-timestamp", default-features = false }
+serde = { features = ['derive'], optional = true, version = '1.0.119' }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+sp-runtime = { git = "https://github.com/paritytech/substrate", package = "sp-runtime", default-features = false }
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '2.0.0'
+
+
+[features]
+default = ['std']
+std = [
+"serde",
+    'codec/std',
+'scale-info/std',
+    'frame-support/std',
+    'frame-system/std',
+    'timestamp/std',
+'sp-std/std',
+]
