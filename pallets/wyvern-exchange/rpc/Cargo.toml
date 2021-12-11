@@ -1,0 +1,51 @@
+[package]
+name = "wyvern-exchange-rpc"
+version = "2.0.0"
+edition = "2018"
+authors = ['']
+repository = ''
+description = ""
+license = "unlicense"
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '2.0.0'
+[dependencies]
+jsonrpc-core = "18.0"
+jsonrpc-core-client = "16.0"
+jsonrpc-derive = "16.0"
+serde = { version = "1.0", features = ["derive"], optional = true }
+
+# Substrate packages
+
+
+
+sp-api = { git = "https://github.com/paritytech/substrate", package = "sp-api", default-features = false }
+
+sp-runtime = { git = "https://github.com/paritytech/substrate", package = "sp-runtime", default-features = false }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", package = "sp-blockchain" }
+sc-rpc = { git = "https://github.com/paritytech/substrate", package = "sc-rpc" }
+sp-core = { git = "https://github.com/paritytech/substrate", package = "sp-core" }
+
+
+# local packages
+
+wyvern-exchange-runtime-api = { version = "2.0.0", path = "../runtime-api", default-features = false }
+[dependencies.wyvern-exchange]
+default-features = false
+package = 'pallet-wyvern-exchange'
+path = '..'
+version = '2.0.0'
+
+[features]
+default = ["std"]
+std = [
+  "serde",
+  "sp-api/std",
+  "sp-runtime/std",
+  "sp-core/std",
+  "wyvern-exchange-runtime-api/std",
+  "wyvern-exchange/std"
+]

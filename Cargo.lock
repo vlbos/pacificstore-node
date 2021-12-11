@@ -828,7 +828,9 @@ dependencies = [
  "contracts-node-runtime",
  "frame-benchmarking",
  "frame-benchmarking-cli",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
+ "orderbook-rpc",
+ "orderbook-runtime-api",
  "pallet-contracts-rpc",
  "pallet-transaction-payment-rpc",
  "sc-basic-authorship",
@@ -858,6 +860,10 @@ dependencies = [
  "structopt",
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
+ "wyvern-exchange-core-rpc",
+ "wyvern-exchange-core-runtime-api",
+ "wyvern-exchange-rpc",
+ "wyvern-exchange-runtime-api",
 ]
 
 [[package]]
@@ -871,17 +877,21 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
+ "orderbook-runtime-api",
  "pallet-aura",
  "pallet-balances",
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
  "pallet-grandpa",
+ "pallet-orderbook",
  "pallet-randomness-collective-flip",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
+ "pallet-wyvern-exchange",
+ "pallet-wyvern-exchange-core",
  "parity-scale-codec",
  "sp-api",
  "sp-block-builder",
@@ -895,6 +905,8 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "substrate-wasm-builder",
+ "wyvern-exchange-core-runtime-api",
+ "wyvern-exchange-runtime-api",
 ]
 
 [[package]]
@@ -2392,18 +2404,47 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-client-transports"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "320acafbc911d7ef8cc056fee6affbed348dc8aaf76709bfda83d3665d092ad4"
+dependencies = [
+ "derive_more",
+ "futures 0.3.17",
+ "jsonrpc-core 16.0.0",
+ "jsonrpc-pubsub 16.0.0",
+ "log",
+ "serde",
+ "serde_json",
+ "url 1.7.2",
+]
+
+[[package]]
+name = "jsonrpc-client-transports"
 version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2b99d4207e2a04fb4581746903c2bb7eb376f88de9c699d0f3e10feeac0cd3a"
 dependencies = [
  "derive_more",
  "futures 0.3.17",
- "jsonrpc-core",
- "jsonrpc-pubsub",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-pubsub 18.0.0",
  "log",
  "serde",
  "serde_json",
  "url 1.7.2",
+]
+
+[[package]]
+name = "jsonrpc-core"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a47c4c3ac843f9a4238943f97620619033dadef4b378cd1e8addd170de396b3"
+dependencies = [
+ "futures 0.3.17",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -2423,12 +2464,34 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-core-client"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "289d049ac6a6c69e8d2023ad420934d236badda8375f1fd9960a2f67beedb42e"
+dependencies = [
+ "futures 0.3.17",
+ "jsonrpc-client-transports 16.0.0",
+]
+
+[[package]]
+name = "jsonrpc-core-client"
 version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b51da17abecbdab3e3d4f26b01c5ec075e88d3abe3ab3b05dc9aa69392764ec0"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-client-transports",
+ "jsonrpc-client-transports 18.0.0",
+]
+
+[[package]]
+name = "jsonrpc-derive"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4b6a15924a4b7ae582079c5e78cc5d692ec8ebe5167e660ee1755509a59b551"
+dependencies = [
+ "proc-macro-crate 0.1.5",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -2451,7 +2514,7 @@ checksum = "e1dea6e07251d9ce6a552abfb5d7ad6bc290a4596c8dcc3d795fae2bbdc1f3ff"
 dependencies = [
  "futures 0.3.17",
  "hyper",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "jsonrpc-server-utils",
  "log",
  "net2",
@@ -2466,7 +2529,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "382bb0206323ca7cda3dcd7e245cea86d37d02457a02a975e3378fb149a48845"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "jsonrpc-server-utils",
  "log",
  "parity-tokio-ipc",
@@ -2476,12 +2539,27 @@ dependencies = [
 
 [[package]]
 name = "jsonrpc-pubsub"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a1132f6d03de286dd21bde88191af63b5189214574f7b9cbac8e0027c732394"
+dependencies = [
+ "futures 0.3.17",
+ "jsonrpc-core 16.0.0",
+ "lazy_static",
+ "log",
+ "parking_lot 0.11.2",
+ "rand 0.7.3",
+ "serde",
+]
+
+[[package]]
+name = "jsonrpc-pubsub"
 version = "18.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "240f87695e6c6f62fb37f05c02c04953cf68d6408b8c1c89de85c7a0125b1011"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "lazy_static",
  "log",
  "parking_lot 0.11.2",
@@ -2498,7 +2576,7 @@ dependencies = [
  "bytes 1.1.0",
  "futures 0.3.17",
  "globset",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "lazy_static",
  "log",
  "tokio",
@@ -2514,7 +2592,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f892c7d766369475ab7b0669f417906302d7c0fb521285c0a0c92e52e7c8e946"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "jsonrpc-server-utils",
  "log",
  "parity-ws",
@@ -3739,6 +3817,34 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28988d872ab76095a6e6ac88d99b54fd267702734fd7ffe610ca27f533ddb95a"
 
 [[package]]
+name = "orderbook-rpc"
+version = "2.0.0"
+dependencies = [
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 16.0.0",
+ "jsonrpc-derive 16.0.0",
+ "orderbook-runtime-api",
+ "pallet-orderbook",
+ "parity-scale-codec",
+ "sc-rpc",
+ "serde",
+ "sp-api",
+ "sp-blockchain",
+ "sp-runtime",
+]
+
+[[package]]
+name = "orderbook-runtime-api"
+version = "2.0.0"
+dependencies = [
+ "pallet-orderbook",
+ "parity-scale-codec",
+ "serde_json",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
 name = "owning_ref"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3843,9 +3949,9 @@ name = "pallet-contracts-rpc"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e3017c4a0aad516"
 dependencies = [
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 18.0.0",
+ "jsonrpc-derive 18.0.0",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
  "parity-scale-codec",
@@ -3888,6 +3994,20 @@ dependencies = [
  "sp-runtime",
  "sp-session",
  "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-orderbook"
+version = "2.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-runtime",
  "sp-std",
 ]
 
@@ -3975,9 +4095,9 @@ name = "pallet-transaction-payment-rpc"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e3017c4a0aad516"
 dependencies = [
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 18.0.0",
+ "jsonrpc-derive 18.0.0",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
  "sp-api",
@@ -3996,6 +4116,38 @@ dependencies = [
  "parity-scale-codec",
  "sp-api",
  "sp-runtime",
+]
+
+[[package]]
+name = "pallet-wyvern-exchange"
+version = "2.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+]
+
+[[package]]
+name = "pallet-wyvern-exchange-core"
+version = "2.0.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -5575,8 +5727,8 @@ source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e
 dependencies = [
  "futures 0.3.17",
  "hash-db",
- "jsonrpc-core",
- "jsonrpc-pubsub",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-pubsub 18.0.0",
  "log",
  "parity-scale-codec",
  "parking_lot 0.11.2",
@@ -5605,10 +5757,10 @@ version = "0.10.0-dev"
 source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e3017c4a0aad516"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
- "jsonrpc-pubsub",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 18.0.0",
+ "jsonrpc-derive 18.0.0",
+ "jsonrpc-pubsub 18.0.0",
  "log",
  "parity-scale-codec",
  "parking_lot 0.11.2",
@@ -5630,10 +5782,10 @@ version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e3017c4a0aad516"
 dependencies = [
  "futures 0.3.17",
- "jsonrpc-core",
+ "jsonrpc-core 18.0.0",
  "jsonrpc-http-server",
  "jsonrpc-ipc-server",
- "jsonrpc-pubsub",
+ "jsonrpc-pubsub 18.0.0",
  "jsonrpc-ws-server",
  "log",
  "serde_json",
@@ -5651,8 +5803,8 @@ dependencies = [
  "futures 0.3.17",
  "futures-timer 3.0.2",
  "hash-db",
- "jsonrpc-core",
- "jsonrpc-pubsub",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-pubsub 18.0.0",
  "log",
  "parity-scale-codec",
  "parity-util-mem",
@@ -6912,9 +7064,9 @@ source = "git+https://github.com/paritytech/substrate#b391b82954ad95a927a921035e
 dependencies = [
  "frame-system-rpc-runtime-api",
  "futures 0.3.17",
- "jsonrpc-core",
- "jsonrpc-core-client",
- "jsonrpc-derive",
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 18.0.0",
+ "jsonrpc-derive 18.0.0",
  "log",
  "parity-scale-codec",
  "sc-client-api",
@@ -7991,6 +8143,63 @@ checksum = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 dependencies = [
  "winapi 0.2.8",
  "winapi-build",
+]
+
+[[package]]
+name = "wyvern-exchange-core-rpc"
+version = "2.0.0"
+dependencies = [
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 16.0.0",
+ "jsonrpc-derive 16.0.0",
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "sc-rpc",
+ "serde",
+ "sp-api",
+ "sp-blockchain",
+ "sp-runtime",
+ "wyvern-exchange-core-runtime-api",
+]
+
+[[package]]
+name = "wyvern-exchange-core-runtime-api"
+version = "2.0.0"
+dependencies = [
+ "pallet-wyvern-exchange-core",
+ "parity-scale-codec",
+ "serde_json",
+ "sp-api",
+ "sp-std",
+]
+
+[[package]]
+name = "wyvern-exchange-rpc"
+version = "2.0.0"
+dependencies = [
+ "jsonrpc-core 18.0.0",
+ "jsonrpc-core-client 16.0.0",
+ "jsonrpc-derive 16.0.0",
+ "pallet-wyvern-exchange",
+ "parity-scale-codec",
+ "sc-rpc",
+ "serde",
+ "sp-api",
+ "sp-blockchain",
+ "sp-core",
+ "sp-runtime",
+ "wyvern-exchange-runtime-api",
+]
+
+[[package]]
+name = "wyvern-exchange-runtime-api"
+version = "2.0.0"
+dependencies = [
+ "pallet-wyvern-exchange",
+ "parity-scale-codec",
+ "serde_json",
+ "sp-api",
+ "sp-std",
 ]
 
 [[package]]
