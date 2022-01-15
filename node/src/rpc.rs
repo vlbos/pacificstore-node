@@ -7,13 +7,19 @@
 
 use std::sync::Arc;
 
-use contracts_node_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
+use contracts_node_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index, Moment, Signature};
 use pallet_contracts_rpc::{Contracts, ContractsApi};
 pub use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use orderbook_rpc;
+use orderbook_runtime_api;
+use wyvern_exchange_core_rpc;
+use wyvern_exchange_core_runtime_api;
+use wyvern_exchange_rpc;
+use wyvern_exchange_runtime_api;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -35,6 +41,21 @@ where
 	C::Api: pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	C::Api: BlockBuilder<Block>,
+    C::Api: orderbook_runtime_api::OrderbookApi<Block, AccountId, Moment>,
+    C::Api: wyvern_exchange_runtime_api::WyvernExchangeApi<
+        Block,
+        AccountId,
+        Balance,
+        Moment,
+        Signature,
+    >,
+    C::Api: wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi<
+        Block,
+        AccountId,
+        Balance,
+        Moment,
+        Signature,
+    >,
 	P: TransactionPool + 'static,
 {
 	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
@@ -54,6 +75,18 @@ where
 
 	// Contracts RPC API extension
 	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
+    io.extend_with(orderbook_rpc::OrderbookApi::to_delegate(
+        orderbook_rpc::Orderbook::new(client.clone()),
+    ));
 
+    io.extend_with(wyvern_exchange_rpc::WyvernExchangeApi::to_delegate(
+        wyvern_exchange_rpc::WyvernExchange::new(client.clone()),
+    ));
+
+    io.extend_with(
+        wyvern_exchange_core_rpc::WyvernExchangeCoreApi::to_delegate(
+            wyvern_exchange_core_rpc::WyvernExchangeCore::new(client.clone()),
+        ),
+    );
 	io
 }

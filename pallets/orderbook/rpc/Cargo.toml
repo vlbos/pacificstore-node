@@ -1,0 +1,47 @@
+[package]
+name = "orderbook-rpc"
+version = "2.0.0"
+edition = "2018"
+authors = ['']
+repository = ''
+description = "A pallet that nft orders management"
+license = "unlicense"
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '2.0.0'
+[dependencies]
+jsonrpc-core = "18.0"
+jsonrpc-core-client = "16.0"
+jsonrpc-derive = "16.0"
+serde = { features = ['derive'], optional = true, version = '1.0.119' }
+
+# Substrate packages
+
+
+sp-api = { git = "https://github.com/paritytech/substrate", package = "sp-api", default-features = false }
+
+sp-runtime = { git = "https://github.com/paritytech/substrate", package = "sp-runtime", default-features = false }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", package = "sp-blockchain" }
+sc-rpc = { git = "https://github.com/paritytech/substrate", package = "sc-rpc" }
+
+# local packages
+
+orderbook-runtime-api = { version = "2.0.0", path = "../runtime-api", default-features = false }
+
+[dependencies.orderbook]
+default-features = false
+package = 'pallet-orderbook'
+path = '..'
+version = '2.0.0'
+
+[features]
+default = ["std"]
+std = [
+  "serde",
+  "sp-api/std",
+  "sp-runtime/std",
+  "orderbook-runtime-api/std",
+  "orderbook/std"
+]
