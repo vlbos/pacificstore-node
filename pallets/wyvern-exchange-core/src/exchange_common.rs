@@ -12,7 +12,6 @@ pub use pallet::*;
 // };
 // use frame_system::{self as system};
 
-
 // pub trait Config: system::Config + timestamp::Config {
 // 	type Currency: ReservableCurrency<Self::AccountId>
 // 		+ LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
@@ -22,24 +21,16 @@ pub use pallet::*;
 // 	pub struct Module<T: Config> for enum Call where origin: T::Origin {
 // 	}
 // }
-use frame_support::{
-// 	sp_runtime::traits::Zero,
-// sp_std::prelude::*,
-	traits::{Currency},//, LockableCurrency, ReservableCurrency
-};
-	pub type BalanceOf<T> =
-		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+use frame_support::traits::Currency;
+pub type BalanceOf<T> =
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 #[frame_support::pallet]
 pub mod pallet {
 	// use frame_support::pallet_prelude::*;
 	// use frame_system::pallet_prelude::*;
-use frame_support::{
-	sp_runtime::traits::Zero,
-sp_std::prelude::*,
-	traits::{Currency},//, LockableCurrency, ReservableCurrency
-};
+	use frame_support::{sp_runtime::traits::Zero, sp_std::prelude::*, traits::Currency};
 
-use crate::types::*;
+	use crate::types::*;
 	pub type BalanceOf<T> =
 		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 	#[pallet::config]

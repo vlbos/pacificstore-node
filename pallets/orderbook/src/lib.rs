@@ -59,23 +59,24 @@ pub mod pallet {
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
 
-use frame_support::{
-    // decl_error, decl_event, decl_module, decl_storage,
-    dispatch::DispatchResult,
-    ensure,
-    sp_std::prelude::*,
-    sp_std::{collections::btree_set::BTreeSet},
-};
+    use frame_support::{
+        // decl_error, decl_event, decl_module, decl_storage,
+        dispatch::DispatchResult,
+        ensure,
+        sp_std::collections::btree_set::BTreeSet,
+        sp_std::prelude::*,
+    };
 
-//   use frame_support::dispatch::EncodeLike;
-pub use crate::types::OrderJSONType;
-use crate::builders::*;
+    //   use frame_support::dispatch::EncodeLike;
+    use crate::builders::*;
+    pub use crate::types::OrderJSONType;
 
-type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
-type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>::Moment>;
+    type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+    type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>::Moment>;
 
     #[pallet::config]
-    pub trait Config: frame_system::Config+ timestamp::Config  {//
+    pub trait Config: frame_system::Config + timestamp::Config {
+        //
         // type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
     }
@@ -107,13 +108,8 @@ type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>
     pub(super) type Owner<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
     #[pallet::storage]
     #[pallet::getter(fn order_by_index)]
-    pub(super) type Orders<T: Config> = StorageMap<
-        _,
-        Blake2_128Concat,
-        u64,
-        OrderJSONTypeOf<T>,
-        OptionQuery,
-    >;
+    pub(super) type Orders<T: Config> =
+        StorageMap<_, Blake2_128Concat, u64, OrderJSONTypeOf<T>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn order_index_by_id)]
@@ -154,8 +150,7 @@ type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>
     // decl_event!(
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
-    pub enum Event<T: Config> 
-    {
+    pub enum Event<T: Config> {
         OrderPosted(T::AccountId, OrderId, T::AccountId),
         AssetWhiteListPosted(Vec<u8>, Vec<u8>, Vec<u8>),
         OwnerChanged(T::AccountId, T::AccountId),
@@ -183,7 +178,7 @@ type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>
         OnlyOwner,
     }
     // }
-// where <T as frame_system::Config>::AccountId: EncodeLike<std::option::Option<<T as frame_system::Config>::AccountId>>
+    // where <T as frame_system::Config>::AccountId: EncodeLike<std::option::Option<<T as frame_system::Config>::AccountId>>
     // decl_module! {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
@@ -237,7 +232,8 @@ type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>
 
             // Validate order posted limits on chain
             ensure!(
-                <NextOrderIndex<T>>::get() - <RemovedOrderCount<T>>::get() <= <OrderLimits<T>>::get(),
+                <NextOrderIndex<T>>::get() - <RemovedOrderCount<T>>::get()
+                    <= <OrderLimits<T>>::get(),
                 Error::<T>::OrderLimitsExceed,
             );
             // Validate order ID
@@ -358,11 +354,7 @@ type OrderJSONTypeOf<T> = OrderJSONType<AccountIdOf<T>, <T as timestamp::Config>
             } else {
                 <AssetWhitelist<T>>::insert(token_address.clone(), token_id.clone(), email.clone());
             }
-            Self::deposit_event(Event::AssetWhiteListPosted(
-                token_address,
-                token_id,
-                email,
-            ));
+            Self::deposit_event(Event::AssetWhiteListPosted(token_address, token_id, email));
             Ok(())
         }
 

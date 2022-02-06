@@ -2,7 +2,7 @@
 
 pub use crate as wyvern_exchange_core;
 // pub use crate::exchange_core::*;
-pub use crate::{exchange_common::*, Module, Config};
+pub use crate::{exchange_common::*, Config, Module};
 use core::marker::PhantomData;
 use frame_support::{
 	impl_outer_event, impl_outer_origin, parameter_types,

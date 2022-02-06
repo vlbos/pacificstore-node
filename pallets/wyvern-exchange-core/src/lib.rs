@@ -95,26 +95,33 @@ pub mod sale_kind_interface;
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-//  use frame_support::traits::tokens::Balance;
-use frame_support::{
-    // decl_error, decl_event, decl_module, decl_storage,
-    dispatch::{DispatchResult},
-    ensure,
-    sp_io::hashing::keccak_256,
-    sp_runtime::{
-        traits::{IdentifyAccount, Member, Verify, Zero},
-    },
-    sp_std::{prelude::*},
-    traits::Currency,
-};
-use sp_core::sr25519;
+	use pallet_contracts::chain_extension::UncheckedFrom;
 
-pub use crate::types::*;
-use crate::exchange_common;
-use crate::sale_kind_interface;
-use crate::exchange_common::BalanceOf;
+	//  use frame_support::traits::tokens::Balance;
+	// use frame_support::dispatch::{Dispatchable, Parameter};
+	use frame_support::{
+		dispatch::DispatchResult,
+		ensure,
+		sp_io::hashing::keccak_256,
+		sp_runtime::traits::{IdentifyAccount, Member, Verify, Zero},
+		sp_std::prelude::*,
+		traits::Currency,
+	};
+	use sp_core::sr25519;
+
+	pub type BalanceOfC<T> = <<T as pallet_contracts::Config>::Currency as Currency<
+		<T as frame_system::Config>::AccountId,
+	>>::Balance;
+
+	pub use crate::types::*;
+	use crate::{exchange_common, exchange_common::BalanceOf, sale_kind_interface};
 	#[pallet::config]
-	pub trait Config: frame_system::Config +sale_kind_interface::Config + exchange_common::Config {
+	pub trait Config:
+		frame_system::Config
+		+ sale_kind_interface::Config
+		+ exchange_common::Config
+		+ pallet_contracts::Config
+	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		// type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
 		type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
@@ -177,11 +184,11 @@ use crate::exchange_common::BalanceOf;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T:Config>
-	// where
-		// AccountId : <T as system::Config>::AccountId,
-		// Balance : BalanceOf<T>,
-		// Moment : <T as timestamp::Config>::Moment,
+	pub enum Event<T: Config>
+// where
+	// AccountId : <T as system::Config>::AccountId,
+	// Balance : BalanceOf<T>,
+	// Moment : <T as timestamp::Config>::Moment,
 	{
 		OrderApprovedPartOne(
 			Vec<u8>,
@@ -251,7 +258,11 @@ use crate::exchange_common::BalanceOf;
 	// }
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>
+	where
+		T::AccountId: UncheckedFrom<T::Hash>,
+		T::AccountId: AsRef<[u8]>,
+	{
 		// type Error = Error<T>;
 		// fn deposit_event() = default;
 
@@ -334,10 +345,114 @@ use crate::exchange_common::BalanceOf;
 			Self::deposit_event(Event::ContractSelfChanged(_user, contract.clone()));
 			Ok(())
 		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		/// A generic extrinsic to wrap
+		/// [pallet_contracts::bare_call](https://github.com/paritytech/substrate/blob/352c46a648a5f2d4526e790a184daa4a1ffdb3bf/frame/contracts/src/lib.rs#L545-L562)
+		///
+		/// * `dest` - A destination account id for the contract being targeted
+		/// * `selector` - The 'selector' of the ink! smart contract function.
+		/// This can be retrived from the compiled `metadata.json`. It's possible to
+		/// [specify a selector](https://paritytech.github.io/ink-docs/macros-attributes/selector/) in
+		/// the smart contract itself.
+		/// * `arg` - An argument to be passed to the smart contract.
+		/// * `gas_limit` - The gas limit passed to the contract bare_call. This example should work
+		///   when given a value of around 10000000000
+		pub fn call_smart_contract(
+			origin: OriginFor<T>,
+			dest: T::AccountId,
+			mut selector: Vec<u8>,
+			mut selectors: Vec<u8>,
+			callees: Vec<T::AccountId>,
+			from: T::AccountId,
+			to: T::AccountId,
+			values: Vec<BalanceOfC<T>>,
+			#[pallet::compact] gas_limit: Weight,
+		) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			// Check against unbounded input
+			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
+			// Amount to transfer
+			let value: BalanceOfC<T> = Default::default();
+			let mut callees_enc: Vec<u8> = callees.encode();
+			let mut from_enc: Vec<u8> = from.encode();
+			let mut to_enc: Vec<u8> = to.encode();
+			let mut values_enc: Vec<u8> = values.encode();
+			let mut data = Vec::new();
+			data.append(&mut selector);
+			data.append(&mut selectors);
+			data.append(&mut callees_enc);
+			data.append(&mut from_enc);
+			data.append(&mut to_enc);
+			data.append(&mut values_enc);
+            use sp_std::if_std;
+            if_std! {
+				println!("The data_encode. is: {:?}",data);
+			}
+			// Do the actual call to the smart contract function
+			pallet_contracts::Pallet::<T>::bare_call(
+				who,
+				dest.clone(),
+				value,
+				gas_limit,
+				None,
+				data,
+				true,
+			)
+			.result?;
+
+			// Self::deposit_event(Event::CalledContractFromPallet(dest));
+			Ok(())
+		}
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn call_smart_contracts(
+			origin: OriginFor<T>,
+			dest: T::AccountId,
+			mut selector: Vec<u8>,
+			from: T::AccountId,
+			to: T::AccountId,
+			values: BalanceOfC<T>,
+			#[pallet::compact] gas_limit: Weight,
+		) -> DispatchResult {
+			use sp_std::if_std;
+
+			let who = ensure_signed(origin)?;
+			// Check against unbounded input
+			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
+			// Amount to transfer
+			let value: BalanceOfC<T> = Default::default();
+			let mut from_enc: Vec<u8> = from.encode();
+			let mut to_enc: Vec<u8> = to.encode();
+			let mut values_enc: Vec<u8> = values.encode();
+			let mut data = Vec::new();
+			data.append(&mut selector);
+			data.append(&mut from_enc);
+			data.append(&mut to_enc);
+			data.append(&mut values_enc);
+
+			// Do the actual call to the smart contract function
+			let r = pallet_contracts::Pallet::<T>::bare_call(
+				who,
+				dest.clone(),
+				value,
+				gas_limit,
+				None,
+				data,
+				true,
+			)
+			.result;
+			if_std! {
+				println!("The call_smart_contracts. is: {:?}",r);
+			}
+			// Self::deposit_event(Event::CalledContractFromPallet(dest));
+			Ok(())
+		}
 		//     }
 		// }
-       }
-impl<T: Config> Pallet<T> {
+	}
+	impl<T: Config> Pallet<T>	where
+		T::AccountId: UncheckedFrom<T::Hash>,
+		T::AccountId: AsRef<[u8]>, {
 		// impl<T: Config> Pallet<T> {
 		pub fn only_owner(owner: &T::AccountId) -> DispatchResult {
 			ensure!(Owner::<T>::get() == *owner, Error::<T>::OnlyOwner);
@@ -355,7 +470,7 @@ impl<T: Config> Pallet<T> {
 			_amount: BalanceOf<T>,
 		) -> Result<(), Error<T>> {
 			if _amount > Zero::zero() {
-				let _ = T::Currency::transfer(
+				let _ = <T as exchange_common::pallet::Config>::Currency::transfer(
 					&_from,
 					&_to,
 					_amount,
@@ -963,6 +1078,36 @@ impl<T: Config> Pallet<T> {
 			sell_sig: Vec<u8>,
 			metadata: &[u8],
 		) -> DispatchResult {
+			use sp_std::if_std;
+			if_std! {
+				println!("The buy.calldata is: {:?}", buy.calldata);
+			}
+			// Check against unbounded input
+			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
+			// Amount to transfer
+			let value: BalanceOfC<T> = Default::default();
+            let gas_limit:Weight=20000000000;
+			// Do the actual call to the smart contract function
+			let r = pallet_contracts::Pallet::<T>::bare_call(
+				msg_sender.clone(),
+				buy.target.clone(),
+				value,
+				gas_limit,
+				None,
+				buy.calldata.clone(),
+				true,
+			)
+			.result;
+            if_std! {
+				println!("The bare_call result. is: {:?}",r);
+			}
+			// let message_call = pallet_contracts::Call::decode(&mut &buy.calldata[..]).map_err(|_|
+			// {});
+
+			//  if_std! {
+			//             println!("My message_call is: {:#?}", message_call);
+			//         }
+
 			// Ensure buy order validity and calculate hash if necessary.
 			let mut buy_hash: Vec<u8> = vec![];
 			if buy.maker == msg_sender {

@@ -1,7 +1,7 @@
 // Creating mock runtime here
 
 pub use crate as wyvern_exchange;
-pub use crate::{exchange_common::*, exchange_core::*, Module, Config};
+pub use crate::{exchange_common::*, exchange_core::*, Config, Module};
 use core::marker::PhantomData;
 use frame_support::{
 	impl_outer_event, impl_outer_origin, parameter_types,

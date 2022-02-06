@@ -78,21 +78,17 @@ pub use exchange_core::{exchange_common, exchange_common::BalanceOf, sale_kind_i
 // pub use crate::exchange_core::Event;
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::pallet_prelude::*;
+	pub use exchange_core::{
+		exchange_common, exchange_common::BalanceOf, sale_kind_interface, types::*, Error,
+	};
+	use frame_support::{
+		dispatch::DispatchResult, pallet_prelude::*, sp_runtime::traits::Zero, sp_std::prelude::*,
+	};
 	use frame_system::pallet_prelude::*;
-use frame_support::{
-    // decl_module, decl_storage,
-    dispatch::DispatchResult,
-    sp_runtime::{
-        traits::{Zero},
-    },
-    sp_std::prelude::*,
-};
-pub use exchange_core::{exchange_common, exchange_common::BalanceOf, sale_kind_interface, Error};
-pub use exchange_core::types::*;
+	use pallet_contracts::chain_extension::UncheckedFrom;
 
 	#[pallet::config]
-	pub trait Config:frame_system::Config+ exchange_core::Config {}
+	pub trait Config: frame_system::Config + exchange_core::Config {}
 	// decl_storage! {
 	//     trait Store for Pallet<T: Trait> as WyvernExchange {
 
@@ -103,7 +99,9 @@ pub use exchange_core::types::*;
 	pub struct Pallet<T>(_);
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>	where
+		T::AccountId: UncheckedFrom<T::Hash>,
+		T::AccountId: AsRef<[u8]>, {
 		// decl_module! {
 		//     pub struct Pallet<T: Trait> for enum Call where origin: T::Origin {
 		// type Error = Error<T>;
@@ -136,11 +134,7 @@ pub use exchange_core::types::*;
 					&replacement_pattern,
 					&static_extradata,
 				);
-			<exchange_core::Pallet<T>>::approve_order(
-				origin,
-				&order,
-				orderbook_inclusion_desired,
-			)
+			<exchange_core::Pallet<T>>::approve_order(origin, &order, orderbook_inclusion_desired)
 		}
 
 		// Call cancel_order - .
@@ -221,9 +215,11 @@ pub use exchange_core::types::*;
 		}
 
 		//  }
-		}
+	}
 
-		impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T> where
+		T::AccountId: UncheckedFrom<T::Hash>,
+		T::AccountId: AsRef<[u8]>,{
 		//  Call calculate_final_price - library exposed for testing.
 		pub fn calculate_final_price_ex(
 			side: Side,

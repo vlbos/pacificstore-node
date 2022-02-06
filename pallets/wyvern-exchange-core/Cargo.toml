@@ -25,6 +25,7 @@ timestamp = { git = "https://github.com/paritytech/substrate", package = "pallet
 balances = { git = "https://github.com/paritytech/substrate", package = "pallet-balances", default-features = false }
 serde = { features = ['derive'], optional = true, version = '1.0.119' }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+pallet-contracts = { git = "https://github.com/paritytech/substrate", package = "pallet-contracts", default-features = false }
 
 [features]
 default = ['std']
@@ -34,6 +35,7 @@ std = [
 'scale-info/std',
     'frame-support/std',
     'frame-system/std',
+	"pallet-contracts/std",
     'timestamp/std',
     'balances/std',
 	"sp-core/std",
