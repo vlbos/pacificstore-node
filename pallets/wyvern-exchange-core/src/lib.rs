@@ -569,8 +569,12 @@ pub mod pallet {
 		pub fn validate_order_parameters(
 			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
 		) -> bool {
+use sp_std::if_std;
 			// OrderType must be targeted at this protocol version (this contract:Exchange).
-			if order.exchange != ContractSelf::<T>::get() {
+			if order.exchange != ContractSelf::<T>::get() {   
+	if_std! {
+				println!("The buy.order.exchange != ContractSelf::<T>::get()  is: {:?},=={:?}", order.exchange,ContractSelf::<T>::get());
+			}
 				return false
 			}
 
@@ -579,6 +583,10 @@ pub mod pallet {
 				&order.sale_kind,
 				order.expiration_time,
 			) {
+	if_std! {
+				println!("The order.sale_kind,order.expiration_time is: {:?},=={:?}", order.sale_kind,order.expiration_time);
+     
+			}
 				return false
 			}
 
@@ -587,6 +595,11 @@ pub mod pallet {
 				(order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get() ||
 					order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get())
 			{
+	        if_std! {
+                println!("The order.fee_method,FeeMethod::SplitFeeis: {},{:?},=={:?}", order.fee_method == FeeMethod::SplitFee,order.fee_method,FeeMethod::SplitFee);  
+				println!("The order.maker_protocol_fee,MinimumMakerProtocolFee::<T>::get() is:{}, {:?},=={:?}",order.maker_protocol_fee < MinimumMakerProtocolFee::<T>::get(), order.maker_protocol_fee,MinimumMakerProtocolFee::<T>::get());
+				println!("Theorder.taker_protocol_fee,MinimumTakerProtocolFee::<T>::get()is:{}, {:?},=={:?}",order.taker_protocol_fee < MinimumTakerProtocolFee::<T>::get(), order.taker_protocol_fee,MinimumTakerProtocolFee::<T>::get());
+			}
 				return false
 			}
 
@@ -1078,37 +1091,12 @@ pub mod pallet {
 			sell_sig: Vec<u8>,
 			metadata: &[u8],
 		) -> DispatchResult {
-			use sp_std::if_std;
+      use sp_std::if_std;
 			if_std! {
-				println!("The buy.calldata is: {:?}", buy.calldata);
+				println!("The atomic_matchis: {:?}", buy.calldata);
 			}
-			// Check against unbounded input
-			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
-			// Amount to transfer
-			let value: BalanceOfC<T> = Default::default();
-            let gas_limit:Weight=20000000000;
-			// Do the actual call to the smart contract function
-			let r = pallet_contracts::Pallet::<T>::bare_call(
-				msg_sender.clone(),
-				buy.target.clone(),
-				value,
-				gas_limit,
-				None,
-				buy.calldata.clone(),
-				true,
-			)
-			.result;
-            if_std! {
-				println!("The bare_call result. is: {:?}",r);
-			}
-			// let message_call = pallet_contracts::Call::decode(&mut &buy.calldata[..]).map_err(|_|
-			// {});
 
-			//  if_std! {
-			//             println!("My message_call is: {:#?}", message_call);
-			//         }
-
-			// Ensure buy order validity and calculate hash if necessary.
+    		// Ensure buy order validity and calculate hash if necessary.
 			let mut buy_hash: Vec<u8> = vec![];
 			if buy.maker == msg_sender {
 				if !Self::validate_order_parameters(&buy) {
@@ -1121,7 +1109,7 @@ pub mod pallet {
 			// Ensure sell order validity and calculate hash if necessary.
 			let mut sell_hash: Vec<u8> = vec![];
 			if sell.maker == msg_sender {
-				if Self::validate_order_parameters(&sell) {
+				if !Self::validate_order_parameters(&sell) {
 					return Err(Error::<T>::InvalidSellOrderParameters.into())
 				}
 			} else {
@@ -1170,9 +1158,41 @@ pub mod pallet {
 				<CancelledOrFinalized<T>>::insert(sell_hash.clone(), true);
 			}
 
+
 			// INTERACTIONS
 			// Execute funds transfer and pay fees.
 			let price: BalanceOf<T> = Self::execute_funds_transfer(msg_value, &buy, &sell)?;
+
+    
+            // use sp_std::if_std;
+			if_std! {
+				println!("The buy.calldata is: {:?}", buy.calldata);
+			}
+			// Check against unbounded input
+			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
+			// Amount to transfer
+			let value: BalanceOfC<T> = Default::default();
+            let gas_limit:Weight=20000000000;
+			// Do the actual call to the smart contract function
+			let r = pallet_contracts::Pallet::<T>::bare_call(
+				msg_sender.clone(),
+				sell.target.clone(),
+				value,
+				gas_limit,
+				None,
+				sellcalldata.clone(),
+				true,
+			)
+			.result;
+            if_std! {
+				println!("The bare_call result. is: {:?}",r);
+			}
+			// let message_call = pallet_contracts::Call::decode(&mut &buy.calldata[..]).map_err(|_|
+			// {});
+
+			//  if_std! {
+			//             println!("My message_call is: {:#?}", message_call);
+			//         }
 
 			// Log match event.
 			Self::deposit_event(Event::OrdersMatched(

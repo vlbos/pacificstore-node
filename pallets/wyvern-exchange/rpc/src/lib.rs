@@ -131,6 +131,16 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		at: Option<BlockHash>,
 	) -> Result<bool>;
 
+    #[rpc(name = "wyvernExchange_orderCalldataCanMatchEx")]
+	fn order_calldata_can_match_ex(
+		&self,
+		calldata_buy: String,
+		calldata_sell: String,
+		replacement_pattern_buy: String,
+		replacement_pattern_sell: String,
+		at: Option<BlockHash>,
+	) -> Result<bool>;
+
 	#[rpc(name = "wyvernExchange_calculateMatchPriceEx")]
 	fn calculate_match_price_ex(
 		&self,
@@ -455,6 +465,32 @@ where
 			from_hex(replacement_pattern_sell),
 			from_hex(static_extradata_buy),
 			from_hex(static_extradata_sell),
+		);
+		runtime_api_result.map_err(|e| RpcError {
+			code: ErrorCode::ServerError(9876), // No real reason for this value
+			message: "Something wrong".into(),
+			data: Some(format!("{:?}", e).into()),
+		})
+	}
+    fn order_calldata_can_match_ex(
+		&self,
+		calldata_buy: String,
+		calldata_sell: String,
+		replacement_pattern_buy: String,
+		replacement_pattern_sell: String,
+		at: Option<<Block as BlockT>::Hash>,
+	) -> Result<bool> {
+		let api = self.client.runtime_api();
+		let at = BlockId::hash(at.unwrap_or_else(||
+			// If the block hash is not supplied assume the best block.
+			self.client.info().best_hash));
+
+		let runtime_api_result = api.order_calldata_can_match_ex(
+			&at,
+			from_hex(calldata_buy),
+			from_hex(calldata_sell),
+			from_hex(replacement_pattern_buy),
+			from_hex(replacement_pattern_sell),
 		);
 		runtime_api_result.map_err(|e| RpcError {
 			code: ErrorCode::ServerError(9876), // No real reason for this value

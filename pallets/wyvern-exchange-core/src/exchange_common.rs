@@ -53,6 +53,10 @@ pub mod pallet {
 		// mask The mask specifying which bits can be changed
 		// The updated byte array (the parameter will be modified inplace)
 		pub fn guarded_array_replace(array: &mut Vec<u8>, desired: &[u8], mask: &[u8]) -> bool {
+   use sp_std::if_std;
+			if_std! {
+				println!("The guarded_array_replace: {:?},{:?},{:?},{:?},{:?},{:?}", desired.len() , array.len() , mask.len(),desired , array , mask);
+			}
 			if array.len() != desired.len() || array.len() != mask.len() {
 				return false
 			}
@@ -62,6 +66,9 @@ pub mod pallet {
 				// Conceptually: array[i] = (!mask[i] && array[i]) || (mask[i] && desired[i]),
 				//  bitwise in word chunks.
 				array[i] = (!mask[i] & _item) | (mask[i] & desired[i]);
+			}
+	        if_std! {
+				println!("The guarded_array_replace return : {:?}",  array );
 			}
 			true
 		}

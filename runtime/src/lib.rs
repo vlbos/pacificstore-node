@@ -776,6 +776,19 @@ impl_runtime_apis! {
 				static_extradata_sell,
 			)
 		}
+        fn order_calldata_can_match_ex(
+			calldata_buy: Vec<u8>,
+			calldata_sell: Vec<u8>,
+			replacement_pattern_buy: Vec<u8>,
+			replacement_pattern_sell: Vec<u8>,
+		) -> bool {
+			WyvernExchange::order_calldata_can_match_ex(
+				calldata_buy,
+				calldata_sell,
+				replacement_pattern_buy,
+				replacement_pattern_sell,
+			)
+		}
 		fn calculate_match_price_ex(
 			addrs: Vec<AccountId>,
 			uints: Vec<u64>,

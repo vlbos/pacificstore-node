@@ -42,6 +42,7 @@
 //!   would match (fail -otherwise).
 //! * `orders_can_match_ex` - Return whether or not two orders can be matched with each other by
 //!   basic parameters (does not check order signatures / calldata or perform calls -static).
+//! * `order_calldata_can_match_ex` - Return whether or not two orders' calldata specifications can match.
 //! * `calculate_final_price_ex` - Calculate the settlement price of an order;   Precondition:
 //!   parameters have passed validate_parameters.
 
@@ -462,12 +463,12 @@ pub mod pallet {
 		// sell_calldata Sell-side order calldata
 		// sell_replacement_pattern Sell-side order calldata replacement mask
 		// Whether the orders' calldata can be matched
-		pub fn order_calldata_can_match(
+		pub fn order_calldata_can_match_ex(
 			buy_calldata: Vec<u8>,
 			buy_replacement_pattern: Vec<u8>,
 			sell_calldata: Vec<u8>,
 			sell_replacement_pattern: Vec<u8>,
-		) -> Result<bool, Error<T>> {
+		) -> bool {
 			let mut tmpbuy_calldata = buy_calldata.clone();
 			let mut tmpsell_calldata = sell_calldata.clone();
 			if buy_replacement_pattern.len() > 0 {
@@ -476,7 +477,7 @@ pub mod pallet {
 					&sell_calldata,
 					&buy_replacement_pattern,
 				) {
-					return Ok(false)
+					return false;
 				}
 			}
 			if sell_replacement_pattern.len() > 0 {
@@ -485,11 +486,11 @@ pub mod pallet {
 					&buy_calldata,
 					&sell_replacement_pattern,
 				) {
-					return Ok(false)
+					return false;
 				}
 			}
 
-			Ok(<exchange_common::Pallet<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata))
+			<exchange_common::Pallet<T>>::array_eq(&tmpbuy_calldata, &tmpsell_calldata)
 		}
 
 		// Call calculate_match_price - .
