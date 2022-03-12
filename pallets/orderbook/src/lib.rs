@@ -33,15 +33,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
-// use frame_support::{
-//     decl_error, decl_event, decl_module, decl_storage,
-//     dispatch::DispatchResult,
-//     ensure,
-//     sp_std::prelude::*,
-//     sp_std::{collections::btree_set::BTreeSet},
-// };
-
-// use frame_system::{self as system, ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -60,14 +51,12 @@ pub mod pallet {
     use frame_system::pallet_prelude::*;
 
     use frame_support::{
-        // decl_error, decl_event, decl_module, decl_storage,
         dispatch::DispatchResult,
         ensure,
         sp_std::collections::btree_set::BTreeSet,
         sp_std::prelude::*,
     };
 
-    //   use frame_support::dispatch::EncodeLike;
     use crate::builders::*;
     pub use crate::types::OrderJSONType;
 
@@ -76,16 +65,12 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config + timestamp::Config {
-        //
-        // type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
     }
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
-    // decl_storage! {
-    //     trait Store for Module<T: Config> as Orderbook {
     #[pallet::type_value]
     pub(super) fn LimitDefault<T: Config>() -> u64 {
         3
@@ -144,10 +129,7 @@ pub mod pallet {
         Vec<u8>,
         ValueQuery,
     >;
-    //     }
-    // }
 
-    // decl_event!(
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -157,9 +139,7 @@ pub mod pallet {
         OrderLimitsChanged(u64),
         AssetWhiteListLimitsChanged(u64),
     }
-    // );
 
-    // decl_error! {
     #[pallet::error]
     pub enum Error<T> {
         OrderIdMissing,
@@ -177,15 +157,9 @@ pub mod pallet {
         AssetWhiteListNotExist,
         OnlyOwner,
     }
-    // }
-    // where <T as frame_system::Config>::AccountId: EncodeLike<std::option::Option<<T as frame_system::Config>::AccountId>>
-    // decl_module! {
+
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        // pub struct Module<T: Config> for enum Call where origin: T::Origin {
-        // type Error = Error<T>;
-        // fn deposit_event() = default;
-
         #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
         pub fn change_owner(origin: OriginFor<T>, new_owner: T::AccountId) -> DispatchResult {
             let _user = ensure_signed(origin)?;
@@ -203,7 +177,6 @@ pub mod pallet {
         #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
         pub fn set_order_limits(origin: OriginFor<T>, limits: u64) -> DispatchResult {
             let owner = ensure_signed(origin)?;
-            // Self::only_owner(&_user)?;
             ensure!(Owner::<T>::get() == owner, Error::<T>::OnlyOwner);
             <OrderLimits<T>>::put(limits);
             Self::deposit_event(Event::OrderLimitsChanged(limits));
@@ -213,7 +186,6 @@ pub mod pallet {
         #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
         pub fn set_asset_white_list_limits(origin: OriginFor<T>, limits: u64) -> DispatchResult {
             let owner = ensure_signed(origin)?;
-            // Self::only_owner(&_user)?;
             ensure!(Owner::<T>::get() == owner, Error::<T>::OnlyOwner);
             <AssetWhiteListLimits<T>>::put(limits);
             Self::deposit_event(Event::AssetWhiteListLimitsChanged(limits));
@@ -425,7 +397,6 @@ pub mod pallet {
             <AssetWhitelist<T>>::take(token_address.clone(), token_id.clone());
             Ok(())
         }
-        //     }
     }
     impl<T: Config> Pallet<T> {
         /// Helper methods
@@ -677,6 +648,5 @@ pub mod pallet {
 
             None
         }
-        // }
     }
 }

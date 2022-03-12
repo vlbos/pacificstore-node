@@ -1,7 +1,6 @@
 // Creating mock runtime here
 
 pub use crate as wyvern_exchange_core;
-// pub use crate::exchange_core::*;
 pub use crate::{exchange_common::*, Config, Module};
 use core::marker::PhantomData;
 use frame_support::{
@@ -22,13 +21,6 @@ impl_outer_origin! {
 	pub enum Origin for Test {}
 }
 
-// impl_outer_dispatch! {
-//     pub enum Call for Test where origin: Origin {
-//         balances::Balances,
-//         // WyvernExchangeCore,
-//     }
-// }
-
 impl_outer_event! {
 	pub enum TestEvent for Test {
 balances<T>,
@@ -40,7 +32,6 @@ balances<T>,
 impl balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
-	// type TransferPayment = ();
 	type ExistentialDeposit = ExistentialDeposit;
 
 	type MaxLocks = ();
@@ -108,12 +99,6 @@ impl wyvern_exchange_core::exchange_common::Config for Test {
 }
 
 impl wyvern_exchange_core::sale_kind_interface::Config for Test {}
-// impl wyvern_exchange_core::Config for Test {
-//     type Event = TestEvent;
-//     type Public = sr25519::Public;
-//     type Signature = sr25519::Signature;
-// }
-
 pub type WyvernExchangeCore = Module<Test>;
 pub type System = system::Module<Test>;
 pub type Timestamp = timestamp::Pallet<Test>;

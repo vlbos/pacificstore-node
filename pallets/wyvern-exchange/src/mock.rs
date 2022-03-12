@@ -21,13 +21,6 @@ impl_outer_origin! {
 	pub enum Origin for Test {}
 }
 
-// impl_outer_dispatch! {
-//     pub enum Call for Test where origin: Origin {
-//         balances::Balances,
-//         // WyvernExchange,
-//     }
-// }
-
 impl_outer_event! {
 	pub enum TestEvent for Test {
 		balances<T>,
@@ -39,7 +32,6 @@ impl_outer_event! {
 impl balances::Config for Test {
 	type Balance = u64;
 	type DustRemoval = ();
-	// type TransferPayment = ();
 	type ExistentialDeposit = ExistentialDeposit;
 
 	type MaxLocks = ();

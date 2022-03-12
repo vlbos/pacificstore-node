@@ -297,16 +297,4 @@ where
 			created_date: Moment::default(),
 		}
 	}
-
-	pub fn maker(&self) -> &AccountId {
-		&self.maker
-	}
-
-	pub fn taker(&self) -> &AccountId {
-		&self.taker
-	}
-
-	pub fn payment_token(&self) -> &AccountId {
-		&self.payment_token
-	}
 }

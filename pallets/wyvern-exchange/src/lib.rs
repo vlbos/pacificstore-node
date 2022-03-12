@@ -48,19 +48,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![recursion_limit = "512"]
-// use core::result::Result;
 pub use pallet::*;
-
-// use frame_support::{
-//     decl_module, decl_storage,
-//     dispatch::DispatchResult,
-//     sp_runtime::{
-//         traits::{Zero},
-//     },
-//     sp_std::prelude::*,
-// };
-
-// use frame_system::{ ensure_signed};
 
 #[cfg(test)]
 mod mock;
@@ -69,14 +57,7 @@ mod mock;
 mod tests;
 
 pub use exchange_core;
-
-// mod types;
-
-// pub mod exchange_common;
 pub use exchange_core::{exchange_common, exchange_common::BalanceOf, sale_kind_interface, Error};
-// pub mod sale_kind_interface;
-// pub mod exchange_core;
-// pub use crate::exchange_core::Event;
 #[frame_support::pallet]
 pub mod pallet {
 	pub use exchange_core::{
@@ -90,11 +71,6 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + exchange_core::Config {}
-	// decl_storage! {
-	//     trait Store for Pallet<T: Trait> as WyvernExchange {
-
-	//  }
-	// }
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
@@ -103,10 +79,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T>	where
 		T::AccountId: UncheckedFrom<T::Hash>,
 		T::AccountId: AsRef<[u8]>, {
-		// decl_module! {
-		//     pub struct Pallet<T: Trait> for enum Call where origin: T::Origin {
-		// type Error = Error<T>;
-		// fn deposit_event() = default;
+
 		// Call approve_order - .
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_order_ex(
@@ -215,7 +188,6 @@ pub mod pallet {
 			Ok(())
 		}
 
-		//  }
 	}
 
 	impl<T: Config> Pallet<T> where

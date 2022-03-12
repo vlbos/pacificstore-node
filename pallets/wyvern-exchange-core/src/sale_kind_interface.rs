@@ -4,27 +4,15 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
-// use frame_support::{decl_module, sp_runtime::traits::Zero, sp_std::prelude::*};
-
-// pub trait Config: exchange_common::Config {}
-
-// decl_module! {
-// 	pub struct Pallet<T: Config> for enum Call where origin: T::Origin {}
-// }
 
 #[frame_support::pallet]
 pub mod pallet {
-	// use frame_support::pallet_prelude::*;
-	// use frame_system::pallet_prelude::*;
-	use frame_support::sp_runtime::traits::Zero; //, sp_std::prelude::*
+	use frame_support::sp_runtime::traits::Zero;
 
 	use crate::{exchange_common, exchange_common::*, types::*};
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + timestamp::Config {
-		// type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
-		// type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-	}
+	pub trait Config: frame_system::Config + timestamp::Config {}
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);

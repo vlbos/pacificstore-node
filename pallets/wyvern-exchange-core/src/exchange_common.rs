@@ -1,33 +1,13 @@
 //! # Pacific Store - Wyvern Exchange pallet
 
 #![cfg_attr(not(feature = "std"), no_std)]
-// use core::convert::TryInto;
-pub use pallet::*;
-
-// use frame_support::{
-// 	decl_module,
-// 	sp_runtime::traits::Zero,
-// 	sp_std::prelude::*,
-// 	traits::{Currency, LockableCurrency, ReservableCurrency},
-// };
-// use frame_system::{self as system};
-
-// pub trait Config: system::Config + timestamp::Config {
-// 	type Currency: ReservableCurrency<Self::AccountId>
-// 		+ LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
-// }
-
-// decl_module! {
-// 	pub struct Module<T: Config> for enum Call where origin: T::Origin {
-// 	}
-// }
 use frame_support::traits::Currency;
+pub use pallet::*;
 pub type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 #[frame_support::pallet]
 pub mod pallet {
-	// use frame_support::pallet_prelude::*;
-	// use frame_system::pallet_prelude::*;
+
 	use frame_support::{sp_runtime::traits::Zero, sp_std::prelude::*, traits::Currency};
 
 	use crate::types::*;
@@ -37,8 +17,6 @@ pub mod pallet {
 	pub trait Config: frame_system::Config + timestamp::Config {
 		/// The currency in which fees are paid and contract balances are held.
 		type Currency: Currency<Self::AccountId>;
-		// type Event: From<Event<Self>> + Into<<Self as system::Config>::Event>;
-		// type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 	}
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -53,7 +31,7 @@ pub mod pallet {
 		// mask The mask specifying which bits can be changed
 		// The updated byte array (the parameter will be modified inplace)
 		pub fn guarded_array_replace(array: &mut Vec<u8>, desired: &[u8], mask: &[u8]) -> bool {
-   use sp_std::if_std;
+			use sp_std::if_std;
 			if_std! {
 				println!("The guarded_array_replace: {:?},{:?},{:?},{:?},{:?},{:?}", desired.len() , array.len() , mask.len(),desired , array , mask);
 			}
@@ -67,7 +45,7 @@ pub mod pallet {
 				//  bitwise in word chunks.
 				array[i] = (!mask[i] & _item) | (mask[i] & desired[i]);
 			}
-	        if_std! {
+			if_std! {
 				println!("The guarded_array_replace return : {:?}",  array );
 			}
 			true
@@ -260,10 +238,6 @@ pub mod pallet {
 		pub fn u64_to_balance_option(_input: u64) -> Option<BalanceOf<T>> {
 			_input.try_into().ok()
 		}
-		////commented
-		// pub fn balance_to_u128(input: BalanceOf<T>) -> Option<u128> {
-		//     TryInto::<u128>::try_into(input).ok()
-		// }
 		pub fn balance_to_u64_option(input: BalanceOf<T>) -> Option<u64> {
 			TryInto::<u64>::try_into(input).ok()
 		}
