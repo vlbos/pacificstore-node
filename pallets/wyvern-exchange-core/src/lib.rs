@@ -390,7 +390,7 @@ pub mod pallet {
 				println!("The data_encode. is: {:?}",data);
 			}
 			// Do the actual call to the smart contract function
-			pallet_contracts::Pallet::<T>::bare_call(
+			let r = pallet_contracts::Pallet::<T>::bare_call(
 				who,
 				dest.clone(),
 				value,
@@ -399,8 +399,10 @@ pub mod pallet {
 				data,
 				true,
 			)
-			.result?;
-
+			.result;
+	if_std! {
+				println!("The call_smart_contracts. is: {:?}",r);
+			}
 			// Self::deposit_event(Event::CalledContractFromPallet(dest));
 			Ok(())
 		}
@@ -429,7 +431,9 @@ pub mod pallet {
 			data.append(&mut from_enc);
 			data.append(&mut to_enc);
 			data.append(&mut values_enc);
-
+	        if_std! {
+				println!(" dest={:?}=The call_smart_contracts data=. is: {:?}",dest.clone(),data.clone());
+			}
 			// Do the actual call to the smart contract function
 			let r = pallet_contracts::Pallet::<T>::bare_call(
 				who,
@@ -1093,7 +1097,7 @@ use sp_std::if_std;
 		) -> DispatchResult {
       use sp_std::if_std;
 			if_std! {
-				println!("The atomic_matchis: {:?}", buy.calldata);
+				println!("The atomic_match is: {:?}", buy.calldata);
 			}
 
     		// Ensure buy order validity and calculate hash if necessary.
@@ -1166,7 +1170,7 @@ use sp_std::if_std;
     
             // use sp_std::if_std;
 			if_std! {
-				println!("The buy.calldata is: {:?}", buy.calldata);
+				println!("atomic_matchx={:?} ,{:?} ,The sellcalldata is: {:?}",msg_sender.clone(),sell.target.clone(), &sellcalldata);
 			}
 			// Check against unbounded input
 			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
