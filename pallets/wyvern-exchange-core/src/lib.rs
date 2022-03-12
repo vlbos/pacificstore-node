@@ -156,6 +156,30 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(super) type ProtocolFeeRecipient<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
 
+	#[pallet::type_value]
+	pub(super) fn GasLimitDefault<T: Config>() -> Weight {
+		20000000000
+	}
+	#[pallet::storage]
+	pub(super) type GasLimit<T> =
+		StorageValue<Value = Weight, QueryKind = ValueQuery, OnEmpty = GasLimitDefault<T>>;
+
+	#[pallet::type_value]
+	pub(super) fn ProxySelectorDefault<T: Config>() -> Vec<u8> {
+		vec![0x55, 0x7e, 0xfb, 0x0c]
+	}
+	#[pallet::storage]
+	pub(super) type ProxySelector<T> =
+		StorageValue<Value = Vec<u8>, QueryKind = ValueQuery, OnEmpty = ProxySelectorDefault<T>>;
+
+	#[pallet::type_value]
+	pub(super) fn TokenSelectorDefault<T: Config>() -> Vec<u8> {
+		vec![0x0b, 0x39, 0x6f, 0x18]
+	}
+	#[pallet::storage]
+	pub(super) type TokenSelector<T> =
+		StorageValue<Value = Vec<u8>, QueryKind = ValueQuery, OnEmpty = TokenSelectorDefault<T>>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -198,6 +222,9 @@ pub mod pallet {
 		ContractSelfChanged(T::AccountId, T::AccountId),
 		ProxyRegistryChanged(T::AccountId, T::AccountId),
 		TokenTransferProxyChanged(T::AccountId, T::AccountId),
+		GasLimitChanged(T::AccountId, Weight),
+		ProxySelectorChanged(T::AccountId, Vec<u8>),
+		TokenSelectorChanged(T::AccountId, Vec<u8>),
 	}
 
 	#[pallet::error]
@@ -329,6 +356,33 @@ pub mod pallet {
 			Self::deposit_event(Event::TokenTransferProxyChanged(_user, proxy_address.clone()));
 			Ok(())
 		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_gas_limit(origin: OriginFor<T>, gas_limit: Weight) -> DispatchResult {
+			let _user = ensure_signed(origin)?;
+			Self::only_owner(&_user)?;
+			GasLimit::<T>::put(gas_limit.clone());
+			Self::deposit_event(Event::GasLimitChanged(_user, gas_limit.clone()));
+			Ok(())
+		}
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_proxy_selector(origin: OriginFor<T>, selectror: Vec<u8>) -> DispatchResult {
+			let _user = ensure_signed(origin)?;
+			Self::only_owner(&_user)?;
+			ProxySelector::<T>::put(selectror.clone());
+			Self::deposit_event(Event::ProxySelectorChanged(_user, selectror.clone()));
+			Ok(())
+		}
+
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		pub fn set_token_selector(origin: OriginFor<T>, selectror: Vec<u8>) -> DispatchResult {
+			let _user = ensure_signed(origin)?;
+			Self::only_owner(&_user)?;
+			TokenSelector::<T>::put(selectror.clone());
+			Self::deposit_event(Event::TokenSelectorChanged(_user, selectror.clone()));
+			Ok(())
+		}
+
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		/// A generic extrinsic to wrap
 		/// [pallet_contracts::bare_call](https://github.com/paritytech/substrate/blob/352c46a648a5f2d4526e790a184daa4a1ffdb3bf/frame/contracts/src/lib.rs#L545-L562)
