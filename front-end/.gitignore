@@ -1,4 +1,4 @@
-**/target/
+**/node_modules/
 **/*.rs.bk
 *.swp
 .wasm-binaries
