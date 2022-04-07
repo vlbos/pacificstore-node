@@ -56,6 +56,12 @@ contracts-node-runtime = { path = "../runtime" }
 
 # CLI-specific dependencies
 try-runtime-cli = { git = "https://github.com/paritytech/substrate", package = "try-runtime-cli", optional = true }
+orderbook-rpc = { path = "../pallets/orderbook/rpc" }
+orderbook-runtime-api = { path = "../pallets/orderbook/runtime-api" }
+wyvern-exchange-rpc = { path = "../pallets/wyvern-exchange/rpc" }
+wyvern-exchange-runtime-api = { path = "../pallets/wyvern-exchange/runtime-api" }
+wyvern-exchange-core-rpc = { path = "../pallets/wyvern-exchange-core/rpc" }
+wyvern-exchange-core-runtime-api = { path = "../pallets/wyvern-exchange-core/runtime-api" }
 
 [build-dependencies]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", package = "substrate-build-script-utils" }
