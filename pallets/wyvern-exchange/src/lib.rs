@@ -68,6 +68,7 @@ pub mod pallet {
 	};
 	use frame_system::pallet_prelude::*;
 	use pallet_contracts::chain_extension::UncheckedFrom;
+    type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + exchange_core::Config {}
@@ -77,14 +78,14 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>	where
-		T::AccountId: UncheckedFrom<T::Hash>,
-		T::AccountId: AsRef<[u8]>, {
+		AccountIdOf<T>: UncheckedFrom<T::Hash>,
+		AccountIdOf<T>: AsRef<[u8]>, {
 
 		// Call approve_order - .
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn approve_order_ex(
 			origin: OriginFor<T>,
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -96,7 +97,7 @@ pub mod pallet {
 			orderbook_inclusion_desired: bool,
 		) -> DispatchResult {
 			let _user = ensure_signed(origin.clone())?;
-			let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+			let order: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> =
 				<exchange_common::Pallet<T>>::build_order_type_from_array_parameters(
 					addrs,
 					uints,
@@ -115,7 +116,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn cancel_order_ex(
 			origin: OriginFor<T>,
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -148,7 +149,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
 		pub fn atomic_match_ex(
 			origin: OriginFor<T>,
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_methods_sides_kinds_how_to_calls: Vec<u8>,
 			calldata_buy: Vec<u8>,
@@ -191,8 +192,8 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> where
-		T::AccountId: UncheckedFrom<T::Hash>,
-		T::AccountId: AsRef<[u8]>,{
+		AccountIdOf<T>: UncheckedFrom<T::Hash>,
+		AccountIdOf<T>: AsRef<[u8]>,{
 		//  Call calculate_final_price - library exposed for testing.
 		pub fn calculate_final_price_ex(
 			side: Side,
@@ -227,7 +228,7 @@ pub mod pallet {
 
 		// Call hash_order - .
 		pub fn hash_order_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -255,7 +256,7 @@ pub mod pallet {
 
 		// Call hash_to_sign - .
 		pub fn hash_to_sign_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -283,7 +284,7 @@ pub mod pallet {
 
 		// Call validate_order_parameters - .
 		pub fn validate_order_parameters_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -293,7 +294,7 @@ pub mod pallet {
 			replacement_pattern: Vec<u8>,
 			static_extradata: Vec<u8>,
 		) -> bool {
-			let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+			let order: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> =
 				<exchange_common::Pallet<T>>::build_order_type_from_array_parameters(
 					addrs,
 					uints,
@@ -310,7 +311,7 @@ pub mod pallet {
 
 		// Call validate_order - .
 		pub fn validate_order_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -321,7 +322,7 @@ pub mod pallet {
 			static_extradata: Vec<u8>,
 			sig: Vec<u8>,
 		) -> bool {
-			let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+			let order: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> =
 				<exchange_common::Pallet<T>>::build_order_type_from_array_parameters(
 					addrs,
 					uints,
@@ -343,7 +344,7 @@ pub mod pallet {
 
 		// Call require valid order - .
 		pub fn require_valid_order_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -354,7 +355,7 @@ pub mod pallet {
 			static_extradata: Vec<u8>,
 			sig: Vec<u8>,
 		) -> Vec<u8> {
-			let order: OrderType<T::AccountId, T::Moment, BalanceOf<T>> =
+			let order: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> =
 				<exchange_common::Pallet<T>>::build_order_type_from_array_parameters(
 					addrs,
 					uints,
@@ -371,7 +372,7 @@ pub mod pallet {
 
 		// Call calculate_current_price - .
 		pub fn calculate_current_price_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -405,7 +406,7 @@ pub mod pallet {
 
 		// Call orders_can_match - .
 		pub fn orders_can_match_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_methods_sides_kinds_how_to_calls: Vec<u8>,
 			calldata_buy: Vec<u8>,
@@ -467,7 +468,7 @@ pub mod pallet {
 
 		// Call calculate_match_price - .
 		pub fn calculate_match_price_ex(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_methods_sides_kinds_how_to_calls: Vec<u8>,
 			calldata_buy: Vec<u8>,

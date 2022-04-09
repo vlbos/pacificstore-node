@@ -2,7 +2,6 @@
 //! Abstract over fixed-price sales and Dutch auctions, with the intent
 //! of easily supporting additional methods of sale later.
 
-#![cfg_attr(not(feature = "std"), no_std)]
 pub use pallet::*;
 
 #[frame_support::pallet]

@@ -2,7 +2,7 @@
 name = "wyvern-exchange-core-runtime-api"
 version = "2.0.0"
 authors = ['']
-edition = "2018"
+edition = "2021"
 license = "unlicense"
 
 [dependencies.wyvern-exchange-core]
@@ -15,7 +15,7 @@ version = '2.0.0'
 sp-api = { git = "https://github.com/paritytech/substrate", package = "sp-api", default-features = false }
 sp-std = { git = "https://github.com/paritytech/substrate", package = "sp-std", default-features = false }
 
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 
 
 [dev-dependencies]

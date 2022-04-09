@@ -81,7 +81,6 @@ pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
 	use pallet_contracts::chain_extension::UncheckedFrom;
-
 	use frame_support::{
 		dispatch::DispatchResult,
 		ensure,
@@ -90,10 +89,11 @@ pub mod pallet {
 		sp_std::prelude::*,
 		traits::Currency,
 	};
-	use sp_core::sr25519;
+   use frame_system::Config as SysConfig;
+    type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	pub type BalanceOfC<T> = <<T as pallet_contracts::Config>::Currency as Currency<
-		<T as frame_system::Config>::AccountId,
+		<T as SysConfig>::AccountId,
 	>>::Balance;
 
 	pub use crate::types::*;
@@ -106,31 +106,32 @@ pub mod pallet {
 		+ pallet_contracts::Config
 	{
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type Public: IdentifyAccount<AccountId = Self::AccountId> + Clone;
+		type Public: IdentifyAccount<AccountId = <Self as frame_system::Config>::AccountId> + Clone;
 		type Signature: Verify<Signer = Self::Public> + Member + Decode + Encode;
 	}
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
+#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
 	pub(super) type NextOrderIndex<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
 
 	#[pallet::storage]
-	pub(super) type Owner<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type Owner<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	#[pallet::storage]
-	pub(super) type ContractSelf<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type ContractSelf<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	#[pallet::storage]
-	pub(super) type ProxyRegistry<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type ProxyRegistry<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	#[pallet::storage]
-	pub(super) type TokenTransferProxy<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type TokenTransferProxy<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	//The token used to pay exchange fees.
 	#[pallet::storage]
-	pub(super) type ExchangeToken<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type ExchangeToken<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	//Cancelled / finalized orders, by hash.
 	#[pallet::storage]
@@ -154,7 +155,7 @@ pub mod pallet {
 	pub(super) type MinimumTakerProtocolFee<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
 	//Recipient of protocol fees.
 	#[pallet::storage]
-	pub(super) type ProtocolFeeRecipient<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+	pub(super) type ProtocolFeeRecipient<T: Config> = StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 
 	#[pallet::type_value]
 	pub(super) fn GasLimitDefault<T: Config>() -> Weight {
@@ -179,33 +180,39 @@ pub mod pallet {
 	#[pallet::storage]
 	pub(super) type TokenSelector<T> =
 		StorageValue<Value = Vec<u8>, QueryKind = ValueQuery, OnEmpty = TokenSelectorDefault<T>>;
-
+#[pallet::type_value]
+	pub(super) fn MyAccountIdDefault<T: Config>() ->  AccountIdOf<T> {
+		AccountIdOf::<T>::decode(&mut &vec![1u8;32][..]).expect("32 bytes can always construct an AccountId32")
+	}
+	#[pallet::storage]
+	pub(super) type MyAccountId<T> =
+		StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		OrderApprovedPartOne(
 			Vec<u8>,
-			T::AccountId,
-			T::AccountId,
-			T::AccountId,
+			AccountIdOf<T>,
+			AccountIdOf<T>,
+			AccountIdOf<T>,
 			BalanceOf<T>,
 			BalanceOf<T>,
 			BalanceOf<T>,
 			BalanceOf<T>,
-			T::AccountId,
+			AccountIdOf<T>,
 			FeeMethod,
 			Side,
 			SaleKind,
-			T::AccountId,
+			AccountIdOf<T>,
 		),
 		OrderApprovedPartTwo(
 			Vec<u8>,
 			HowToCall,
 			Vec<u8>,
 			Vec<u8>,
-			T::AccountId,
+			AccountIdOf<T>,
 			Vec<u8>,
-			T::AccountId,
+			AccountIdOf<T>,
 			BalanceOf<T>,
 			T::Moment,
 			T::Moment,
@@ -214,17 +221,17 @@ pub mod pallet {
 			bool,
 		),
 		OrderCancelled(Vec<u8>),
-		OrdersMatched(Vec<u8>, Vec<u8>, T::AccountId, T::AccountId, BalanceOf<T>, Vec<u8>),
+		OrdersMatched(Vec<u8>, Vec<u8>, AccountIdOf<T>, AccountIdOf<T>, BalanceOf<T>, Vec<u8>),
 		MinimumMakerProtocolFeeChanged(BalanceOf<T>),
 		MinimumTakerProtocolFeeChanged(BalanceOf<T>),
-		ProtocolFeeRecipientChanged(T::AccountId, T::AccountId),
-		OwnerChanged(T::AccountId, T::AccountId),
-		ContractSelfChanged(T::AccountId, T::AccountId),
-		ProxyRegistryChanged(T::AccountId, T::AccountId),
-		TokenTransferProxyChanged(T::AccountId, T::AccountId),
-		GasLimitChanged(T::AccountId, Weight),
-		ProxySelectorChanged(T::AccountId, Vec<u8>),
-		TokenSelectorChanged(T::AccountId, Vec<u8>),
+		ProtocolFeeRecipientChanged(AccountIdOf<T>, AccountIdOf<T>),
+		OwnerChanged(AccountIdOf<T>, AccountIdOf<T>),
+		ContractSelfChanged(AccountIdOf<T>, AccountIdOf<T>),
+		ProxyRegistryChanged(AccountIdOf<T>, AccountIdOf<T>),
+		TokenTransferProxyChanged(AccountIdOf<T>, AccountIdOf<T>),
+		GasLimitChanged(AccountIdOf<T>, Weight),
+		ProxySelectorChanged(AccountIdOf<T>, Vec<u8>),
+		TokenSelectorChanged(AccountIdOf<T>, Vec<u8>),
 	}
 
 	#[pallet::error]
@@ -256,12 +263,15 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
 	where
-		T::AccountId: UncheckedFrom<T::Hash>,
-		T::AccountId: AsRef<[u8]>,
+  <T as SysConfig>::AccountId: pallet_contracts::chain_extension::UncheckedFrom<<T as SysConfig>::Hash>,
+        <T as SysConfig>::AccountId: AsRef<[u8]>,
+		AccountIdOf<T>: UncheckedFrom<<T as SysConfig>::Hash>,
+		AccountIdOf<T>: AsRef<[u8]>,
+ <T as pallet_contracts::Config>::Currency: Currency<<T as frame_system::Config>::AccountId>,
 	{
 		// Change the minimum maker fee paid to the protocol (only:owner)
 		// newMinimumMakerProtocolFee New fee to set in basis points
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn change_minimum_maker_protocol_fee(
 			origin: OriginFor<T>,
 			new_minimum_maker_protocol_fee: BalanceOf<T>,
@@ -278,7 +288,7 @@ pub mod pallet {
 
 		// Change the minimum taker fee paid to the protocol (only:owner)
 		// new_minimum_taker_protocol_fee New fee to set in basis points
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn change_minimum_taker_protocol_fee(
 			origin: OriginFor<T>,
 			new_minimum_taker_protocol_fee: BalanceOf<T>,
@@ -296,10 +306,10 @@ pub mod pallet {
 
 		// Change the protocol fee recipient (only:owner)
 		// new_protocol_fee_recipient New protocol fee recipient AccountId
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn change_protocol_fee_recipient(
 			origin: OriginFor<T>,
-			new_protocol_fee_recipient: T::AccountId,
+			new_protocol_fee_recipient: AccountIdOf<T>,
 		) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -311,13 +321,13 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn change_owner(origin: OriginFor<T>, new_owner: T::AccountId) -> DispatchResult {
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
+		pub fn change_owner(origin: OriginFor<T>, new_owner: AccountIdOf<T>) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			sp_runtime::runtime_logger::RuntimeLogger::init();
 
 			ensure!(
-				T::AccountId::default() == Owner::<T>::get() || _user == Owner::<T>::get(),
+				MyAccountIdDefault::<T>::get() == Owner::<T>::get() || _user == Owner::<T>::get(),
 				Error::<T>::OnlyOwner,
 			);
 			Owner::<T>::put(new_owner.clone());
@@ -325,8 +335,8 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-		pub fn set_contract_self(origin: OriginFor<T>, contract: T::AccountId) -> DispatchResult {
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
+		pub fn set_contract_self(origin: OriginFor<T>, contract: AccountIdOf<T>) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
 			ContractSelf::<T>::put(contract.clone());
@@ -334,10 +344,10 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn set_proxy_registry(
 			origin: OriginFor<T>,
-			registry_address: T::AccountId,
+			registry_address: AccountIdOf<T>,
 		) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -345,10 +355,10 @@ pub mod pallet {
 			Self::deposit_event(Event::ProxyRegistryChanged(_user, registry_address.clone()));
 			Ok(())
 		}
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn set_token_transfer_proxy(
 			origin: OriginFor<T>,
-			proxy_address: T::AccountId,
+			proxy_address: AccountIdOf<T>,
 		) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -357,7 +367,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn set_gas_limit(origin: OriginFor<T>, gas_limit: Weight) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -365,7 +375,7 @@ pub mod pallet {
 			Self::deposit_event(Event::GasLimitChanged(_user, gas_limit.clone()));
 			Ok(())
 		}
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn set_proxy_selector(origin: OriginFor<T>, selectror: Vec<u8>) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -374,7 +384,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn set_token_selector(origin: OriginFor<T>, selectror: Vec<u8>) -> DispatchResult {
 			let _user = ensure_signed(origin)?;
 			Self::only_owner(&_user)?;
@@ -383,7 +393,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		/// A generic extrinsic to wrap
 		/// [pallet_contracts::bare_call](https://github.com/paritytech/substrate/blob/352c46a648a5f2d4526e790a184daa4a1ffdb3bf/frame/contracts/src/lib.rs#L545-L562)
 		///
@@ -397,12 +407,12 @@ pub mod pallet {
 		///   when given a value of around 10000000000
 		pub fn call_smart_contract(
 			origin: OriginFor<T>,
-			dest: T::AccountId,
+			dest: AccountIdOf<T>,
 			mut selector: Vec<u8>,
 			mut selectors: Vec<u8>,
-			callees: Vec<T::AccountId>,
-			from: T::AccountId,
-			to: T::AccountId,
+			callees: Vec<AccountIdOf<T>>,
+			from: AccountIdOf<T>,
+			to: AccountIdOf<T>,
 			values: Vec<BalanceOfC<T>>,
 			#[pallet::compact] gas_limit: Weight,
 		) -> DispatchResult {
@@ -427,7 +437,7 @@ pub mod pallet {
 				println!("The data_encode. is: {:?}",data);
 			}
 			// Do the actual call to the smart contract function
-			let r = pallet_contracts::Pallet::<T>::bare_call(
+			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				who,
 				dest.clone(),
 				value,
@@ -438,18 +448,18 @@ pub mod pallet {
 			)
 			.result;
 			if_std! {
-				println!("The call_smart_contracts. is: {:?}",r);
+				println!("The call_smart_contracts. is: {:?}",_r);
 			}
 			// Self::deposit_event(Event::CalledContractFromPallet(dest));
 			Ok(())
 		}
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+		#[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
 		pub fn call_smart_contracts(
 			origin: OriginFor<T>,
-			dest: T::AccountId,
+			dest: AccountIdOf<T>,
 			mut selector: Vec<u8>,
-			from: T::AccountId,
-			to: T::AccountId,
+			from: AccountIdOf<T>,
+			to: AccountIdOf<T>,
 			values: BalanceOfC<T>,
 			#[pallet::compact] gas_limit: Weight,
 		) -> DispatchResult {
@@ -472,7 +482,7 @@ pub mod pallet {
 				println!(" dest={:?}=The call_smart_contracts data=. is: {:?}",dest.clone(),data.clone());
 			}
 			// Do the actual call to the smart contract function
-			let r = pallet_contracts::Pallet::<T>::bare_call(
+			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				who,
 				dest.clone(),
 				value,
@@ -483,17 +493,20 @@ pub mod pallet {
 			)
 			.result;
 			if_std! {
-				println!("The call_smart_contracts. is: {:?}",r);
+				println!("The call_smart_contracts. is: {:?}",_r);
 			}
 			Ok(())
 		}
 	}
 	impl<T: Config> Pallet<T>
 	where
-		T::AccountId: UncheckedFrom<T::Hash>,
-		T::AccountId: AsRef<[u8]>,
+  <T as SysConfig>::AccountId: pallet_contracts::chain_extension::UncheckedFrom<<T as SysConfig>::Hash>,
+        <T as SysConfig>::AccountId: AsRef<[u8]>,
+		AccountIdOf<T>: UncheckedFrom<<T as frame_system::Config>::Hash>,
+		AccountIdOf<T>: AsRef<[u8]>,
+ <T as pallet_contracts::Config>::Currency: Currency<<T as frame_system::Config>::AccountId>,
 	{
-		pub fn only_owner(owner: &T::AccountId) -> DispatchResult {
+		pub fn only_owner(owner: &AccountIdOf<T>) -> DispatchResult {
 			ensure!(Owner::<T>::get() == *owner, Error::<T>::OnlyOwner);
 			Ok(())
 		}
@@ -503,16 +516,16 @@ pub mod pallet {
 		// to AccountId to receive fees
 		// amount Amount of protocol tokens to charge
 		pub fn transfer_tokens(
-			msg_sender: &T::AccountId,
-			_token: &T::AccountId,
-			_from: &T::AccountId,
-			_to: &T::AccountId,
+			msg_sender: &AccountIdOf<T>,
+			_token: &AccountIdOf<T>,
+			_from: &AccountIdOf<T>,
+			_to: &AccountIdOf<T>,
 			_amount: BalanceOf<T>,
-		) -> Result<(), Error<T>> {
+		) -> Result<(), Error<T>> where <T as pallet_contracts::Config>::Currency: Currency<<T as frame_system::Config>::AccountId>  {
 			if _amount > Zero::zero() {
 				return Ok(())
 			}
-			if *_token == T::AccountId::default() {
+			if *_token == MyAccountIdDefault::<T>::get() {
 				let _ = <T as exchange_common::pallet::Config>::Currency::transfer(
 					&_from,
 					&_to,
@@ -541,7 +554,7 @@ pub mod pallet {
 				println!("The data_encode. is: {:?}",data);
 			}
 			// Do the actual call to the smart contract function
-			let r = pallet_contracts::Pallet::<T>::bare_call(
+			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				msg_sender.clone(),
 				TokenTransferProxy::<T>::get().clone(),
 				value,
@@ -552,7 +565,7 @@ pub mod pallet {
 			)
 			.result;
 			if_std! {
-				println!("The call_smart_contracts. is: {:?}",r);
+				println!("The call_smart_contracts. is: {:?}",_r);
 			}
 
 			Ok(())
@@ -564,8 +577,8 @@ pub mod pallet {
 		// to AccountId to receive fees
 		// amount Amount of protocol tokens to charge
 		pub fn transfer_native_tokens(
-			_from: &T::AccountId,
-			_to: &T::AccountId,
+			_from: &AccountIdOf<T>,
+			_to: &AccountIdOf<T>,
 			_amount: BalanceOf<T>,
 		) -> Result<(), Error<T>> {
 			if _amount > Zero::zero() {
@@ -580,10 +593,10 @@ pub mod pallet {
 		}
 
 		pub fn transfer_tokens_fee(
-			msg_sender: &T::AccountId,
-			_token: &T::AccountId,
-			_from: &T::AccountId,
-			_to: &T::AccountId,
+			msg_sender: &AccountIdOf<T>,
+			_token: &AccountIdOf<T>,
+			_from: &AccountIdOf<T>,
+			_to: &AccountIdOf<T>,
 			_amount: BalanceOf<T>,
 			_price: &BalanceOf<T>,
 		) -> Result<(), Error<T>> {
@@ -595,10 +608,10 @@ pub mod pallet {
 		}
 
 		pub fn transfer_tokens_fee_sell(
-			msg_sender: &T::AccountId,
-			_token: &T::AccountId,
-			_from: &T::AccountId,
-			_to: &T::AccountId,
+			msg_sender: &AccountIdOf<T>,
+			_token: &AccountIdOf<T>,
+			_from: &AccountIdOf<T>,
+			_to: &AccountIdOf<T>,
 			_amount: BalanceOf<T>,
 			_price: &BalanceOf<T>,
 			receive_or_required_amount: &mut BalanceOf<T>,
@@ -607,7 +620,7 @@ pub mod pallet {
 			if _amount > Zero::zero() {
 				let _fee = _amount * *_price / INVERSE_BASIS_POINT.into();
 				let mut _from_ = (*_from).clone();
-				if *_token == T::AccountId::default() {
+				if *_token == MyAccountIdDefault::<T>::get() {
 					if is_maker {
 						*receive_or_required_amount -= _fee;
 					} else {
@@ -627,9 +640,9 @@ pub mod pallet {
 		// to AccountId to receive fees
 		// amount Amount of protocol tokens to charge
 		pub fn charge_protocol_fee(
-			msg_sender: &T::AccountId,
-			from: &T::AccountId,
-			to: &T::AccountId,
+			msg_sender: &AccountIdOf<T>,
+			from: &AccountIdOf<T>,
+			to: &AccountIdOf<T>,
 			amount: BalanceOf<T>,
 		) -> Result<(), Error<T>> {
 			Self::transfer_tokens(&msg_sender, &ExchangeToken::<T>::get(), &from, &to, amount)
@@ -639,7 +652,7 @@ pub mod pallet {
 		// order OrderType to hash
 		// Hash of order
 		pub fn hash_order(
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> Result<Vec<u8>, Error<T>> {
 			Ok(keccak_256(&order.encode()).into())
 		}
@@ -649,7 +662,7 @@ pub mod pallet {
 		// order OrderType to hash
 		// Hash of  order hash per Polkadot format
 		pub fn hash_to_sign(
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> Result<Vec<u8>, Error<T>> {
 			Ok(keccak_256(&Self::hash_order(&order)?).to_vec())
 		}
@@ -658,7 +671,7 @@ pub mod pallet {
 		// order OrderType to validate
 		// sig  signature
 		pub fn require_valid_order(
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			sig: &[u8],
 		) -> Result<Vec<u8>, Error<T>> {
 			let hash: Vec<u8> = Self::hash_to_sign(&order)?;
@@ -669,7 +682,7 @@ pub mod pallet {
 		// Validate order parameters (does *not* check validity:signature)
 		// order OrderType to validate
 		pub fn validate_order_parameters(
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> bool {
 			use sp_std::if_std;
 			// OrderType must be targeted at this protocol version (this contract:Exchange).
@@ -714,7 +727,7 @@ pub mod pallet {
 		// sig  signature
 		pub fn validate_order(
 			hash: &[u8],
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			sig: &[u8],
 		) -> Result<bool, Error<T>> {
 			// OrderType must have valid parameters.
@@ -745,11 +758,11 @@ pub mod pallet {
 		pub fn check_signature_bytes(
 			_signature: &[u8],
 			_msg: &[u8],
-			_signer: &T::AccountId,
+			_signer: &AccountIdOf<T>,
 		) -> Result<(), Error<T>> {
 			// sr25519 always expects a 64 byte signature.
 			ensure!(_signature.len() == 64, Error::<T>::InvalidSignature);
-			let signature: Signature = sr25519::Signature::from_slice(_signature).into();
+			let signature: Signature =sp_core::sr25519::Signature::from_slice(_signature).unwrap().into();
 
 			// In Polkadot, the AccountId is always the same as the 32 byte public key.
 			let account_bytes: [u8; 32] = account_to_bytes(_signer)?;
@@ -768,8 +781,8 @@ pub mod pallet {
 		// orderbook_inclusion_desired Whether orderbook providers should include the order
 		// in their orderbooks
 		pub fn approve_order(
-			origin: T::Origin,
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			origin: <T as frame_system::Config>::Origin,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			orderbook_inclusion_desired: bool,
 		) -> DispatchResult {
 			// CHECKS
@@ -826,8 +839,8 @@ pub mod pallet {
 		// order order OrderType to cancel
 		// sig  signature
 		pub fn cancel_order(
-			origin: T::Origin,
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			origin: <T as frame_system::Config>::Origin,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			sig: &[u8],
 		) -> DispatchResult {
 			// CHECKS
@@ -852,7 +865,7 @@ pub mod pallet {
 		// order OrderType to calculate the price of
 		// The current price of the order
 		pub fn calculate_current_price(
-			order: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			order: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> Result<BalanceOf<T>, Error<T>> {
 			Ok(<sale_kind_interface::Pallet<T>>::calculate_final_price(
 				&order.side,
@@ -869,8 +882,8 @@ pub mod pallet {
 		// sell Sell-side order
 		// Match price
 		pub fn calculate_match_price(
-			buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-			sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			buy: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
+			sell: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> Result<BalanceOf<T>, Error<T>> {
 			// Calculate sell price.
 			let sell_price: BalanceOf<T> = <sale_kind_interface::Pallet<T>>::calculate_final_price(
@@ -897,7 +910,7 @@ pub mod pallet {
 
 			// Maker/taker priority.
 			let price: BalanceOf<T> =
-				if sell.fee_recipient != T::AccountId::default() { sell_price } else { buy_price };
+				if sell.fee_recipient != MyAccountIdDefault::<T>::get() { sell_price } else { buy_price };
 
 			Ok(price)
 		}
@@ -907,14 +920,14 @@ pub mod pallet {
 		// buy Buy-side order
 		// sell Sell-side order
 		pub fn execute_funds_transfer(
-			msg_sender: &T::AccountId,
+			msg_sender: &AccountIdOf<T>,
 			msg_value: BalanceOf<T>,
-			buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-			sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			buy: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
+			sell: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> Result<BalanceOf<T>, Error<T>> {
 			// let originprotocol_fee_recipient = ProtocolFeeRecipient::<T>::get();
 			// Only payable in the special case of unwrapped DOT.
-			if sell.payment_token != T::AccountId::default() {
+			if sell.payment_token != MyAccountIdDefault::<T>::get() {
 				ensure!(msg_value == Zero::zero(), Error::<T>::ValueNotZero);
 			}
 
@@ -923,7 +936,7 @@ pub mod pallet {
 
 			// If paying using a token (DOT:not), transfer tokens. This is done prior to
 			// fee payments to that a seller will have tokens before being charged fees.
-			if price > Zero::zero() && sell.payment_token != T::AccountId::default() {
+			if price > Zero::zero() && sell.payment_token != MyAccountIdDefault::<T>::get() {
 				Self::transfer_tokens(
 					&msg_sender,
 					&sell.payment_token,
@@ -940,7 +953,7 @@ pub mod pallet {
 			let mut required_amount: BalanceOf<T> = price;
 
 			// Determine maker/taker and charge fees accordingly.
-			if sell.fee_recipient != T::AccountId::default() {
+			if sell.fee_recipient != MyAccountIdDefault::<T>::get() {
 				// Sell-side order is maker.
 				Self::execute_funds_transfer_sell_side(
 					&msg_sender,
@@ -955,7 +968,7 @@ pub mod pallet {
 				Self::execute_funds_transfer_buy_side(&msg_sender, buy, sell, &price)?;
 			}
 
-			if sell.payment_token == T::AccountId::default() {
+			if sell.payment_token == MyAccountIdDefault::<T>::get() {
 				// Special-case DOT, order must be matched by buyer.
 				ensure!(msg_value >= required_amount, Error::<T>::ValueLessThanRequiredAmount);
 				// sell.maker.transfer(receive_amount);
@@ -982,9 +995,9 @@ pub mod pallet {
 		// buy Buy-side order
 		// sell Sell-side order
 		pub fn execute_funds_transfer_sell_side(
-			msg_sender: &T::AccountId,
-			buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-			sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			msg_sender: &AccountIdOf<T>,
+			buy: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
+			sell: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			price: &BalanceOf<T>,
 			receive_amount: &mut BalanceOf<T>,
 			required_amount: &mut BalanceOf<T>,
@@ -1079,9 +1092,9 @@ pub mod pallet {
 		// buy Buy-side order
 		// sell Sell-side order
 		pub fn execute_funds_transfer_buy_side(
-			msg_sender: &T::AccountId,
-			buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-			sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			msg_sender: &AccountIdOf<T>,
+			buy: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
+			sell: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			price: &BalanceOf<T>,
 		) -> Result<BalanceOf<T>, Error<T>> {
 			let originprotocol_fee_recipient = ProtocolFeeRecipient::<T>::get();
@@ -1099,7 +1112,7 @@ pub mod pallet {
 				// The Exchange does not escrow DOT, so direct DOT can only be used to with
 				// sell-side maker / buy-side taker orders.
 				ensure!(
-					sell.payment_token != T::AccountId::default(),
+					sell.payment_token != MyAccountIdDefault::<T>::get(),
 					Error::<T>::SellPaymentTokenEqualPaymentToken
 				);
 
@@ -1173,8 +1186,8 @@ pub mod pallet {
 		// sell Sell-side order
 		// Whether or not the two orders can be matched
 		pub fn orders_can_match(
-			buy: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
-			sell: &OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			buy: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
+			sell: &OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 		) -> bool {
 			//  Must be opposite-side.
 			(buy.side == Side::Buy && sell.side == Side::Sell) &&
@@ -1183,13 +1196,13 @@ pub mod pallet {
             // Must use same payment token. 
             (buy.payment_token == sell.payment_token) &&
             // Must match maker/taker addresses. 
-            (sell.taker == T::AccountId::default() || sell.taker == buy.maker) &&
-            (buy.taker == T::AccountId::default() || buy.taker == sell.maker) &&
+            (sell.taker == MyAccountIdDefault::<T>::get() || sell.taker == buy.maker) &&
+            (buy.taker == MyAccountIdDefault::<T>::get() || buy.taker == sell.maker) &&
             // One must be maker and the other must be taker (no bool XOR Solidity:in). 
-            ((sell.fee_recipient == T::AccountId::default() &&
-            buy.fee_recipient != T::AccountId::default()) ||
-            (sell.fee_recipient != T::AccountId::default() &&
-            buy.fee_recipient == T::AccountId::default())) &&
+            ((sell.fee_recipient == MyAccountIdDefault::<T>::get() &&
+            buy.fee_recipient != MyAccountIdDefault::<T>::get()) ||
+            (sell.fee_recipient != MyAccountIdDefault::<T>::get() &&
+            buy.fee_recipient == MyAccountIdDefault::<T>::get())) &&
             // Must match target. 
             (buy.target == sell.target) &&
             // Must match how_to_call. 
@@ -1213,14 +1226,14 @@ pub mod pallet {
 		// sell Sell-side order
 		// sell_sig Sell-side order signature
 		pub fn atomic_match(
-			msg_sender: T::AccountId,
+			msg_sender: AccountIdOf<T>,
 			msg_value: BalanceOf<T>,
-			buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			buy: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			buy_sig: Vec<u8>,
-			sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>>,
+			sell: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>,
 			sell_sig: Vec<u8>,
 			metadata: &[u8],
-		) -> DispatchResult {
+		) -> DispatchResult where <T as pallet_contracts::Config>::Currency: Currency<<T as frame_system::Config>::AccountId> {
 			use sp_std::if_std;
 			if_std! {
 				println!("The atomic_match is: {:?}", buy.calldata);
@@ -1279,11 +1292,11 @@ pub mod pallet {
 			}
 
 			// Mark previously signed or approved orders as finalized.
-			let buymaker: T::AccountId = buy.maker.clone();
+			let buymaker: AccountIdOf<T> = buy.maker.clone();
 			if msg_sender != buymaker {
 				<CancelledOrFinalized<T>>::insert(buy_hash.clone(), true);
 			}
-			let sellmaker: T::AccountId = sell.maker.clone();
+			let sellmaker: AccountIdOf<T> = sell.maker.clone();
 			if msg_sender != sellmaker {
 				<CancelledOrFinalized<T>>::insert(sell_hash.clone(), true);
 			}
@@ -1303,7 +1316,7 @@ pub mod pallet {
 			let value: BalanceOfC<T> = Default::default();
 			let gas_limit: Weight = 20000000000;
 			// Do the actual call to the smart contract function
-			let r = pallet_contracts::Pallet::<T>::bare_call(
+			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				msg_sender.clone(),
 				sell.target.clone(),
 				value,
@@ -1314,7 +1327,7 @@ pub mod pallet {
 			)
 			.result;
 			if_std! {
-				println!("The bare_call result. is: {:?}",r);
+				println!("The bare_call result. is: {:?}",_r);
 			}
 			// let message_call = pallet_contracts::Call::decode(&mut &buy.calldata[..]).map_err(|_|
 			// {});
@@ -1327,12 +1340,12 @@ pub mod pallet {
 			Self::deposit_event(Event::OrdersMatched(
 				buy_hash.clone(),
 				sell_hash.clone(),
-				if sell.fee_recipient != T::AccountId::default() {
+				if sell.fee_recipient != MyAccountIdDefault::<T>::get() {
 					sell.maker.clone()
 				} else {
 					buy.maker.clone()
 				},
-				if sell.fee_recipient != T::AccountId::default() {
+				if sell.fee_recipient != MyAccountIdDefault::<T>::get() {
 					buy.maker.clone()
 				} else {
 					sell.maker.clone()

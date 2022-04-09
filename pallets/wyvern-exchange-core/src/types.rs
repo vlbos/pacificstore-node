@@ -1,6 +1,5 @@
 //! # Pacific Store - Wyvern Exchange pallet
 
-#![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
 
@@ -240,7 +239,6 @@ pub struct OrderType<AccountId, Moment, Balance> {
 
 impl<AccountId, Moment, Balance> OrderType<AccountId, Moment, Balance>
 where
-	AccountId: Default,
 	Moment: Default,
 	Balance: Default,
 {

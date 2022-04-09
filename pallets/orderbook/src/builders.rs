@@ -1,5 +1,4 @@
 //! # Pacific Store node - Orderbook pallet
-#![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::sp_std::prelude::*;
 
@@ -8,7 +7,6 @@ pub use crate::types::*;
 #[derive(Default)]
 pub struct OrderBuilder<AccountId, Moment>
 where
-    AccountId: Default,
     Moment: Default,
 {
     index: u64,
@@ -20,9 +18,15 @@ where
 
 impl<AccountId, Moment> OrderBuilder<AccountId, Moment>
 where
-    AccountId: Default,
     Moment: Default,
 {
+    pub fn new(owner: AccountId)->Self{
+        Self{  index: 0,
+    order_id: Vec::new(),
+    owner,
+    fields:None,
+    created_date: Moment::default(),}
+    }
     pub fn index_by(mut self, index: u64) -> Self {
         self.index = index;
         self

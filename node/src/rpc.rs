@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-use contracts_node_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
+use contracts_node_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index, Moment, Signature};
 use orderbook_rpc;
 use orderbook_runtime_api;
 use pallet_contracts_rpc::{Contracts, ContractsApi};

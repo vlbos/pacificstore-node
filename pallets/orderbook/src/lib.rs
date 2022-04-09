@@ -56,7 +56,6 @@ pub mod pallet {
         sp_std::collections::btree_set::BTreeSet,
         sp_std::prelude::*,
     };
-
     use crate::builders::*;
     pub use crate::types::OrderJSONType;
 
@@ -69,6 +68,7 @@ pub mod pallet {
     }
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
+#[pallet::without_storage_info]
     pub struct Pallet<T>(_);
 
     #[pallet::type_value]
@@ -89,8 +89,15 @@ pub mod pallet {
     pub(super) type NextAssetWhiteListIndex<T> = StorageValue<_, u64, ValueQuery>;
     #[pallet::storage]
     pub(super) type NextOrderIndex<T> = StorageValue<_, u64, ValueQuery>;
+#[pallet::type_value]
+	pub(super) fn MyAccountIdDefault<T: Config>() ->  AccountIdOf<T> {
+		AccountIdOf::<T>::decode(&mut &vec![1u8;32][..]).expect("32 bytes can always construct an AccountId32")
+	}
+	#[pallet::storage]
+	pub(super) type MyAccountId<T> =
+		StorageValue<Value = AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
     #[pallet::storage]
-    pub(super) type Owner<T: Config> = StorageValue<_, T::AccountId, ValueQuery>;
+    pub(super) type Owner<T: Config> = StorageValue<Value =AccountIdOf<T>, QueryKind = ValueQuery, OnEmpty = MyAccountIdDefault<T>>;
     #[pallet::storage]
     #[pallet::getter(fn order_by_index)]
     pub(super) type Orders<T: Config> =
@@ -116,7 +123,7 @@ pub mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn owner_of)]
     pub(super) type OwnerOf<T: Config> =
-        StorageMap<_, Blake2_128Concat, OrderId, T::AccountId, OptionQuery>;
+        StorageMap<_, Blake2_128Concat, OrderId, AccountIdOf<T>, OptionQuery>;
 
     #[pallet::storage]
     #[pallet::getter(fn asset_white_list)]
@@ -133,9 +140,9 @@ pub mod pallet {
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        OrderPosted(T::AccountId, OrderId, T::AccountId),
+        OrderPosted(AccountIdOf<T>, OrderId, AccountIdOf<T>),
         AssetWhiteListPosted(Vec<u8>, Vec<u8>, Vec<u8>),
-        OwnerChanged(T::AccountId, T::AccountId),
+        OwnerChanged(AccountIdOf<T>, AccountIdOf<T>),
         OrderLimitsChanged(u64),
         AssetWhiteListLimitsChanged(u64),
     }
@@ -160,13 +167,12 @@ pub mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
-        pub fn change_owner(origin: OriginFor<T>, new_owner: T::AccountId) -> DispatchResult {
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
+        pub fn change_owner(origin: OriginFor<T>, new_owner: AccountIdOf<T>) -> DispatchResult {
             let _user = ensure_signed(origin)?;
-            sp_runtime::runtime_logger::RuntimeLogger::init();
-
+            // sp_runtime::runtime_logger::RuntimeLogger::init();
             ensure!(
-                T::AccountId::default() == Owner::<T>::get() || _user == Owner::<T>::get(),
+                 MyAccountIdDefault::<T>::get() == Owner::<T>::get() ||_user == Owner::<T>::get(),
                 Error::<T>::OnlyOwner,
             );
             Owner::<T>::put(new_owner.clone());
@@ -174,7 +180,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn set_order_limits(origin: OriginFor<T>, limits: u64) -> DispatchResult {
             let owner = ensure_signed(origin)?;
             ensure!(Owner::<T>::get() == owner, Error::<T>::OnlyOwner);
@@ -183,7 +189,7 @@ pub mod pallet {
             Ok(())
         }
 
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn set_asset_white_list_limits(origin: OriginFor<T>, limits: u64) -> DispatchResult {
             let owner = ensure_signed(origin)?;
             ensure!(Owner::<T>::get() == owner, Error::<T>::OnlyOwner);
@@ -193,11 +199,11 @@ pub mod pallet {
         }
         /// Send an order to the orderbook.
         /// param order Order JSON to post to the orderbook
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn post_order(
             origin: OriginFor<T>,
             order_id: OrderId,
-            owner: T::AccountId,
+            owner: AccountIdOf<T>,
             fields: Option<Vec<OrderField>>,
         ) -> DispatchResult {
             let who = ensure_signed(origin)?;
@@ -266,7 +272,7 @@ pub mod pallet {
             }
 
             // Create a order instance
-            let order = Self::new_order()
+            let order = Self::new_order(owner.clone())
                 .index_by(next_index)
                 .identified_by(order_id.clone())
                 .owned_by(owner.clone())
@@ -297,7 +303,7 @@ pub mod pallet {
         /// tokenAddress Address of the asset's contract
         /// tokenId The asset's token ID
         /// email The email allowed to buy.
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn post_asset_white_list(
             origin: OriginFor<T>,
             token_address: Vec<u8>,
@@ -332,7 +338,7 @@ pub mod pallet {
 
         /// remove an order on chain.
         /// orderIndx the index of the order
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn remove_order(origin: OriginFor<T>, order_index: u64) -> DispatchResult {
             let owner = ensure_signed(origin)?;
             // Self::only_owner(&who)?;
@@ -375,7 +381,7 @@ pub mod pallet {
         /// remove an asset whitelist on chain.
         /// tokenAddress Address of the asset's contract
         /// tokenId The asset's token ID        
-        #[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
         pub fn remove_asset_white_list(
             origin: OriginFor<T>,
             token_address: Vec<u8>,
@@ -400,16 +406,16 @@ pub mod pallet {
     }
     impl<T: Config> Pallet<T> {
         /// Helper methods
-        fn new_order() -> OrderBuilder<T::AccountId, T::Moment> {
-            OrderBuilder::<T::AccountId, T::Moment>::default()
+        fn new_order(owner: AccountIdOf<T>) -> OrderBuilder<AccountIdOf<T>, T::Moment> {
+            OrderBuilder::<AccountIdOf<T>, T::Moment>::new(owner)
         }
 
         /// Get an order from the orderbook, throwing if none is found.
         /// query Query to use for getting orders. A subset of parameters
         /// on the `OrderJSON` type is supported
         pub fn get_order(
-            order_query: Option<OrderQuery<T::AccountId>>,
-        ) -> Option<OrderJSONType<T::AccountId, T::Moment>> {
+            order_query: Option<OrderQuery<AccountIdOf<T>>>,
+        ) -> Option<OrderJSONType<AccountIdOf<T>, T::Moment>> {
             if let Some(orders) = Self::get_orders(order_query, Some(1)) {
                 if !orders.is_empty() {
                     if let Some(order) = orders.get(0) {
@@ -508,12 +514,12 @@ pub mod pallet {
             temp_order_indices: BTreeSet<u64>,
             limit: usize,
             offset: usize,
-        ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
+        ) -> Option<Vec<OrderJSONType<AccountIdOf<T>, T::Moment>>> {
             if temp_order_indices.is_empty() {
                 frame_support::log::error!("temp_order_indices is empty in get_orders_by_indices");
                 return None;
             }
-            let mut result_orders: Vec<OrderJSONType<T::AccountId, T::Moment>> = Vec::new();
+            let mut result_orders: Vec<OrderJSONType<AccountIdOf<T>, T::Moment>> = Vec::new();
             let result_order_indices: Vec<u64> = temp_order_indices.into_iter().collect::<Vec<_>>();
             if result_order_indices.len() <= offset {
                 frame_support::log::error!("result_order_indices'length is less than offset");
@@ -545,9 +551,9 @@ pub mod pallet {
         /// param page Page number, defaults to 1. Can be overridden by
         /// `limit` and `offset` attributes from OrderQuery
         pub fn get_orders(
-            order_query: Option<OrderQuery<T::AccountId>>,
+            order_query: Option<OrderQuery<AccountIdOf<T>>>,
             page: Option<u64>,
-        ) -> Option<Vec<OrderJSONType<T::AccountId, T::Moment>>> {
+        ) -> Option<Vec<OrderJSONType<AccountIdOf<T>, T::Moment>>> {
             let mut _page = 1;
             if let Some(page) = page {
                 _page = page
@@ -603,7 +609,7 @@ pub mod pallet {
             if let Some(token_id) = token_id {
                 token_ids = Some(vec![token_id]);
             }
-            let query = AssetQuery::<T::AccountId> {
+            let query = AssetQuery::<AccountIdOf<T>> {
                 owner: None,
                 asset_contract_address: token_address,
                 token_ids: token_ids,
@@ -631,7 +637,7 @@ pub mod pallet {
         /// page Page number, defaults to 1. Can be overridden by
         /// `limit` and `offset` attributes from OpenSeaAssetQuery
         pub fn get_assets(
-            asset_query: Option<AssetQuery<T::AccountId>>,
+            asset_query: Option<AssetQuery<AccountIdOf<T>>>,
             page: Option<u64>,
         ) -> Option<Vec<JSONType>> {
             let order_query = convert_assetquery_to_orderquery(asset_query);

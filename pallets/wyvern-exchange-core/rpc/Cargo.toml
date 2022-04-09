@@ -1,14 +1,14 @@
 [package]
 name = "wyvern-exchange-core-rpc"
 version = "2.0.0"
-edition = "2018"
+edition = "2021"
 authors = ['']
 repository = ''
 description = ""
 license = "unlicense"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 jsonrpc-core = "18.0.0"
 jsonrpc-core-client = "16.0"
 jsonrpc-derive = "16.0"

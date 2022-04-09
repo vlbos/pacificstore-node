@@ -1,5 +1,4 @@
 //! # Pacific Store node - Orderbook pallet
-#![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::{Decode, Encode};
 use frame_support::{sp_runtime::RuntimeDebug, sp_std::prelude::*};

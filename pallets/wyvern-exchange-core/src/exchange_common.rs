@@ -1,6 +1,5 @@
 //! # Pacific Store - Wyvern Exchange pallet
 
-#![cfg_attr(not(feature = "std"), no_std)]
 use frame_support::traits::Currency;
 pub use pallet::*;
 pub type BalanceOf<T> =
@@ -11,12 +10,14 @@ pub mod pallet {
 	use frame_support::{sp_runtime::traits::Zero, sp_std::prelude::*, traits::Currency};
 
 	use crate::types::*;
+    type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+
 	pub type BalanceOf<T> =
 		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 	#[pallet::config]
 	pub trait Config: frame_system::Config + timestamp::Config {
 		/// The currency in which fees are paid and contract balances are held.
-		type Currency: Currency<Self::AccountId>;
+		type Currency: Currency<<Self as frame_system::Config>::AccountId>;
 	}
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -64,7 +65,7 @@ pub mod pallet {
 		}
 
 		pub fn build_order_type_from_array_parameters(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_method: FeeMethod,
 			side: Side,
@@ -73,7 +74,7 @@ pub mod pallet {
 			calldata: &[u8],
 			replacement_pattern: &[u8],
 			static_extradata: &[u8],
-		) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
+		) -> OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> {
 			Self::build_order_type(
 				addrs[0].clone(),
 				addrs[1].clone(),
@@ -102,7 +103,7 @@ pub mod pallet {
 		}
 
 		pub fn build_buy_sell_order_type(
-			addrs: Vec<T::AccountId>,
+			addrs: Vec<AccountIdOf<T>>,
 			uints: Vec<u64>,
 			fee_methods_sides_kinds_how_to_calls: &[u8],
 			calldata_buy: &[u8],
@@ -111,8 +112,8 @@ pub mod pallet {
 			replacement_pattern_sell: &[u8],
 			static_extradata_buy: &[u8],
 			static_extradata_sell: &[u8],
-		) -> Vec<OrderType<T::AccountId, T::Moment, BalanceOf<T>>> {
-			let buy: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = Self::build_order_type(
+		) -> Vec<OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>>> {
+			let buy: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> = Self::build_order_type(
 				addrs[0].clone(),
 				addrs[1].clone(),
 				addrs[2].clone(),
@@ -137,7 +138,7 @@ pub mod pallet {
 				Self::u64_to_moment_saturated(uints[7]),
 				uints[8],
 			);
-			let sell: OrderType<T::AccountId, T::Moment, BalanceOf<T>> = Self::build_order_type(
+			let sell: OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> = Self::build_order_type(
 				addrs[7].clone(),
 				addrs[8].clone(),
 				addrs[9].clone(),
@@ -166,31 +167,31 @@ pub mod pallet {
 		}
 
 		pub fn build_order_type(
-			exchange: T::AccountId,
-			maker: T::AccountId,
-			taker: T::AccountId,
+			exchange: AccountIdOf<T>,
+			maker: AccountIdOf<T>,
+			taker: AccountIdOf<T>,
 			maker_relayer_fee: BalanceOf<T>,
 			taker_relayer_fee: BalanceOf<T>,
 			maker_protocol_fee: BalanceOf<T>,
 			taker_protocol_fee: BalanceOf<T>,
-			fee_recipient: T::AccountId,
+			fee_recipient: AccountIdOf<T>,
 			fee_method: FeeMethod,
 			side: Side,
 			sale_kind: SaleKind,
-			target: T::AccountId,
+			target: AccountIdOf<T>,
 			how_to_call: HowToCall,
 			calldata: Bytes,
 			replacement_pattern: Bytes,
-			static_target: T::AccountId,
+			static_target: AccountIdOf<T>,
 			static_extradata: Bytes,
-			payment_token: T::AccountId,
+			payment_token: AccountIdOf<T>,
 			base_price: BalanceOf<T>,
 			extra: T::Moment,
 			listing_time: T::Moment,
 			expiration_time: T::Moment,
 			salt: u64,
-		) -> OrderType<T::AccountId, T::Moment, BalanceOf<T>> {
-			OrderType::<T::AccountId, T::Moment, BalanceOf<T>>::new(
+		) -> OrderType<AccountIdOf<T>, T::Moment, BalanceOf<T>> {
+			OrderType::<AccountIdOf<T>, T::Moment, BalanceOf<T>>::new(
 				exchange,
 				maker,
 				taker,

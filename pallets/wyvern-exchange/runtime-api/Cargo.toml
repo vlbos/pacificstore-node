@@ -2,7 +2,7 @@
 name = "wyvern-exchange-runtime-api"
 version = "2.0.0"
 authors = ['']
-edition = "2018"
+edition = "2021"
 license = "unlicense"
 
 [dependencies.wyvern-exchange]
@@ -10,16 +10,14 @@ default-features = false
 package = 'pallet-wyvern-exchange'
 path = '..'
 version = '2.0.0'
-[dependencies.codec]
-default-features = false
-features = ['derive']
-package = 'parity-scale-codec'
-version = '2.0.0'
+
 [dependencies]
 sp-api = { git = "https://github.com/paritytech/substrate", package = "sp-api", default-features = false }
 
 sp-std = { git = "https://github.com/paritytech/substrate", package = "sp-std", default-features = false }
-
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+	"derive",
+] }
 [dev-dependencies]
 serde_json = "1.0"
 
