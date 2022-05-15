@@ -91,7 +91,7 @@ pub mod pallet {
     pub(super) type NextOrderIndex<T> = StorageValue<_, u64, ValueQuery>;
 #[pallet::type_value]
 	pub(super) fn MyAccountIdDefault<T: Config>() ->  AccountIdOf<T> {
-		AccountIdOf::<T>::decode(&mut &vec![1u8;32][..]).expect("32 bytes can always construct an AccountId32")
+		AccountIdOf::<T>::decode(&mut &vec![0u8;32][..]).expect("32 bytes can always construct an AccountId32")
 	}
 	#[pallet::storage]
 	pub(super) type MyAccountId<T> =

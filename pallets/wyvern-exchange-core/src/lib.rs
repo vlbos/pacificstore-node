@@ -182,7 +182,7 @@ pub mod pallet {
 		StorageValue<Value = Vec<u8>, QueryKind = ValueQuery, OnEmpty = TokenSelectorDefault<T>>;
 #[pallet::type_value]
 	pub(super) fn MyAccountIdDefault<T: Config>() ->  AccountIdOf<T> {
-		AccountIdOf::<T>::decode(&mut &vec![1u8;32][..]).expect("32 bytes can always construct an AccountId32")
+		AccountIdOf::<T>::decode(&mut &vec![0u8;32][..]).expect("32 bytes can always construct an AccountId32")
 	}
 	#[pallet::storage]
 	pub(super) type MyAccountId<T> =
@@ -258,6 +258,8 @@ pub mod pallet {
 		InvalidSignature,
 		OnlyOwner,
 		OnlyContractSelf,
+ProxyRegistryIsEmpty,
+TokenTransferProxyIsEmpty,
 	}
 
 	#[pallet::call]
@@ -457,7 +459,7 @@ pub mod pallet {
 		pub fn call_smart_contracts(
 			origin: OriginFor<T>,
 			dest: AccountIdOf<T>,
-			mut selector: Vec<u8>,
+			selector: Vec<u8>,
 			from: AccountIdOf<T>,
 			to: AccountIdOf<T>,
 			values: BalanceOfC<T>,
@@ -474,6 +476,7 @@ pub mod pallet {
 			let mut to_enc: Vec<u8> = to.encode();
 			let mut values_enc: Vec<u8> = values.encode();
 			let mut data = Vec::new();
+			let mut selector= selector;
 			data.append(&mut selector);
 			data.append(&mut from_enc);
 			data.append(&mut to_enc);
@@ -494,6 +497,50 @@ pub mod pallet {
 			.result;
 			if_std! {
 				println!("The call_smart_contracts. is: {:?}",_r);
+			}
+			Ok(())
+		}
+        #[pallet::weight(10_000 + <T as frame_system::Config>::DbWeight::get().writes(1))]
+		pub fn call_proxy_contracts(
+			origin: OriginFor<T>,
+			dest: AccountIdOf<T>,
+			selector: Vec<u8>,
+			from: AccountIdOf<T>,
+			#[pallet::compact] gas_limit: Weight,
+		) -> DispatchResult {
+			use sp_std::if_std;
+
+			let who = ensure_signed(origin)?;
+			// Check against unbounded input
+			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
+			// Amount to transfer
+			let value: BalanceOfC<T> = Default::default();
+			let mut from_enc: Vec<u8> = from.encode();
+			let mut data = Vec::new();
+			let mut selector= selector;
+			data.append(&mut selector);
+			data.append(&mut from_enc);
+			if_std! {
+				println!(" dest={:?}=The call_smart_contracts data=. is: {:?}",dest.clone(),data.clone());
+			}
+			// Do the actual call to the smart contract function
+			let _r = pallet_contracts::Pallet::<T>::bare_call(
+				who,
+				dest.clone(),
+				value,
+				gas_limit,
+				None,
+				data,
+				true,
+			)
+			.result;
+			if_std! {
+				println!("The call_smart_contracts. is: {:?},=={:?}",_r,_r.as_ref().unwrap().data.0.clone());
+			}
+            // ensure!(!_r.did_revert(), Error::<T>::TokenTransferProxyIsEmpty);
+            let proxy=		AccountIdOf::<T>::decode(&mut &_r.as_ref().unwrap().data.0[..]).expect("32 bytes can always construct an AccountId32");
+            if_std! {
+				println!("The proxy. is: {:?}",proxy.clone());
 			}
 			Ok(())
 		}
@@ -536,15 +583,13 @@ pub mod pallet {
 			}
 			let value: BalanceOfC<T> = Default::default();
 			let gas_limit: Weight = 20000000000;
-			let mut selector: Vec<u8> = vec![0x55, 0x7e, 0xfb, 0x0c];
-			let mut selectors: Vec<u8> = vec![0x0b, 0x39, 0x6f, 0x18];
-			let mut callees_enc: Vec<u8> = vec![_token].encode();
+			let mut selector: Vec<u8> = vec![0x0b, 0x39, 0x6f, 0x18];
+			let mut callees_enc: Vec<u8> = _token.encode();
 			let mut from_enc: Vec<u8> = _from.encode();
 			let mut to_enc: Vec<u8> = _to.encode();
-			let mut values_enc: Vec<u8> = vec![_amount].encode();
+			let mut values_enc: Vec<u8> = _amount.encode();
 			let mut data = Vec::new();
 			data.append(&mut selector);
-			data.append(&mut selectors);
 			data.append(&mut callees_enc);
 			data.append(&mut from_enc);
 			data.append(&mut to_enc);
@@ -553,6 +598,8 @@ pub mod pallet {
 			if_std! {
 				println!("The data_encode. is: {:?}",data);
 			}
+	        ensure!(TokenTransferProxy::<T>::get().clone() !=  MyAccountIdDefault::<T>::get(), Error::<T>::TokenTransferProxyIsEmpty);
+
 			// Do the actual call to the smart contract function
 			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				msg_sender.clone(),
@@ -1310,15 +1357,38 @@ pub mod pallet {
 			if_std! {
 				println!("atomic_matchx={:?} ,{:?} ,The sellcalldata is: {:?}",msg_sender.clone(),sell.target.clone(), &sellcalldata);
 			}
+	        ensure!(ProxyRegistry::<T>::get().clone() !=  MyAccountIdDefault::<T>::get(), Error::<T>::ProxyRegistryIsEmpty);
 			// Check against unbounded input
 			// ensure!(selector.len() < 4, Error::<T>::InputTooLarge);
 			// Amount to transfer
 			let value: BalanceOfC<T> = Default::default();
 			let gas_limit: Weight = 20000000000;
+            let mut selector: Vec<u8> = vec![0x36, 0xd3, 0x00, 0x35];
+			let mut auth_address_enc: Vec<u8> = sell.maker.encode();
+			let mut data = Vec::new();
+			data.append(&mut selector);
+			data.append(&mut auth_address_enc);
+            let _r = pallet_contracts::Pallet::<T>::bare_call(
+				msg_sender.clone(),
+				ProxyRegistry::<T>::get().clone(),
+				value,
+				gas_limit,
+				None,
+				sellcalldata.clone(),
+				true,
+			)
+			.result;
+            ensure!(_r.is_ok(), Error::<T>::ProxyRegistryIsEmpty);
+
+			if_std! {
+				println!("The bare_call result. is: {:?}",_r);
+			}
+            let proxy=		AccountIdOf::<T>::decode(&mut &_r.as_ref().unwrap().data.0[..]).expect("32 bytes can always construct an AccountId32");
+	        ensure!(proxy !=  MyAccountIdDefault::<T>::get(), Error::<T>::ProxyRegistryIsEmpty);
 			// Do the actual call to the smart contract function
 			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				msg_sender.clone(),
-				sell.target.clone(),
+				proxy,
 				value,
 				gas_limit,
 				None,
