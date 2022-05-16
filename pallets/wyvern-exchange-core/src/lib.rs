@@ -1385,6 +1385,16 @@ TokenTransferProxyIsEmpty,
 			}
             let proxy=		AccountIdOf::<T>::decode(&mut &_r.as_ref().unwrap().data.0[..]).expect("32 bytes can always construct an AccountId32");
 	        ensure!(proxy !=  MyAccountIdDefault::<T>::get(), Error::<T>::ProxyRegistryIsEmpty);
+            let mut selector: Vec<u8> = vec![0x36, 0xd3, 0x00, 0x35];
+			let mut addr_user_enc: Vec<u8> = msg_sender.encode();
+	        let mut dest_enc: Vec<u8> = sell.target.encode();
+			let mut how_to_call_enc: Vec<u8> = sell.how_to_call.encode();
+		    let mut data = Vec::new();
+			data.append(&mut selector);
+			data.append(&mut addr_user_enc);
+            data.append(&mut dest_enc);
+            data.append(&mut how_to_call_enc);
+            data.append(&mut sellcalldata.clone());
 			// Do the actual call to the smart contract function
 			let _r = pallet_contracts::Pallet::<T>::bare_call(
 				msg_sender.clone(),
@@ -1392,7 +1402,7 @@ TokenTransferProxyIsEmpty,
 				value,
 				gas_limit,
 				None,
-				sellcalldata.clone(),
+				data,
 				true,
 			)
 			.result;
