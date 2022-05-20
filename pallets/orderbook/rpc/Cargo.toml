@@ -8,6 +8,7 @@ description = "A pallet that nft orders management"
 license = "unlicense"
 
 [dependencies]
+jsonrpsee = { version = "0.13.0", features = ["server", "macros"] }
 jsonrpc-core = "18.0"
 jsonrpc-core-client = "16.0"
 jsonrpc-derive = "16.0"

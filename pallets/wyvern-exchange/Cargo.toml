@@ -36,14 +36,13 @@ path = '../wyvern-exchange-core'
 [features]
 default = ['std']
 std = [
-"serde",
+    "serde",
     'codec/std',
-'scale-info/std',
-
+    'scale-info/std',
     'frame-support/std',
     'frame-system/std',
     'timestamp/std',
-'balances/std',
+    'balances/std',
 
 ]
 runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]

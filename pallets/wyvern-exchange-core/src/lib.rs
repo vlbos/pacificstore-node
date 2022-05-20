@@ -538,9 +538,9 @@ TokenTransferProxyIsEmpty,
 				println!("The call_smart_contracts. is: {:?},=={:?}",_r,_r.as_ref().unwrap().data.0.clone());
 			}
             // ensure!(!_r.did_revert(), Error::<T>::TokenTransferProxyIsEmpty);
-            let proxy=		AccountIdOf::<T>::decode(&mut &_r.as_ref().unwrap().data.0[..]).expect("32 bytes can always construct an AccountId32");
+            let _proxy=		AccountIdOf::<T>::decode(&mut &_r.as_ref().unwrap().data.0[..]).expect("32 bytes can always construct an AccountId32");
             if_std! {
-				println!("The proxy. is: {:?}",proxy.clone());
+				println!("The proxy. is: {:?}",_proxy);
 			}
 			Ok(())
 		}

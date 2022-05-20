@@ -8,6 +8,7 @@ description = ""
 license = "unlicense"
 
 [dependencies]
+jsonrpsee = { version = "0.13.0", features = ["server", "macros"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 jsonrpc-core = "18.0.0"
 jsonrpc-core-client = "16.0"

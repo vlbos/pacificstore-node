@@ -1,8 +1,12 @@
 //! RPC interface for the transaction payment module.
-
+use jsonrpsee::{
+	core::{async_trait, Error as JsonRpseeError, RpcResult},
+	proc_macros::rpc,
+	// types::error::{CallError, ErrorCode, ErrorObject},
+};
 use codec::Codec;
-use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
-use jsonrpc_derive::rpc;
+// use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
+// use jsonrpc_derive::rpc;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
@@ -10,9 +14,9 @@ use std::sync::Arc;
 use wyvern_exchange::{FeeMethod, HowToCall, SaleKind, Side};
 use wyvern_exchange_runtime_api::WyvernExchangeApi as WyvernExchangeRuntimeApi;
 
-#[rpc]
+#[rpc(client, server)]
 pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
-	#[rpc(name = "wyvernExchange_calculateFinalPriceEx")]
+	#[method(name = "wyvernExchange_calculateFinalPriceEx")]
 	fn calculate_final_price_ex(
 		&self,
 		side: Side,
@@ -22,9 +26,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		listing_time: Moment,
 		expiration_time: Moment,
 		at: Option<BlockHash>,
-	) -> Result<u64>;
+	) -> RpcResult<u64>;
 
-	#[rpc(name = "wyvernExchange_hashOrderEx")]
+	#[method(name = "wyvernExchange_hashOrderEx")]
 	fn hash_order_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -37,9 +41,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchange_hashToSignEx")]
+	#[method(name = "wyvernExchange_hashToSignEx")]
 	fn hash_to_sign_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -52,9 +56,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchange_validateOrderParametersEx")]
+	#[method(name = "wyvernExchange_validateOrderParametersEx")]
 	fn validate_order_parameters_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -67,9 +71,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchange_validateOrderEx")]
+	#[method(name = "wyvernExchange_validateOrderEx")]
 	fn validate_order_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -83,9 +87,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		static_extradata: String,
 		sig: String,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchange_requireValidOrderEx")]
+	#[method(name = "wyvernExchange_requireValidOrderEx")]
 	fn require_valid_order_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -99,9 +103,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		static_extradata: String,
 		sig: String,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchange_calculateCurrentPriceEx")]
+	#[method(name = "wyvernExchange_calculateCurrentPriceEx")]
 	fn calculate_current_price_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -114,9 +118,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<BlockHash>,
-	) -> Result<u64>;
+	) -> RpcResult<u64>;
 
-	#[rpc(name = "wyvernExchange_ordersCanMatchEx")]
+	#[method(name = "wyvernExchange_ordersCanMatchEx")]
 	fn orders_can_match_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -129,9 +133,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		static_extradata_buy: String,
 		static_extradata_sell: String,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-    #[rpc(name = "wyvernExchange_orderCalldataCanMatchEx")]
+    #[method(name = "wyvernExchange_orderCalldataCanMatchEx")]
 	fn order_calldata_can_match_ex(
 		&self,
 		calldata_buy: String,
@@ -139,9 +143,9 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		replacement_pattern_buy: String,
 		replacement_pattern_sell: String,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchange_calculateMatchPriceEx")]
+	#[method(name = "wyvernExchange_calculateMatchPriceEx")]
 	fn calculate_match_price_ex(
 		&self,
 		addrs: Vec<AccountId>,
@@ -154,7 +158,7 @@ pub trait WyvernExchangeApi<BlockHash, AccountId, Balance, Moment, Signature> {
 		static_extradata_buy: String,
 		static_extradata_sell: String,
 		at: Option<BlockHash>,
-	) -> Result<u64>;
+	) -> RpcResult<u64>;
 }
 
 /// A struct that implements the `WyvernExchangeApi`.
@@ -171,9 +175,9 @@ impl<C, M> WyvernExchange<C, M> {
 		Self { client, _marker: Default::default() }
 	}
 }
-
+#[async_trait]
 impl<C, Block, AccountId, Balance, Moment, Signature>
-	WyvernExchangeApi<<Block as BlockT>::Hash, AccountId, Balance, Moment, Signature>
+	WyvernExchangeApiServer<<Block as BlockT>::Hash, AccountId, Balance, Moment, Signature>
 	for WyvernExchange<C, Block>
 where
 	Block: BlockT,
@@ -195,7 +199,7 @@ where
 		listing_time: Moment,
 		expiration_time: Moment,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<u64> {
+	) -> RpcResult<u64> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -210,11 +214,7 @@ where
 			listing_time,
 			expiration_time,
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn hash_order_ex(
 		&self,
@@ -228,7 +228,7 @@ where
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -246,11 +246,7 @@ where
 			from_hex(replacement_pattern),
 			from_hex(static_extradata),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn hash_to_sign_ex(
@@ -265,7 +261,7 @@ where
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 		// If the block hash is not supplied assume the best block.
@@ -282,11 +278,7 @@ where
 			from_hex(replacement_pattern),
 			from_hex(static_extradata),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn validate_order_parameters_ex(
 		&self,
@@ -300,7 +292,7 @@ where
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -318,11 +310,7 @@ where
 			from_hex(replacement_pattern),
 			from_hex(static_extradata),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn validate_order_ex(
 		&self,
@@ -337,7 +325,7 @@ where
 		static_extradata: String,
 		sig: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -355,11 +343,7 @@ where
 			from_hex(static_extradata),
 			from_hex(sig),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn require_valid_order_ex(
@@ -375,7 +359,7 @@ where
 		static_extradata: String,
 		sig: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -393,11 +377,7 @@ where
 			from_hex(static_extradata),
 			from_hex(sig),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn calculate_current_price_ex(
@@ -412,7 +392,7 @@ where
 		replacement_pattern: String,
 		static_extradata: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<u64> {
+	) -> RpcResult<u64> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -430,11 +410,7 @@ where
 			from_hex(replacement_pattern),
 			from_hex(static_extradata),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn orders_can_match_ex(
 		&self,
@@ -448,7 +424,7 @@ where
 		static_extradata_buy: String,
 		static_extradata_sell: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -466,11 +442,7 @@ where
 			from_hex(static_extradata_buy),
 			from_hex(static_extradata_sell),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
     fn order_calldata_can_match_ex(
 		&self,
@@ -479,7 +451,7 @@ where
 		replacement_pattern_buy: String,
 		replacement_pattern_sell: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -492,11 +464,7 @@ where
 			from_hex(replacement_pattern_buy),
 			from_hex(replacement_pattern_sell),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn calculate_match_price_ex(
 		&self,
@@ -510,7 +478,7 @@ where
 		static_extradata_buy: String,
 		static_extradata_sell: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<u64> {
+	) -> RpcResult<u64> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
@@ -528,11 +496,7 @@ where
 			from_hex(static_extradata_buy),
 			from_hex(static_extradata_sell),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 }
 

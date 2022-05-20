@@ -9,7 +9,9 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
-use pallet_contracts::weights::WeightInfo;
+use frame_support::{ weights::DispatchClass};
+use frame_system::limits::{BlockLength, BlockWeights};
+use pallet_contracts::{ weights::WeightInfo, DefaultContractAccessWeight};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
@@ -45,6 +47,7 @@ pub use sp_runtime::{MultiSigner, Perbill, Permill};
 use orderbook::{AssetQuery, JSONType, OrderJSONType, OrderQuery};
 
 use wyvern_exchange_core::{FeeMethod, HowToCall, OrderType, SaleKind, Side};
+pub use pallet_kitties;
 /// An index to a block.
 pub type BlockNumber = u32;
 
@@ -133,14 +136,36 @@ pub fn native_version() -> NativeVersion {
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 
+/// We allow for 2 seconds of compute with a 6 second average block time.
+const MAXIMUM_BLOCK_WEIGHT: Weight = 2 * WEIGHT_PER_SECOND;
 parameter_types! {
 	pub const Version: RuntimeVersion = VERSION;
 	pub const BlockHashCount: BlockNumber = 2400;
-	/// We allow for 2 seconds of compute with a 6 second average block time.
-	pub BlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights
-		::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
-	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
-		::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
+	// This part is copied from Substrate's `bin/node/runtime/src/lib.rs`.
+	//  The `RuntimeBlockLength` and `RuntimeBlockWeights` exist here because the
+	// `DeletionWeightLimit` and `DeletionQueueDepth` depend on those to parameterize
+	// the lazy contract deletion.
+	pub RuntimeBlockLength: BlockLength =
+		BlockLength::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
+	pub RuntimeBlockWeights: BlockWeights = BlockWeights::builder()
+		.base_block(BlockExecutionWeight::get())
+		.for_class(DispatchClass::all(), |weights| {
+			weights.base_extrinsic = ExtrinsicBaseWeight::get();
+		})
+		.for_class(DispatchClass::Normal, |weights| {
+			weights.max_total = Some(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT);
+		})
+		.for_class(DispatchClass::Operational, |weights| {
+			weights.max_total = Some(MAXIMUM_BLOCK_WEIGHT);
+			// Operational transactions have some extra reserved space, so that they
+			// are included even if block reached `MAXIMUM_BLOCK_WEIGHT`.
+			weights.reserved = Some(
+				MAXIMUM_BLOCK_WEIGHT - NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT
+			);
+		})
+		.avg_block_initialization(AVERAGE_ON_INITIALIZE_RATIO)
+		.build_or_panic();
+
 	pub const SS58Prefix: u8 = 42;
 }
 
@@ -150,9 +175,9 @@ impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
 	type BaseCallFilter = frame_support::traits::Everything;
 	/// Block & extrinsics weights: base values and limits.
-	type BlockWeights = BlockWeights;
+	type BlockWeights = RuntimeBlockWeights;
 	/// The maximum length of a block (in bytes).
-	type BlockLength = BlockLength;
+	type BlockLength = RuntimeBlockLength;
 	/// The identifier used to distinguish between accounts.
 	type AccountId = AccountId;
 	/// The aggregated dispatch type that is available for extrinsics.
@@ -289,7 +314,7 @@ parameter_types! {
 	pub const DepositPerByte: Balance = deposit(0, 1);
 	// The lazy deletion runs inside on_initialize.
 	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
-		BlockWeights::get().max_block;
+		RuntimeBlockWeights::get().max_block;
 	// The weight needed for decoding the queue should be less or equal than a fifth
 	// of the overall weight dedicated to the lazy deletion.
 	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
@@ -305,7 +330,7 @@ parameter_types! {
 		// to deploy their contracts. We are currently introducing a number of optimizations
 		// into ink! which should bring the contract sizes lower. In the meantime we don't
 		// want to pose additional friction on developers.
-		schedule.limits.code_len = 256 * 1024;
+		schedule.limits.payload_len = 256 * 1024;
 		schedule
 	};
 }
@@ -333,6 +358,9 @@ impl pallet_contracts::Config for Runtime {
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type AddressGenerator = pallet_contracts::DefaultAddressGenerator;
+	type ContractAccessWeight = DefaultContractAccessWeight<RuntimeBlockWeights>;
+	type MaxCodeLen = ConstU32<{ 128 * 1024 }>;
+	type RelaxedMaxCodeLen = ConstU32<{ 256 * 1024 }>;
 }
 
 impl orderbook::Config for Runtime {
@@ -351,6 +379,13 @@ impl wyvern_exchange_core::Config for Runtime {
 	type Event = Event;
 	type Public = MultiSigner;
 	type Signature = Signature;
+}
+/// Configure pallet-kitties in pallets/kitties.
+impl pallet_kitties::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type KittyRandomness = RandomnessCollectiveFlip;
+	type MaxKittiesOwned = ConstU32<100>;
 }
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -371,6 +406,7 @@ construct_runtime!(
 		WyvernExchange: wyvern_exchange,
 		WyvernExchangeCore: wyvern_exchange_core,
 		Contracts: pallet_contracts,
+		SubstrateKitties: pallet_kitties,
 	}
 );
 

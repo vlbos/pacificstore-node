@@ -1,8 +1,12 @@
 //! RPC interface for the transaction payment module.
-
+use jsonrpsee::{
+	core::{async_trait, Error as JsonRpseeError, RpcResult},
+	proc_macros::rpc,
+	// types::error::{CallError, ErrorCode, ErrorObject},
+};
 use codec::{Codec, Decode, Encode};
-use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
-use jsonrpc_derive::rpc;
+// use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
+// use jsonrpc_derive::rpc;
 use orderbook::{AssetQuery, JSONType, OrderField, OrderJSONType, OrderQuery};
 use orderbook_runtime_api::OrderbookApi as OrderbookRuntimeApi;
 use sp_api::ProvideRuntimeApi;
@@ -12,35 +16,35 @@ use std::sync::Arc;
 // #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-#[rpc]
+#[rpc(client, server)]
 pub trait OrderbookApi<BlockHash, AccountId, Moment> {
-	#[rpc(name = "orderbook_getOrder")]
+	#[method(name = "orderbook_getOrder")]
 	fn get_order(
 		&self,
 		order_query: Option<OrderQueryJSON<AccountId>>,
 		at: Option<BlockHash>,
-	) -> Result<Option<OrderJSONType<AccountId, Moment>>>;
-	#[rpc(name = "orderbook_getOrders")]
+	) -> RpcResult<Option<OrderJSONType<AccountId, Moment>>>;
+	#[method(name = "orderbook_getOrders")]
 	fn get_orders(
 		&self,
 		order_query: Option<OrderQueryJSON<AccountId>>,
 		page: Option<u64>,
 		at: Option<BlockHash>,
-	) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>>;
-	#[rpc(name = "orderbook_getAsset")]
+	) -> RpcResult<Option<Vec<OrderJSONType<AccountId, Moment>>>>;
+	#[method(name = "orderbook_getAsset")]
 	fn get_asset(
 		&self,
 		token_address: String,
 		token_id: String,
 		at: Option<BlockHash>,
-	) -> Result<Option<JSONType>>;
-	#[rpc(name = "orderbook_getAssets")]
+	) -> RpcResult<Option<JSONType>>;
+	#[method(name = "orderbook_getAssets")]
 	fn get_assets(
 		&self,
 		asset_query: Option<AssetQueryJSON<AccountId>>,
 		page: Option<u64>,
 		at: Option<BlockHash>,
-	) -> Result<Option<Vec<JSONType>>>;
+	) -> RpcResult<Option<Vec<JSONType>>>;
 }
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq)]
@@ -172,8 +176,8 @@ impl<C, M> Orderbook<C, M> {
 		Self { client, _marker: Default::default() }
 	}
 }
-
-impl<C, Block, AccountId, Moment> OrderbookApi<<Block as BlockT>::Hash, AccountId, Moment>
+#[async_trait]
+impl<C, Block, AccountId, Moment> OrderbookApiServer<<Block as BlockT>::Hash, AccountId, Moment>
 	for Orderbook<C, Block>
 where
 	Block: BlockT,
@@ -188,7 +192,7 @@ where
 		&self,
 		order_query: Option<OrderQueryJSON<AccountId>>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Option<OrderJSONType<AccountId, Moment>>> {
+	) -> RpcResult<Option<OrderJSONType<AccountId, Moment>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
@@ -196,11 +200,7 @@ where
 
 		let runtime_api_result =
 			api.get_order(&at, convert_json_to_orderquery::<AccountId>(order_query));
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn get_orders(
@@ -208,7 +208,7 @@ where
 		order_query: Option<OrderQueryJSON<AccountId>>,
 		page: Option<u64>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Option<Vec<OrderJSONType<AccountId, Moment>>>> {
+	) -> RpcResult<Option<Vec<OrderJSONType<AccountId, Moment>>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
@@ -216,11 +216,7 @@ where
 
 		let runtime_api_result =
 			api.get_orders(&at, convert_json_to_orderquery::<AccountId>(order_query), page);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn get_asset(
@@ -228,7 +224,7 @@ where
 		token_address: String,
 		token_id: String,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Option<JSONType>> {
+	) -> RpcResult<Option<JSONType>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
@@ -239,18 +235,14 @@ where
 			Some(from_hex(token_address.clone())),
 			Some(from_hex(token_id.clone())),
 		);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn get_assets(
 		&self,
 		asset_query: Option<AssetQueryJSON<AccountId>>,
 		page: Option<u64>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Option<Vec<JSONType>>> {
+	) -> RpcResult<Option<Vec<JSONType>>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
                 // If the block hash is not supplied assume the best block.
@@ -258,10 +250,6 @@ where
 
 		let runtime_api_result =
 			api.get_assets(&at, convert_json_to_assetquery::<AccountId>(asset_query), page);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 }

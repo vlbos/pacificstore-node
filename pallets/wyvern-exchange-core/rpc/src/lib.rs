@@ -1,7 +1,11 @@
 //! RPC interface for the transaction payment module.
-
-use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
-use jsonrpc_derive::rpc;
+use jsonrpsee::{
+	core::{async_trait, Error as JsonRpseeError, RpcResult},
+	proc_macros::rpc,
+	// types::error::{CallError, ErrorCode, ErrorObject},
+};
+// use jsonrpc_core::{Error as RpcError, ErrorCode, Result};
+// use jsonrpc_derive::rpc;
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
@@ -11,68 +15,68 @@ use std::sync::Arc;
 use wyvern_exchange_core::OrderType;
 use wyvern_exchange_core_runtime_api::WyvernExchangeCoreApi as WyvernExchangeCoreRuntimeApi;
 
-#[rpc]
+#[rpc(client, server)]
 pub trait WyvernExchangeCoreApi<BlockHash, AccountId, Balance, Moment, Signature> {
-	#[rpc(name = "wyvernExchangeCore_hashOrder")]
+	#[method(name = "wyvernExchangeCore_hashOrder")]
 	fn hash_order(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchangeCore_hashToSign")]
+	#[method(name = "wyvernExchangeCore_hashToSign")]
 	fn hash_to_sign(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchangeCore_validateOrderParameters")]
+	#[method(name = "wyvernExchangeCore_validateOrderParameters")]
 	fn validate_order_parameters(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchangeCore_validateOrder")]
+	#[method(name = "wyvernExchangeCore_validateOrder")]
 	fn validate_order(
 		&self,
 		hash: String,
 		order: OrderType<AccountId, Moment, Balance>,
 		sig: Vec<u8>,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchangeCore_requireValidOrder")]
+	#[method(name = "wyvernExchangeCore_requireValidOrder")]
 	fn require_valid_order(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		sig: Vec<u8>,
 		at: Option<BlockHash>,
-	) -> Result<Vec<u8>>;
+	) -> RpcResult<Vec<u8>>;
 
-	#[rpc(name = "wyvernExchangeCore_calculateCurrentPrice")]
+	#[method(name = "wyvernExchangeCore_calculateCurrentPrice")]
 	fn calculate_current_price(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<Balance>;
+	) -> RpcResult<Balance>;
 
-	#[rpc(name = "wyvernExchangeCore_ordersCanMatch")]
+	#[method(name = "wyvernExchangeCore_ordersCanMatch")]
 	fn orders_can_match(
 		&self,
 		buy: OrderType<AccountId, Moment, Balance>,
 		sell: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<bool>;
+	) -> RpcResult<bool>;
 
-	#[rpc(name = "wyvernExchangeCore_calculateMatchPrice")]
+	#[method(name = "wyvernExchangeCore_calculateMatchPrice")]
 	fn calculate_match_price(
 		&self,
 		buy: OrderType<AccountId, Moment, Balance>,
 		sell: OrderType<AccountId, Moment, Balance>,
 		at: Option<BlockHash>,
-	) -> Result<Balance>;
+	) -> RpcResult<Balance>;
 }
 
 /// A struct that implements the `WyvernExchangeCoreApi`.
@@ -89,9 +93,9 @@ impl<C, M> WyvernExchangeCore<C, M> {
 		Self { client, _marker: Default::default() }
 	}
 }
-
+#[async_trait]
 impl<C, Block, AccountId, Balance, Moment, Signature>
-	WyvernExchangeCoreApi<<Block as BlockT>::Hash, AccountId, Balance, Moment, Signature>
+	WyvernExchangeCoreApiServer<<Block as BlockT>::Hash, AccountId, Balance, Moment, Signature>
 	for WyvernExchangeCore<C, Block>
 where
 	Block: BlockT,
@@ -108,53 +112,41 @@ where
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.hash_order(&at, order);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn hash_to_sign(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.hash_to_sign(&at, order);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn validate_order_parameters(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.validate_order_parameters(&at, order);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn validate_order(
 		&self,
@@ -162,18 +154,14 @@ where
 		order: OrderType<AccountId, Moment, Balance>,
 		sig: Vec<u8>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.validate_order(&at, hash.clone().into_bytes(), order, sig);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn require_valid_order(
@@ -181,71 +169,55 @@ where
 		order: OrderType<AccountId, Moment, Balance>,
 		sig: Vec<u8>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Vec<u8>> {
+	) -> RpcResult<Vec<u8>> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.require_valid_order(&at, order, sig);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 
 	fn calculate_current_price(
 		&self,
 		order: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Balance> {
+	) -> RpcResult<Balance> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.calculate_current_price(&at, order);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn orders_can_match(
 		&self,
 		buy: OrderType<AccountId, Moment, Balance>,
 		sell: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<bool> {
+	) -> RpcResult<bool> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.orders_can_match(&at, buy, sell);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 	fn calculate_match_price(
 		&self,
 		buy: OrderType<AccountId, Moment, Balance>,
 		sell: OrderType<AccountId, Moment, Balance>,
 		at: Option<<Block as BlockT>::Hash>,
-	) -> Result<Balance> {
+	) -> RpcResult<Balance> {
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(||
 			// If the block hash is not supplied assume the best block.
 			self.client.info().best_hash));
 
 		let runtime_api_result = api.calculate_match_price(&at, buy, sell);
-		runtime_api_result.map_err(|e| RpcError {
-			code: ErrorCode::ServerError(9876), // No real reason for this value
-			message: "Something wrong".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		runtime_api_result.map_err(|e| JsonRpseeError::to_call_error(e))
 	}
 }

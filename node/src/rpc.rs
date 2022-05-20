@@ -8,17 +8,18 @@
 use std::sync::Arc;
 
 use contracts_node_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index, Moment, Signature};
-use orderbook_rpc;
+use orderbook_rpc::OrderbookApiServer;
 use orderbook_runtime_api;
-use pallet_contracts_rpc::{Contracts, ContractsApi};
+use pallet_contracts_rpc::{ContractsRpc, ContractsApiServer};
+use jsonrpsee::RpcModule;
 pub use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use wyvern_exchange_core_rpc;
+use wyvern_exchange_core_rpc::WyvernExchangeCoreApiServer;
 use wyvern_exchange_core_runtime_api;
-use wyvern_exchange_rpc;
+ use wyvern_exchange_rpc::WyvernExchangeApiServer;
 use wyvern_exchange_runtime_api;
 
 /// Full client dependencies.
@@ -32,7 +33,7 @@ pub struct FullDeps<C, P> {
 }
 
 /// Instantiate all full RPC extensions.
-pub fn create_full<C, P>(deps: FullDeps<C, P>) -> jsonrpc_core::IoHandler<sc_rpc::Metadata>
+pub fn create_full<C, P>(deps: FullDeps<C, P>) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
@@ -58,15 +59,15 @@ where
 	>,
 	P: TransactionPool + 'static,
 {
-	use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
-	use substrate_frame_rpc_system::{FullSystem, SystemApi};
+	use pallet_transaction_payment_rpc::{TransactionPaymentRpc, TransactionPaymentApiServer};
+	use substrate_frame_rpc_system::{SystemRpc, SystemApiServer};
 
-	let mut io = jsonrpc_core::IoHandler::default();
+	let mut io = RpcModule::new(());
 	let FullDeps { client, pool, deny_unsafe } = deps;
 
-	io.extend_with(SystemApi::to_delegate(FullSystem::new(client.clone(), pool, deny_unsafe)));
+	io.merge(SystemRpc::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 
-	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone())));
+	io.merge(TransactionPaymentRpc::new(client.clone()).into_rpc())?;
 
 	// Extend this RPC with a custom API by using the following syntax.
 	// `YourRpcStruct` should have a reference to a client, which is needed
@@ -74,17 +75,17 @@ where
 	// `io.extend_with(YourRpcTrait::to_delegate(YourRpcStruct::new(ReferenceToClient, ...)));`
 
 	// Contracts RPC API extension
-	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
-	io.extend_with(orderbook_rpc::OrderbookApi::to_delegate(orderbook_rpc::Orderbook::new(
-		client.clone(),
-	)));
+	io.merge(ContractsRpc::new(client.clone()).into_rpc())?;
+	io.merge(orderbook_rpc::Orderbook::new(
+		client.clone()
+	).into_rpc())?;
 
-	io.extend_with(wyvern_exchange_rpc::WyvernExchangeApi::to_delegate(
-		wyvern_exchange_rpc::WyvernExchange::new(client.clone()),
-	));
+	io.merge(
+		wyvern_exchange_rpc::WyvernExchange::new(client.clone()).into_rpc()
+	)?;
 
-	io.extend_with(wyvern_exchange_core_rpc::WyvernExchangeCoreApi::to_delegate(
-		wyvern_exchange_core_rpc::WyvernExchangeCore::new(client.clone()),
-	));
-	io
+	io.merge(
+		wyvern_exchange_core_rpc::WyvernExchangeCore::new(client.clone()).into_rpc()
+	)?;
+	Ok(io)
 }

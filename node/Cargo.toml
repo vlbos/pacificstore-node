@@ -19,7 +19,6 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "3.1.6", features = ["derive"] }
-
 sc-cli = { git = "https://github.com/paritytech/substrate", package = "sc-cli", features = ["wasmtime"] }
 sp-core = { git = "https://github.com/paritytech/substrate", package = "sp-core" }
 sc-executor = { git = "https://github.com/paritytech/substrate", package = "sc-executor", features = ["wasmtime"] }
@@ -44,6 +43,7 @@ sp-finality-grandpa = {  git = "https://github.com/paritytech/substrate.git" }
 sp-keyring = {git = "https://github.com/paritytech/substrate.git"  }
 # These dependencies are used for the node's RPCs
 jsonrpc-core = "18.0.0"
+jsonrpsee = { version = "0.13.0", features = ["server"] }
 sc-rpc = { git = "https://github.com/paritytech/substrate", package = "sc-rpc" }
 sp-api = { git = "https://github.com/paritytech/substrate", package = "sp-api" }
 sc-rpc-api = { git = "https://github.com/paritytech/substrate", package = "sc-rpc-api" }
