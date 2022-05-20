@@ -4,8 +4,8 @@ use crate::{
 	command_helper::{inherent_benchmark_data, BenchmarkExtrinsicBuilder},
 	service,
 };
-use frame_benchmarking_cli::BenchmarkCmd;
 use contracts_node_runtime::Block;
+use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 use std::sync::Arc;
@@ -137,7 +137,8 @@ pub fn run() -> sc_cli::Result<()> {
 
 						cmd.run(config, client, inherent_benchmark_data()?, Arc::new(ext_builder))
 					},
-                    _ => todo!(),
+					BenchmarkCmd::Machine(cmd) =>
+						cmd.run(&config, SUBSTRATE_REFERENCE_HARDWARE.clone()),
 				}
 			})
 		},
