@@ -1,0 +1,53 @@
+[package]
+authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+description = 'FRAME pallet template for defining custom runtime logic.'
+edition = '2021'
+homepage = 'https://substrate.io'
+license = 'Unlicense'
+name = 'pallet-kitties'
+readme = 'README.md'
+repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
+version = '4.0.0-dev'
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+	"derive",
+] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+# codec = { default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0' }
+serde = { version = "1.0.119" }
+# scale-info = { default-features = false, features = ['derive'], version = "1.0" }
+
+frame-system = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+frame-support = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+frame-benchmarking = { default-features = false, optional = true, git = 'https://github.com/paritytech/substrate.git' }
+sp-std = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+pallet-randomness-collective-flip = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+pallet-balances = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+sp-core = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+sp-io = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+sp-runtime = { default-features = false, git = 'https://github.com/paritytech/substrate.git' }
+
+[features]
+default = ['std']
+std = [
+	'codec/std',
+	'scale-info/std',
+	'frame-benchmarking/std',
+	'frame-support/std',
+	'frame-system/std',
+	'pallet-balances/std',
+	'pallet-randomness-collective-flip/std',
+	'serde/std',
+	'sp-core/std',
+	'sp-std/std',
+]
+runtime-benchmarks = [
+	'frame-benchmarking',
+	'frame-support/runtime-benchmarks',
+	'frame-system/runtime-benchmarks',
+]
+try-runtime = ['frame-support/try-runtime']
